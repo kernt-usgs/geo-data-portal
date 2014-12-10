@@ -16,10 +16,5 @@
         <input id="loadProcessesButton" type="button" value="Load Processes" />Last loaded: <span id="lastProcessLoad">never</span>
         <br />
         <div id="processData">Load processes...</div>
-        <br />
-        <br />
-        <input id="reportButton" type="button" value="Run Report" />Last run: <span id="lastReportRun">never</span>
-        <br />
-        <div id="reportData">Run a report...</div>
     </body>
 </html>

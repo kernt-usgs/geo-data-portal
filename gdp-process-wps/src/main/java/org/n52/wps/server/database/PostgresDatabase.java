@@ -102,7 +102,7 @@ public class PostgresDatabase extends AbstractDatabase {
 		String baseDirectoryPath = propertyUtil.extractString(KEY_DATABASE_PATH, DEFAULT_BASE_DIRECTORY);
 		String dbName = getDatabaseProperties(PROPERTY_NAME_DATABASE_NAME);
 		DATABASE_NAME = (StringUtils.isBlank(dbName)) ? "wps" : dbName;
-		try {
+		try {	
 			Class.forName("org.postgresql.Driver");
 			initializeBaseDirectory(baseDirectoryPath);
 			initializeConnectionHandler();
@@ -407,76 +407,76 @@ public class PostgresDatabase extends AbstractDatabase {
 		LOGGER.warn("requested response as file for a response stored in the database, returning null");
 		return null;
 	}
+	
+    private class WipeTimerTask extends TimerTask {
 
-	private class WipeTimerTask extends TimerTask {
+        private final long thresholdMillis;
+        private static final String DELETE_STATEMENT = "DELETE FROM RESULTS WHERE RESULTS.REQUEST_ID = ANY ( ? ) AND RESULTS.REQUESTS_ID NOT LIKE 'REQ_%';";
+        private static final int DELETE_STATEMENT_LIST_PARAM_INDEX = 1;
+        private static final String LOOKUP_STATEMENT = "SELECT * FROM "
+                + "(SELECT REQUEST_ID, EXTRACT(EPOCH FROM REQUEST_DATE) * 1000 AS TIMESTAMP FROM RESULTS) items WHERE TIMESTAMP < ?";
+        private static final int LOOKUP_STATEMENT_TIMESTAMP_PARAM_INDEX = 1;
+        private static final int LOOKUP_STATEMENT_REQUEST_ID_COLUMN_INDEX = 1;
+	private final String databaseName = getDatabaseName();
 
-		private static final String DELETE_STATEMENT = "DELETE FROM RESULTS WHERE RESULTS.REQUEST_ID = ANY ( ? );";
-		private static final int DELETE_STATEMENT_LIST_PARAM_INDEX = 1;
-		private static final String LOOKUP_STATEMENT = "SELECT * FROM "
-				+ "(SELECT REQUEST_ID, EXTRACT(EPOCH FROM REQUEST_DATE) * 1000 AS TIMESTAMP FROM RESULTS) items WHERE TIMESTAMP < ?";
-		private static final int LOOKUP_STATEMENT_TIMESTAMP_PARAM_INDEX = 1;
-		private static final int LOOKUP_STATEMENT_REQUEST_ID_COLUMN_INDEX = 1;
-		private final long thresholdMillis;
-		private final String databaseName = getDatabaseName();
+        WipeTimerTask(long thresholdMillis) {
+            this.thresholdMillis = thresholdMillis;
+        }
 
-		WipeTimerTask(long thresholdMillis) {
-			this.thresholdMillis = thresholdMillis;
-		}
+        @Override
+        public void run() {
+            LOGGER.info(databaseName + " Postgres wiper, checking for records older than {} ms", thresholdMillis);
+            try {
+				
+                int deletedRecordsCount = wipe();
+                if (deletedRecordsCount > 0) {
+                    LOGGER.info(databaseName + " Postgres wiper, cleaned {} records from database", deletedRecordsCount);
+                } else {
+                    LOGGER.debug(databaseName + " Postgres wiper, cleaned {} records from database", deletedRecordsCount);
+                }
+            } catch (SQLException | IOException ex) {
+                LOGGER.warn(databaseName + " Postgres wiper, failed to deleted old records", ex);
+            }
+        }
 
-		@Override
-		public void run() {
-			LOGGER.info(databaseName + " Postgres wiper, checking for records older than {} ms", thresholdMillis);
-			try {
+        private int wipe() throws SQLException, IOException {
+            LOGGER.debug(databaseName + " Postgres wiper, checking for records older than {} ms", thresholdMillis);
+            int deletedRecordsCount = 0;
+            List<String> oldRecords = findOldRecords();
+            if (!SAVE_RESULTS_TO_DB) {
+                for (String recordId : oldRecords) {
+                    if (recordId.toLowerCase(Locale.US).contains("output")) {
+                        Files.deleteIfExists(Paths.get(BASE_DIRECTORY.toString(), recordId));
+                    }
+                }
+            }
+            if (!oldRecords.isEmpty()) {
+                deletedRecordsCount = deleteRecords(oldRecords);
+            }
+            return deletedRecordsCount;
+        }
 
-				int deletedRecordsCount = wipe();
-				if (deletedRecordsCount > 0) {
-					LOGGER.info(databaseName + " Postgres wiper, cleaned {} records from database", deletedRecordsCount);
-				} else {
-					LOGGER.debug(databaseName + " Postgres wiper, cleaned {} records from database", deletedRecordsCount);
-				}
-			} catch (SQLException | IOException ex) {
-				LOGGER.warn(databaseName + " Postgres wiper, failed to deleted old records", ex);
-			}
-		}
+        private int deleteRecords(List<String> recordIds) throws SQLException {
+            int deletedRecordsCount;
+            try (Connection connection = connectionHandler.getConnection(); PreparedStatement deleteStatement = connection.prepareStatement(DELETE_STATEMENT)) {
+                deleteStatement.setArray(DELETE_STATEMENT_LIST_PARAM_INDEX, connection.createArrayOf("varchar", recordIds.toArray()));
+                deletedRecordsCount = deleteStatement.executeUpdate();
+            }
+            return deletedRecordsCount;
+        }
 
-		private int wipe() throws SQLException, IOException {
-			LOGGER.debug(databaseName + " Postgres wiper, checking for records older than {} ms", thresholdMillis);
-			int deletedRecordsCount = 0;
-			List<String> oldRecords = findOldRecords();
-			if (!SAVE_RESULTS_TO_DB) {
-				for (String recordId : oldRecords) {
-					if (recordId.toLowerCase(Locale.US).contains("output")) {
-						Files.deleteIfExists(Paths.get(BASE_DIRECTORY.toString(), recordId));
-					}
-				}
-			}
-			if (!oldRecords.isEmpty()) {
-				deletedRecordsCount = deleteRecords(oldRecords);
-			}
-			return deletedRecordsCount;
-		}
-
-		private int deleteRecords(List<String> recordIds) throws SQLException {
-			int deletedRecordsCount;
-			try (Connection connection = connectionHandler.getConnection(); PreparedStatement deleteStatement = connection.prepareStatement(DELETE_STATEMENT)) {
-				deleteStatement.setArray(DELETE_STATEMENT_LIST_PARAM_INDEX, connection.createArrayOf("varchar", recordIds.toArray()));
-				deletedRecordsCount = deleteStatement.executeUpdate();
-			}
-			return deletedRecordsCount;
-		}
-
-		private List<String> findOldRecords() throws SQLException {
-			List<String> matchingRecords = new ArrayList<>();
-			try (Connection connection = connectionHandler.getConnection(); PreparedStatement lookupStatement = connection.prepareStatement(LOOKUP_STATEMENT)) {
-				long ageMillis = System.currentTimeMillis() - thresholdMillis;
-				lookupStatement.setLong(LOOKUP_STATEMENT_TIMESTAMP_PARAM_INDEX, ageMillis);
-				try (ResultSet rs = lookupStatement.executeQuery()) {
-					while (rs.next()) {
-						matchingRecords.add(rs.getString(LOOKUP_STATEMENT_REQUEST_ID_COLUMN_INDEX));
-					}
-				}
-			}
-			return matchingRecords;
-		}
-	}
+        private List<String> findOldRecords() throws SQLException {
+            List<String> matchingRecords = new ArrayList<>();
+            try (Connection connection = connectionHandler.getConnection(); PreparedStatement lookupStatement = connection.prepareStatement(LOOKUP_STATEMENT)) {
+                long ageMillis = System.currentTimeMillis() - thresholdMillis;
+                lookupStatement.setLong(LOOKUP_STATEMENT_TIMESTAMP_PARAM_INDEX, ageMillis);
+                try (ResultSet rs = lookupStatement.executeQuery()) {
+                    while (rs.next()) {
+                        matchingRecords.add(rs.getString(LOOKUP_STATEMENT_REQUEST_ID_COLUMN_INDEX));
+                    }
+                }
+            }
+            return matchingRecords;
+        }
+    }
 }

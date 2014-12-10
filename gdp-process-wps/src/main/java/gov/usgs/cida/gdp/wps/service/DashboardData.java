@@ -13,6 +13,8 @@ public class DashboardData {
     private static final long MILLIS_PER_HOUR = 1000 * 60 * 60;
     private static final long MILLIS_PER_MIN = 1000 * 60;
     
+	private String requestId = null;
+	private String requestLink = null;
     private String identifier = null;
     private String status = null;
     private String creationTime = null;
@@ -70,6 +72,34 @@ public class DashboardData {
         this.errorMessage =  errorMessage;
     }
 
+	/**
+	 * @return the requestId
+	 */
+	public String getRequestId() {
+		return requestId;
+	}
+
+	/**
+	 * @param requestId the requestId to set
+	 */
+	public void setRequestId(String requestId) {
+		this.requestId = requestId;
+	}
+
+	/**
+	 * @return the requestLink
+	 */
+	public String getRequestLink() {
+		return requestLink;
+	}
+
+	/**
+	 * @param requestLink the requestLink to set
+	 */
+	public void setRequestLink(String requestLink) {
+		this.requestLink = requestLink;
+	}
+	
     /**
     * @param time in milliseconds
     * @return human readable string of time elapsed in terms of hours, minutes, and seconds (fractional seconds truncated)
@@ -95,4 +125,5 @@ public class DashboardData {
         returnString.append(seconds).append("s");
         return returnString.toString();
     }
+
 }
