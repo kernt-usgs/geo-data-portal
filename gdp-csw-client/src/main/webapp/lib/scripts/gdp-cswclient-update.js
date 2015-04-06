@@ -26,7 +26,7 @@ var oldCSWProto = CSWClient.prototype;
 // I now update the CSWClient object with the new constructor
 CSWClient = function(cswhost, host) {
     this.cswhost = cswhost;
-    this.use_proxy = true;
+    this.use_proxy = false;
     this.proxy = host;
     this.getrecords_xsl = this.loadDocument("lib/xsl/getrecords.xsl");
     this.getrecordbyid_xsl = this.loadDocument("lib/xsl/getrecordbyid.xsl");

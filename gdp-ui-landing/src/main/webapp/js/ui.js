@@ -39,102 +39,92 @@ GDP.UI = function (args) {
 		$('#ccsa-area').children().slice(0, 2).remove();
 
 		var me = this,
+		/**
+		 *	Sciencebase doesn't have a GetDomain call, so had to hard-code the algorithm list in an array
+		 *	and loop through that.  Precedence was set when the algorithms were hard-coded to their buttons
+		 */
 			updateOfferingMaps = function () {
-				GDP.CONFIG.cswClient.getDomain({
-					propertyName: 'keyword',
-					callbacks: {
-						success: [
-							function (cswGetDomainResponseObject) {
-								var dvIdx,
-									value,
-									domainValues = cswGetDomainResponseObject.DomainValues[0].ListOfValues;
+			    var dvIdx,
+				value,
+				domainValues = [
+					"gov.usgs.cida.gdp.wps.algorithm.FeatureWeightedGridStatisticsAlgorithm",
+					"gov.usgs.cida.gdp.wps.algorithm.FeatureGridStatisticsAlgorithm",
+					"gov.usgs.cida.gdp.wps.algorithm.FeatureCategoricalGridCoverageAlgorithm",
+					"gov.usgs.cida.gdp.wps.algorithm.FeatureCoverageOPeNDAPIntersectionAlgorithm",
+					"gov.usgs.cida.gdp.wps.algorithm.FeatureCoverageIntersectionAlgorithm"
+					];
 
-								for (dvIdx = 0; dvIdx < domainValues.length; dvIdx++) {
-									value = domainValues[dvIdx].Value.value;
-									if (value.toLowerCase().indexOf('gov.usgs.cida.gdp.wps') !== -1) {
-										GDP.CONFIG.offeringMaps.wpsToCsw[value] = {};
-									}
+			    for (dvIdx = 0; dvIdx < domainValues.length; dvIdx++) {
+				value = domainValues[dvIdx];
+				GDP.CONFIG.offeringMaps.wpsToCsw[value] = {};
+				}
+			    GDP.CONFIG.cswClient.getRecordsByKeywordsFromServer({
+				scope: me,
+				keywords: [Object.keys(GDP.CONFIG.offeringMaps.wpsToCsw)],
+				callbacks: {
+				    success: [
+					function (cswGetRecRespObj) {
+						var records = cswGetRecRespObj.records,
+						    wpsToCsw = GDP.CONFIG.offeringMaps.wpsToCsw,
+						    cswToWps = GDP.CONFIG.offeringMaps.cswToWps,
+						    rIdx,
+						    record,
+						    algIdx,
+						    algName,
+						    ident,
+						    url,
+						    algorithm,
+						    algorithmArray;
+
+			    			for (rIdx = 0; rIdx < records.length; rIdx++) {
+							record = records[rIdx];
+							ident = record.fileIdentifier.CharacterString.value;
+							url = '';
+							if (!GDP.CONFIG.offeringMaps.cswIdentToRecord[ident]) {
+								GDP.CONFIG.offeringMaps.cswIdentToRecord[ident] = record;
+							}
+							
+							algorithmArray = GDP.CONFIG.cswClient.getAlgorithmArrayFromRecord({
+							    record: record
+							});
+
+							for (algIdx = 0; algIdx < algorithmArray.length; algIdx++) {
+							    algorithm = algorithmArray[algIdx];
+							    if (!wpsToCsw[algorithm][ident]) {
+								wpsToCsw[algorithm][ident] = record;
+							    }
+							}
+
+							if (!cswToWps[ident]) {
+							    cswToWps[ident] = [];
+							}
+						}
+
+						for (algName in wpsToCsw) {
+						    if (wpsToCsw.hasOwnProperty(algName)) {
+							for (ident in wpsToCsw[algName]) {
+							    if (wpsToCsw[algName].hasOwnProperty(ident)) {
+								if (!cswToWps[ident]) {
+								    cswToWps[ident] = [];
 								}
-
-								this.getRecordsByKeywordsFromServer({
-									scope: me,
-									keywords: [Object.keys(GDP.CONFIG.offeringMaps.wpsToCsw)],
-									callbacks: {
-										success: [
-											function (cswGetRecRespObj) {
-												var records = cswGetRecRespObj.records,
-													wpsToCsw = GDP.CONFIG.offeringMaps.wpsToCsw,
-													cswToWps = GDP.CONFIG.offeringMaps.cswToWps,
-													rIdx,
-													record,
-													algIdx,
-													algName,
-													ident,
-													url,
-													algorithm,
-													algorithmArray;
-
-												for (rIdx = 0; rIdx < records.length; rIdx++) {
-													record = records[rIdx];
-													ident = record.fileIdentifier.CharacterString.value;
-													url = '';
-													if (!GDP.CONFIG.offeringMaps.cswIdentToRecord[ident]) {
-														GDP.CONFIG.offeringMaps.cswIdentToRecord[ident] = record;
-													}
-
-													algorithmArray = GDP.CONFIG.cswClient.getAlgorithmArrayFromRecord({
-														record: record
-													});
-
-													for (algIdx = 0; algIdx < algorithmArray.length; algIdx++) {
-														algorithm = algorithmArray[algIdx];
-														if (!wpsToCsw[algorithm][ident]) {
-															wpsToCsw[algorithm][ident] = record;
-														}
-													}
-
-													if (!cswToWps[ident]) {
-														cswToWps[ident] = [];
-													}
-												}
-
-												for (algName in wpsToCsw) {
-													if (wpsToCsw.hasOwnProperty(algName)) {
-														for (ident in wpsToCsw[algName]) {
-															if (wpsToCsw[algName].hasOwnProperty(ident)) {
-																if (!cswToWps[ident]) {
-																	cswToWps[ident] = [];
-																}
-																cswToWps[ident].push(algName);
-															}
-														}
-													}
-												}
-												this.initializationCompleted();
-											}
-										],
-										error: [
-											function (error) {
-												GDP.CONFIG.ui.errorEncountered({
-													data: error,
-													recoverable: false
-												});
-											}
-										]
-									}
-								});
+								cswToWps[ident].push(algName);
+							    }
 							}
-						],
-						error: [
-							function (error) {
-								GDP.CONFIG.ui.errorEncountered({
-									data: error,
-									recoverable: false
-								});
-							}
-						]
+						    }
+						}
+						this.initializationCompleted();
 					}
-				});
+				    ],
+				    error: [
+					function (error) {
+					    GDP.CONFIG.ui.errorEncountered({
+						data: error,
+						recoverable: false
+					    });
+					}
+				    ]
+				}
+			    });
 			},
 			/**
 			 * Handles clicking of either datasets buttons or processing buttons
@@ -486,11 +476,11 @@ GDP.UI = function (args) {
 						// User chose an option which has children
 						subOptions = $chosenOption.data('suboptions');
 						$childSelectControl.empty();
-						$childSelectControl.append($('<option />').attr({
+						var emptyOption = $('<option />').attr({
 							'value': '',
 							'disabled': true,
 							'selected': true
-						}).html(GDP.CONFIG.constants.DATASET_SELECT));
+						}).html(GDP.CONFIG.constants.DATASET_SELECT);
 
 						for (subOptionsChild in subOptions) {
 							if (subOptions.hasOwnProperty(subOptionsChild) && subOptionsChild !== 'ident') {
@@ -503,7 +493,13 @@ GDP.UI = function (args) {
 									);
 							}
 						}
-
+						var sel = $childSelectControl;
+						var opts_list = sel.find('option');
+						opts_list.sort(function(a, b) {
+						    return $(a).text() > $(b).text(); 
+						});
+						$childSelectControl.append(emptyOption);
+						$childSelectControl.append(opts_list);
 						$childSelectRow.fadeIn();
 					} else {
 						// Chosen option has no children
@@ -540,13 +536,11 @@ GDP.UI = function (args) {
 				'value': '',
 				'disabled': true,
 				'selected': true
-			}).html(GDP.CONFIG.constants.DATASET_SELECT),
+				}).html(GDP.CONFIG.constants.DATASET_SELECT),
 				currentlySelectedOption = $datasetDropDown.val(),
 				currentlySelectedChildOption = $datasetDropDownChild.val();
 
 			$datasetDropDown.empty();
-			$datasetDropDown.append(emptyOption);
-
 			$childSelectRow.fadeOut();
 			$datasetDropDownChild.empty();
 
@@ -558,14 +552,20 @@ GDP.UI = function (args) {
 					$datasetDropDown.append(option);
 				}
 			}
-
+			var sel = $datasetDropDown;
+			var opts_list = sel.find('option');
+			opts_list.sort(function(a, b) {
+			    return $(a).text() > $(b).text() ? 1 : -1; 
+			});
+			
+			$datasetDropDown.append(emptyOption);
+			$datasetDropDown.append(opts_list);
 			$datasetDropDown.val(currentlySelectedOption);
 			$datasetDropDown.trigger('change');
 			if (currentlySelectedChildOption && $datasetDropDownChild.children().length > 0) {
 				$datasetDropDownChild.val(currentlySelectedChildOption);
 				$datasetDropDownChild.trigger('change');
 			}
-
 
 			if ($cswGroupRow.css('display') === 'none') {
 				$cswGroupRow.fadeIn();

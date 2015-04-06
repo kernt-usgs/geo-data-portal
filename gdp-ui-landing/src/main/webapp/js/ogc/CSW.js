@@ -12,7 +12,7 @@ GDP.CSW = function (args) {
 	this.url = args.url;
 	this.proxy = args.proxy;
 	this.capabilitiesDocument = args.capabilitiesDocument;
-	this.cswClient = new CSWClient(this.url, this.proxy);
+	this.cswClient = new CSWClient(this.url);
 	/**
 	 * Create a CSW GetCapabilities request
 	 * @param args {Object}
@@ -26,7 +26,6 @@ GDP.CSW = function (args) {
 		},
 		url = args.url || this.url,
 			scbInd,
-			proxy = args.proxy || this.proxy,
 			capabilitiesDocument = args.capabilitiesDocument || this.capabilitiesDocument,
 			scope = args.scope || this,
 			me = this;
@@ -38,7 +37,7 @@ GDP.CSW = function (args) {
 			}
 		} else {
 			OpenLayers.Request.GET({
-				url: proxy ? proxy + url : url,
+				url: url,
 				params: {
 					request: "GetCapabilities",
 					service: "CSW",
@@ -247,7 +246,7 @@ GDP.CSW = function (args) {
 			});
 
 			getRecordsResponse.priv = OpenLayers.Request.POST({
-				url: this.proxy + this.url,
+				url: this.url,
 				data: getRecRequest,
 				success: function (response) {
 					var cswGetRecRespObj = cswGetRecFormat.read(response.responseXML || response.responseText),
@@ -299,7 +298,7 @@ GDP.CSW = function (args) {
 				});
 
 			OpenLayers.Request.POST({
-				url: this.proxy + this.url,
+				url: this.url,
 				data: getDomainReqData,
 				success: function (request) {
 					var cswGetDomainResponseObject = cswGetDomainFormat.read(request.responseXML || request.responseText),

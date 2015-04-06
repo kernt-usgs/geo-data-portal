@@ -36,7 +36,7 @@
   position: relative; overflow:	hidden; width: 100%; height: 72px;
 	margin: 1px 0; padding: 0;
 	color: #fff; background-color: #141414;
-	background-image: url(http://infotrek.er.usgs.gov/docs/nawqa_www/nawqa_public_template/assets/drought-flood_banner.jpg); /* Modify for alternate banner images */
+	background-image: url(http://cida.usgs.gov/nawqa_www/nawqa_public_template/assets/drought-flood_banner.jpg); /* Modify for alternate banner images */
 	background-position: 178px 0px;
 	background-repeat: no-repeat;
 }
@@ -796,7 +796,7 @@ ul.news li {
 .area-3 .hfeed .hentry .headline
 {
 	display: block; padding-left: 16px;
-	background: url(http://infotrek.er.usgs.gov/docs/usgs_vis_std/assets/dotted_bullet.gif);
+	background: url(http://cida.usgs.gov/usgs_vis_std/assets/dotted_bullet.gif);
 	background-position: 4px .2em;
 	background-repeat: no-repeat;
 }
@@ -806,7 +806,7 @@ ul.news li {
 .area-3 .hfeed .urgent .headline
 {
 	background-position: left top;
-	background-image: url(http://infotrek.er.usgs.gov/docs/usgs_vis_std/assets/exclamation.gif);
+	background-image: url(http://cida.usgs.gov/usgs_vis_std/assets/exclamation.gif);
 }
 
 
