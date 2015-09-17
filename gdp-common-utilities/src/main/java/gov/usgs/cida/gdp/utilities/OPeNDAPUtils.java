@@ -2,6 +2,10 @@ package gov.usgs.cida.gdp.utilities;
 
 import gov.usgs.cida.gdp.utilities.exception.OPeNDAPUtilException;
 import gov.usgs.cida.gdp.utilities.exception.OPeNDAPUtilExceptionID;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -73,6 +77,8 @@ public class OPeNDAPUtils {
     public static final String REQUEST_PROTO = "http:";
     public static final List<String> REQUIRED_ATTRIBUTES = Arrays
             .asList("grid_mapping");
+
+    public static final String DESCRIPTION_HEADER = "Content-Description";
 
     /**
      * Will return an OPeNDAP URI based on the NetCDF information passed in.
@@ -426,4 +432,28 @@ public class OPeNDAPUtils {
 
         return results;
     }
+
+    public static boolean isOPeNDAP(URI uri) {
+        boolean result = false;
+        if (uri != null) {
+            try {
+                URI dodsInfo = new URI(uri.toString() + ".info");
+                HttpURLConnection conn = HTTPUtils.openHttpConnection(dodsInfo.toURL(), "HEAD");
+                Map<String, List<String>> headers = conn.getHeaderFields();
+                if (headers.containsKey(DESCRIPTION_HEADER)) {
+                    List<String> dods = headers.get(DESCRIPTION_HEADER);
+                    if (dods.size() > 0) {
+                        String description = dods.get(0);
+                        if ("dods-info".equals(description) || "dods_info".equals(description)) {
+                            result = true;
+                        }
+                    }
+                }
+            } catch (IOException | URISyntaxException ex) {
+                throw new IllegalArgumentException("URI is not a valid dataset", ex);
+            }
+        }
+        return result;
+    }
+
 }
