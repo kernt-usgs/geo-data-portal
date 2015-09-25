@@ -104,6 +104,10 @@ GDP.LayerController = Ext.extend(Ext.util.Observable, {
     getCurrentFOI : function () {
         return this.currentFOI;
     },
+	showHistoricalPeriod : false,
+	getShowHistoricalPeriod : function() {
+		return this.showHistoricalPeriod;
+	},
     showChange : false,
     getShowChange : function () {
         return this.showChange;
@@ -168,6 +172,10 @@ GDP.LayerController = Ext.extend(Ext.util.Observable, {
         LOG.debug('LayerController:requestApplicationResize: Expand: ' + expand);
         this.fireEvent('application-resize', expand);
     },
+	onShowHistoricalPeriod : function(pressed) {
+		this.showHistoricalPeriod = pressed;
+		this.fireEvent('changescenario');
+	},
     onChangeProductToggled : function (pressed) {
         this.showChange = pressed;
         this.fireEvent('changescenario');

@@ -358,6 +358,7 @@ GDP.DatasetConfigPanel = Ext.extend(Ext.Panel, {
 			url = GDP.PROXY_PREFIX + record.get("wms");
 		}
 
+
         this.gcmStore.removeAll();
         this.gcmStore.loadData(record.get("gcms"), true);
 
@@ -365,6 +366,12 @@ GDP.DatasetConfigPanel = Ext.extend(Ext.Panel, {
 
         if (this.controller.getShowChange()) {
             this.capabilitiesStore.proxy.setApi(Ext.data.Api.actions.read, url.replace('der_periods','der_diff'));
+            this.capabilitiesStore.load();
+		} else if (this.controller.getShowHistoricalPeriod()) {
+			var scenario = this.controller.getScenario().get('scenario').toLowerCase();
+			this.controller.scenario.set('scenario', scenario);
+			this.capabilitiesStore.proxy.setApi(Ext.data.Api.actions.read,
+				url.replace('der_periods_' + scenario, 'hist_der_periods'));
             this.capabilitiesStore.load();
         } else {
             this.capabilitiesStore.proxy.setApi(Ext.data.Api.actions.read, url);
@@ -529,8 +536,15 @@ GDP.DatasetConfigPanel = Ext.extend(Ext.Panel, {
     capsFindBy : function (record, id) {
         LOG.debug("DatasetConfigPanel: capsFindBy()");
         var gcm = this.controller.getGcm();
+		var layerName = record.get('layer').name;
         if (gcm) {
-            return (gcm.get("gcm") === record.get('layer').name);
+			if (this.controller.getShowHistoricalPeriod()) {
+				return layerName.indexOf(gcm.get('gcm')) > -1
+				return (gcm.get('gcm').indexOf(layerName)) > -1;
+			}
+			else {
+				return (gcm.get("gcm") === layerName);
+			}
         }
         return false;
     },

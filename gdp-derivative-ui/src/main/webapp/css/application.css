@@ -31,7 +31,7 @@
     color: #15428B;
 }
 
-#changeProdToggleButton button {
+#changeProdToggleButton button, #showHistoricalPeriodButton button {
     font-weight: bold;
     color: #15428B;
 }

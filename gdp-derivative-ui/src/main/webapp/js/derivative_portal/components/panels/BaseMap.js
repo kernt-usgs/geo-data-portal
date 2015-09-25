@@ -10,6 +10,7 @@ GDP.BaseMap = Ext.extend(GeoExt.MapPanel, {
     DEFAULT_LEGEND_X : 110,
     DEFAULT_LEGEND_Y : 293,
 
+	showHistoricalPeriodButton : undefined,
 	changeProdToggleButton : undefined,
     currentLayer : undefined,
     baseLayerCombo : undefined,
@@ -86,6 +87,26 @@ GDP.BaseMap = Ext.extend(GeoExt.MapPanel, {
                 scope : this
             }
         });
+		this.showHistoricalPeriodButton = new Ext.Button({
+			itemId : 'showHistoricalPeriodButton',
+			id : 'showHistoricalPeriodButton',
+			text : 'Show Historical Period',
+			ref : 'show-historical-period-toggle-button',
+			pressed : false,
+			enableToggle : true,
+			listeners : {
+				click : function(button) {
+					if (button.pressed) {
+						this.changeProdToggleButton.disable();
+					}
+					else {
+						this.changeProdToggleButton.enable();
+					}
+					this.layerController.onShowHistoricalPeriod(button.pressed)
+				},
+				scope : this
+			}
+		});
         this.changeProdToggleButton = new Ext.Button({
             itemId : 'changeProdToggleButton',
             id : 'changeProdToggleButton',
@@ -95,6 +116,12 @@ GDP.BaseMap = Ext.extend(GeoExt.MapPanel, {
             enableToggle: true,
             listeners : {
                 click : function (button) {
+					if (button.pressed) {
+						this.showHistoricalPeriodButton.disable();
+					}
+					else {
+						this.showHistoricalPeriodButton.enable();
+					}
                     this.layerController.onChangeProductToggled(button.pressed);
                 },
                 scope : this
@@ -206,6 +233,7 @@ GDP.BaseMap = Ext.extend(GeoExt.MapPanel, {
 				this.infoButton,
 				this.expandContractButton,
 				'->',
+				this.showHistoricalPeriodButton,
 				this.changeProdToggleButton,
 				' ',
 				'-',
@@ -535,6 +563,7 @@ GDP.BaseMap = Ext.extend(GeoExt.MapPanel, {
             this.clearLayers();
 
             var params = {};
+
             Ext.apply(params, this.layerController.getAllDimensions());
             this.replaceLayer(layer, params);
         }
@@ -654,7 +683,10 @@ GDP.BaseMap = Ext.extend(GeoExt.MapPanel, {
                 styles : (params.styles) ? params.styles : this.layerController.getLegendRecord().id
             }, params);
 
-
+			if (this.layerController.getShowHistoricalPeriod()) {
+				var scenario = this.layerController.getScenario().get('scenario');
+				params.layers = copy.get('name').replace(scenario, 'historical');
+			}
             copy.get('layer').displayInLayerSwitcher = false;
             copy.get('layer').mergeNewParams(params);
             copy.getLayer().setOpacity(this.layerController.getLayerOpacity());
