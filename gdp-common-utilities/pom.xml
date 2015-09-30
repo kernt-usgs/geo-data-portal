@@ -84,5 +84,9 @@
 			<artifactId>easymock</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>gov.usgs.cida</groupId>
+			<artifactId>proxy-utils</artifactId>
+		</dependency>
 	</dependencies>
 </project>
