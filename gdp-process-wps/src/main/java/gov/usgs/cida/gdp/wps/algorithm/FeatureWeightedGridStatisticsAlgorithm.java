@@ -30,7 +30,8 @@ import gov.usgs.cida.gdp.coreprocessing.Delimiter;
 import gov.usgs.cida.gdp.coreprocessing.analysis.grid.FeatureCoverageWeightedGridStatistics;
 import gov.usgs.cida.gdp.coreprocessing.analysis.grid.Statistics1DWriter.GroupBy;
 import gov.usgs.cida.gdp.coreprocessing.analysis.grid.Statistics1DWriter.Statistic;
-import gov.usgs.cida.gdp.wps.algorithm.heuristic.IntersectionGeometrySizeAlgorithmHeuristic;
+import gov.usgs.cida.gdp.wps.algorithm.heuristic.FWGSGeometrySizeAlgorithmHeuristic;
+import gov.usgs.cida.gdp.wps.algorithm.heuristic.FWGSOutputSizeAlgorithmHeuristic;
 import gov.usgs.cida.gdp.wps.algorithm.heuristic.exception.AlgorithmHeuristicException;
 import gov.usgs.cida.gdp.wps.binding.CSVFileBinding;
 import gov.usgs.cida.gdp.wps.binding.GMLStreamingFeatureCollectionBinding;
@@ -64,7 +65,8 @@ public class FeatureWeightedGridStatisticsAlgorithm extends AbstractAnnotatedAlg
 
     private File output;
     
-    private IntersectionGeometrySizeAlgorithmHeuristic geometrySizeHeuristic = new IntersectionGeometrySizeAlgorithmHeuristic();
+    private FWGSGeometrySizeAlgorithmHeuristic geometrySizeHeuristic = new FWGSGeometrySizeAlgorithmHeuristic();
+    private FWGSOutputSizeAlgorithmHeuristic outputSizeHeuristic = new FWGSOutputSizeAlgorithmHeuristic();
 
     @ComplexDataInput(
             identifier=GDPAlgorithmConstants.FEATURE_COLLECTION_IDENTIFIER,
@@ -74,6 +76,7 @@ public class FeatureWeightedGridStatisticsAlgorithm extends AbstractAnnotatedAlg
     public void setFeatureCollection(FeatureCollection featureCollection) {
         this.featureCollection = featureCollection;
         this.geometrySizeHeuristic.setFeatureCollection(featureCollection);
+        this.outputSizeHeuristic.setFeatureCollection(featureCollection);
     }
 
     @LiteralDataInput(
@@ -83,6 +86,7 @@ public class FeatureWeightedGridStatisticsAlgorithm extends AbstractAnnotatedAlg
     public void setFeatureAttributeName(String featureAttributeName) {
         this.featureAttributeName = featureAttributeName;
         this.geometrySizeHeuristic.setAttributeName(featureAttributeName);
+        this.outputSizeHeuristic.setAttributeName(featureAttributeName);
     }
 
     @LiteralDataInput(
@@ -110,6 +114,7 @@ public class FeatureWeightedGridStatisticsAlgorithm extends AbstractAnnotatedAlg
     public void setRequireFullCoverage(boolean requireFullCoverage) {
         this.requireFullCoverage = requireFullCoverage;
         this.geometrySizeHeuristic.setRequireFullCoverage(requireFullCoverage);
+        this.outputSizeHeuristic.setRequireFullCoverage(requireFullCoverage);
     }
 
     @LiteralDataInput(
@@ -220,7 +225,27 @@ public class FeatureWeightedGridStatisticsAlgorithm extends AbstractAnnotatedAlg
 		} catch (AlgorithmHeuristicException e) {
 			log.error("Heuristic Error: ", e);
             addError("Heuristic Error: " + e.getMessage());
-		}    
+		}
+        
+        /*
+         * Geometry size heuristic passed, lets do the output size next
+         */
+        Range outputTimeRange = GDPAlgorithmUtil.generateTimeRange(
+        		heuristicGridDatatype,
+                timeStart,
+                timeEnd);
+        outputSizeHeuristic.setGridDataType(heuristicGridDatatype);
+        outputSizeHeuristic.setOutputTimeRange(outputTimeRange);
+        try {
+			if(!outputSizeHeuristic.validated()) {
+				log.error(outputSizeHeuristic.getError());
+				addError(outputSizeHeuristic.getError());
+				return;
+			}
+		} catch (AlgorithmHeuristicException e) {
+			log.error("Heuristic Error: ", e);
+            addError("Heuristic Error: " + e.getMessage());
+		}
         
         BufferedWriter writer = null;
         try {

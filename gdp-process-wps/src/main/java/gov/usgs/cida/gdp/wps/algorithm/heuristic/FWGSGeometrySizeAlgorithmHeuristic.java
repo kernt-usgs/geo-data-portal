@@ -15,8 +15,8 @@ import gov.usgs.cida.gdp.wps.algorithm.heuristic.exception.AlgorithmHeuristicExc
 import ucar.ma2.Range;
 import ucar.nc2.dt.GridDatatype;
 
-public class IntersectionGeometrySizeAlgorithmHeuristic implements AlgorithmHeuristic {
-static private org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(IntersectionGeometrySizeAlgorithmHeuristic.class);
+public class FWGSGeometrySizeAlgorithmHeuristic implements AlgorithmHeuristic {
+static private org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(FWGSGeometrySizeAlgorithmHeuristic.class);
     
     public static final long MAXIMUM_GRID_SIZE = 2147483648L;     // 2GB
     public static final int GRID_MULTIPLIER = 4;
@@ -29,14 +29,14 @@ static private org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(Inter
     private String result = "";
     private long resultingSize = 0;
     
-    public IntersectionGeometrySizeAlgorithmHeuristic() {
+    public FWGSGeometrySizeAlgorithmHeuristic() {
         this.gridDataType = null;
         this.featureCollection = null;
         this.attributeName = "";
         this.requireFullCoverage = false;
     }
     
-    public IntersectionGeometrySizeAlgorithmHeuristic(FeatureCollection<SimpleFeatureType, SimpleFeature> featureCollection,
+    public FWGSGeometrySizeAlgorithmHeuristic(FeatureCollection<SimpleFeatureType, SimpleFeature> featureCollection,
     		String attributeName, boolean requireFullCoverage) {
         this.gridDataType = null;
         this.featureCollection = featureCollection;
@@ -44,7 +44,7 @@ static private org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(Inter
         this.requireFullCoverage = requireFullCoverage;
     }
     
-    public IntersectionGeometrySizeAlgorithmHeuristic(GridDatatype gridDataType, FeatureCollection<SimpleFeatureType, SimpleFeature> featureCollection,
+    public FWGSGeometrySizeAlgorithmHeuristic(GridDatatype gridDataType, FeatureCollection<SimpleFeatureType, SimpleFeature> featureCollection,
     		String attributeName, boolean requireFullCoverage) {
         this.gridDataType = gridDataType;
         this.featureCollection = featureCollection;
@@ -64,7 +64,7 @@ static private org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(Inter
         if( !(gt == GridType.ZYX || gt == GridType.TZYX || gt == GridType.YX || gt == GridType.TYX) ) {
         	this.result = "General Exception thrown";
             String msg = this.result + ":\nincompatible grid dimensions";
-            throw new AlgorithmHeuristicException(AlgorithmHeuristicExceptionID.GENERAL_EXCEPTION, "IntersectionGeometrySizeAlgorithmHeuristic", "validated", msg);
+            throw new AlgorithmHeuristicException(AlgorithmHeuristicExceptionID.GENERAL_EXCEPTION, "FWGSGeometrySizeAlgorithmHeuristic", "validated", msg);
         }
 
         Range[] ranges = null;
@@ -76,7 +76,7 @@ static private org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(Inter
 		} catch (Exception e) {
             this.result = "General Exception thrown";
             String msg = this.result + ":\n" + e.getMessage();
-            throw new AlgorithmHeuristicException(AlgorithmHeuristicExceptionID.GENERAL_EXCEPTION, "IntersectionGeometrySizeAlgorithmHeuristic", "validated", msg);
+            throw new AlgorithmHeuristicException(AlgorithmHeuristicExceptionID.GENERAL_EXCEPTION, "FWGSGeometrySizeAlgorithmHeuristic", "validated", msg);
         }
 		
         try {
@@ -84,7 +84,7 @@ static private org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(Inter
 		} catch (Exception e) {
             this.result = "General Exception thrown";
             String msg = this.result + ":\n" + e.getMessage();
-            throw new AlgorithmHeuristicException(AlgorithmHeuristicExceptionID.GENERAL_EXCEPTION, "IntersectionGeometrySizeAlgorithmHeuristic", "validated", msg);
+            throw new AlgorithmHeuristicException(AlgorithmHeuristicExceptionID.GENERAL_EXCEPTION, "FWGSGeometrySizeAlgorithmHeuristic", "validated", msg);
         }
 
         GridCellCoverageByIndex coverageByIndex = null;
@@ -96,7 +96,7 @@ static private org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(Inter
 		} catch (Exception e) {
             this.result = "General Exception thrown";
             String msg = this.result + ":\n" + e.getMessage();
-            throw new AlgorithmHeuristicException(AlgorithmHeuristicExceptionID.GENERAL_EXCEPTION, "IntersectionGeometrySizeAlgorithmHeuristic", "validated", msg);
+            throw new AlgorithmHeuristicException(AlgorithmHeuristicExceptionID.GENERAL_EXCEPTION, "FWGSGeometrySizeAlgorithmHeuristic", "validated", msg);
         }
 
         List<Object> attributeList = coverageByIndex.getAttributeValueList();
@@ -138,7 +138,7 @@ static private org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(Inter
         this.maximumSizeConfigured = maximumSizeConfigured;
     }
 
-    public void setGridDataType(GridDatatype gridDataType) {
+    public void setGridDataType(final GridDatatype gridDataType) {
         this.gridDataType = gridDataType;
     }
 
@@ -146,7 +146,7 @@ static private org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(Inter
 		this.attributeName = attributeName;
 	}
 
-	public void setFeatureCollection(FeatureCollection<SimpleFeatureType, SimpleFeature> featureCollection) {
+	public void setFeatureCollection(final FeatureCollection<SimpleFeatureType, SimpleFeature> featureCollection) {
         this.featureCollection = featureCollection;
     }
 
@@ -156,10 +156,10 @@ static private org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(Inter
 
     private boolean isInitialized() throws AlgorithmHeuristicException {
         if (this.gridDataType == null) {
-            throw new AlgorithmHeuristicException(AlgorithmHeuristicExceptionID.UNINITIALIZED_EXCEPTION, "IntersectionGeometrySizeAlgorithmHeuristic", "validated", "GridDataType has not been initialized!");
+            throw new AlgorithmHeuristicException(AlgorithmHeuristicExceptionID.UNINITIALIZED_EXCEPTION, "FWGSGeometrySizeAlgorithmHeuristic", "validated", "GridDataType has not been initialized!");
         }
         if (this.featureCollection == null) {
-            throw new AlgorithmHeuristicException(AlgorithmHeuristicExceptionID.UNINITIALIZED_EXCEPTION, "IntersectionGeometrySizeAlgorithmHeuristic", "validated", "FeatureCollection has not been initialized!");
+            throw new AlgorithmHeuristicException(AlgorithmHeuristicExceptionID.UNINITIALIZED_EXCEPTION, "FWGSGeometrySizeAlgorithmHeuristic", "validated", "FeatureCollection has not been initialized!");
         }
         
         return true;

@@ -77,7 +77,7 @@ public class IntersectionGeometrySizeAlgorithmHeuristicTest {
         
         GridDatatype heuristicGridDatatype = prismGridDataSet.findGridDatatype(gridVariableList.get(0));
         
-        IntersectionGeometrySizeAlgorithmHeuristic geometrySizeHeuristic = new IntersectionGeometrySizeAlgorithmHeuristic(heuristicGridDatatype, 
+        FWGSGeometrySizeAlgorithmHeuristic geometrySizeHeuristic = new FWGSGeometrySizeAlgorithmHeuristic(heuristicGridDatatype, 
                 featureCollection, "STATE", false);
         
         /*
