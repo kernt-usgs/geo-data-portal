@@ -2,28 +2,39 @@ package gov.usgs.cida.gdp.urs;
 
 import gov.usgs.cida.gdp.constants.AppConstant;
 import java.io.IOException;
-import java.net.CookieHandler;
-import java.net.CookieManager;
-import java.net.CookiePolicy;
-import java.net.HttpURLConnection;
-import java.net.URISyntaxException;
+import java.io.InputStream;
 import java.net.URL;
 import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
-import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
-import org.apache.http.StatusLine;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CookieStore;
+import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpHead;
-import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.conn.ClientConnectionManager;
+import org.apache.http.conn.scheme.PlainSocketFactory;
+import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.conn.scheme.SchemeRegistry;
+import org.apache.http.conn.ssl.SSLSocketFactory;
+import org.apache.http.conn.ssl.TrustStrategy;
+import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpParams;
 import org.slf4j.Logger;
@@ -36,21 +47,30 @@ import org.slf4j.LoggerFactory;
 public class URSLogin {
 
 	private static final Logger log = LoggerFactory.getLogger(URSLogin.class);
-	// WWW-Authenticate => [Basic realm="Please enter your Earthdata Login username and password"]
-	private String encodedBasicLogin;
-	private String ursHost;
+
+	private static final int SSL_PORT = 443;
+	private CredentialsProvider credentialStore;
+	private CookieStore cookieStore;
+	private KeyStore trustStore;
 
 	public URSLogin() {
 		this(AppConstant.URS_USERNAME.toString(),
-				AppConstant.URS_PASSWORD.toString().toCharArray(),
+				AppConstant.URS_PASSWORD.toString(),
 				AppConstant.URS_HOST.toString());
 	}
 
-	public URSLogin(String username, char[] password, String ursHost) {
-		this.encodedBasicLogin = getAuthorizationHeader(username, password);
-		this.ursHost = ursHost;
-		CookieHandler.setDefault(
-				new CookieManager(null, CookiePolicy.ACCEPT_ALL));
+	public URSLogin(String username, String password, String ursHost) {
+		this.credentialStore = new BasicCredentialsProvider();
+		this.credentialStore.setCredentials(new AuthScope(ursHost, SSL_PORT),
+				new UsernamePasswordCredentials(username, password));
+		this.cookieStore = new BasicCookieStore();
+		try {
+			this.trustStore = KeyStore.getInstance("JKS");
+			initSocketFactory(trustStore);
+		} catch (KeyStoreException ex) {
+			log.error("Could not get access to keystore");
+			this.trustStore = null;
+		}
 	}
 
 	public boolean checkResource(URL resource) {
@@ -61,31 +81,29 @@ public class URSLogin {
 			int redirects = 0;
 			while (statusCode == 302 && redirects < 10) {
 				redirects++;
-				URL url = new URL(currentResource);
-				HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-				if (connection instanceof HttpsURLConnection) {
-					((HttpsURLConnection)connection).setSSLSocketFactory(trustAll().getSocketFactory());
-				}
-				connection.setRequestMethod("GET");
-				connection.setInstanceFollowRedirects(false);
-				connection.setUseCaches(false);
-				
-				if (this.ursHost.equals(url.getHost())) {
-					connection.setRequestProperty("Authorization", encodedBasicLogin);
-				}
-				
-				statusCode = connection.getResponseCode();
-				
+
+				HttpClient client = getClient();
+				HttpGet get = new HttpGet(currentResource);
+
+				HttpResponse response = client.execute(get);
+
+				statusCode = response.getStatusLine().getStatusCode();
+
 				if (statusCode == 302) {
-					currentResource = connection.getHeaderField("Location");
+					Header location = response.getLastHeader("Location");
+					if (location != null) {
+						currentResource = location.getValue();
+					} else {
+						throw new IllegalStateException("Received redirect without Location header");
+					}
 				}
-				connection.disconnect();
 			}
-			
+
 			if (statusCode == 200) {
 				loggedIn = true;
 			}
-		} catch (IOException | NoSuchAlgorithmException | KeyManagementException ex) {
+		} catch (IOException | IllegalStateException | KeyManagementException | CertificateException |
+				KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException ex) {
 			log.error("Error getting resource", ex);
 		}
 		return loggedIn;
@@ -96,10 +114,30 @@ public class URSLogin {
 		return "Basic " + Base64.getEncoder().encodeToString(basicLogin.getBytes());
 	}
 
-	private HttpClient getClient() {
+	private HttpClient getClient() throws NoSuchAlgorithmException, KeyManagementException, KeyStoreException, UnrecoverableKeyException, IOException, CertificateException {
 		HttpParams params = new BasicHttpParams();
 		params.setParameter("http.protocol.handle-redirects", false);
-		HttpClient client = new DefaultHttpClient(params);
+		
+		//this.trustStore.load(null, null);
+		
+		SSLSocketFactory socketFactory = new SSLSocketFactory(new TrustStrategy() {
+
+			@Override
+			public boolean isTrusted(X509Certificate[] xcs, String string) throws CertificateException {
+				return true;
+			}
+			
+		}, SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+		//socketFactory.setHostnameVerifier(SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+		
+		SchemeRegistry registry = new SchemeRegistry();
+		registry.register(new Scheme("http", 80, new PlainSocketFactory()));
+		registry.register(new Scheme("https", 443, socketFactory));
+
+		ClientConnectionManager ccm = new ThreadSafeClientConnManager(params, registry);
+		DefaultHttpClient client = new DefaultHttpClient(ccm, params);
+		client.setCookieStore(cookieStore);
+		client.setCredentialsProvider(credentialStore);
 		return client;
 	}
 
@@ -125,4 +163,26 @@ public class URSLogin {
 		}}, new SecureRandom());
 		return context;
 	}
+	
+	private SSLSocketFactory initSocketFactory(KeyStore trustStore) {
+		//SSLContexts.custom()
+		SSLSocketFactory factory = null;
+		char[] password = "changeit".toCharArray();
+		try (InputStream keystoreFile = this.getClass().getClassLoader().getResourceAsStream("URStrust.pks")) {
+			trustStore.load(keystoreFile, password);
+			SSLContext ssl = SSLContext.getInstance("TLS");
+			KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
+			TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
+			kmf.init(trustStore, password);
+			tmf.init(trustStore);
+//			ssl.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
+//			factory = new SSLSocketFactory(trustStore)
+//			
+		} catch (IOException | CertificateException | NoSuchAlgorithmException |
+				KeyStoreException | UnrecoverableKeyException ex) {
+			throw new RuntimeException("Could not load keystore for SSL");
+		}
+		return factory;
+	}
+	
 }
