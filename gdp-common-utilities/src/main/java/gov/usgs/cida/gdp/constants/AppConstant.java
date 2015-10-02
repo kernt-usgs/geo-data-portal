@@ -161,7 +161,7 @@ public enum AppConstant {
                 result = "test";
             }
             // URS_PASSWORD
-            if (input.equals("gdp.login.urs.login")) {
+            if (input.equals("gdp.login.urs.password")) {
                 result = "test";
             }
             // URS_ENDPOINT
