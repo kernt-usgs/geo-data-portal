@@ -22,61 +22,61 @@
 
 			"Cooling Degree Days" : "This is a derivative data product produced from a 1/8th degree daily downscaled climate projection dataset. Cooling degree days are represented on the original 1/8th degree grid. Precalculated threshold is: 65 degrees Fahrenheit.",
 
-			"Growing Season Length" : "This is a derivative data product produced from a 1/8th degree daily downscaled climate projection dataset. Growing season length is represented on the original 1/8th degree grid. Precalculated threshold is: 32 degrees Fahrenheit."
+			"Growing Season Length" : "This is a derivative data product produced from a 1/8th degree daily downscaled climate projection dataset. Growing season length is represented on the original 1/8th degree grid. Precalculated threshold is: 41 degrees Fahrenheit. Note that this was calculated using the climdex growing season length algorithm."
 
 			},
 
 			"scenarios" : {
 
-			"RCP85" : "Very High: The A1FI scenario describes a future world of very rapid globalization and economic growth with Fossil Intensive (FI) energy sources. The A1FI scenario is displayed by default because it most closely matches the current trajectory of population and emissions growth.",
+			"RCP85" : "Very High: Rising radiative forcing pathway leading to 8.5 W/m2 in 2100",
 
-			"RCP60" : "High: The A2 scenario describes a very heterogeneous world. Economic development is primarily regionally oriented and per capita economic growth is slower than other scenarios.",
+			"RCP60" : "High: Stabilization without overshoot pathway to 6 W/m2 at stabilization after 2100",
 
-			"RCP45" : "Medium: The A1B scenario describes a future world of very rapid globalization and economic growth with a Balanced (B) use of energy sources.",
+			"RCP45" : "Medium: Stabilization without overshoot pathway to 4.5 W/m2 at stabilization after 2100",
 
-			"RCP26" : "Low: The B1 scenario describes a future world of very rapic globalization rapid change in economic structures toward the introduction of clean and resource-efficient technologies."
+			"RCP26" : "Low: Peak in radiative forcing at ~ 3 W/m2 before 2100 and decline"
 
 			},
 
 			"gcms" : {
 
-            "ACCESS1-0" : "placeholder",
+            "ACCESS1-0" : "Commonwealth Scientific and Industrial Research Organization (CSIRO) and Bureau of Meteorology (BOM), Australia",
             
-            "bcc-csm1-1" : "placeholder",
+            "bcc-csm1-1" : "Beijing Climate Center, China Meteorological Administration",
             
-            "BNU-ESM" : "placeholder",
+            "BNU-ESM" : "College of Global Change and Earth System Science, Beijing Normal University",
             
-            "CanESM2" : "placeholder",
+            "CanESM2" : "Canadian Centre for Climate Modelling and Analysis",
             
-            "CCSM4" : "placeholder",
+            "CCSM4" : "University of Miami - RSMAS",
             
-            "CESM1-BGC" : "placeholder",
+            "CESM1-BGC" : "Community Earth System Model Contributors",
             
-            "CSIRO-Mk3-6-0" : "placeholder",
+            "CSIRO-Mk3-6-0" : "Commonwealth Scientific and Industrial Research Organization in collaboration with Queensland Climate Change Centre of Excellence",
             
-            "GFDL-CM3" : "placeholder",
+            "GFDL-CM3" : "NOAA Geophysical Fluid Dynamics Laboratory",
             
-            "GFDL-ESM2G" : "placeholder",
+            "GFDL-ESM2G" : "NOAA Geophysical Fluid Dynamics Laboratory",
             
-            "GFDL-ESM2M" : "placeholder",
+            "GFDL-ESM2M" : "NOAA Geophysical Fluid Dynamics Laboratory",
             
-            "inmcm4" : "placeholder",
+            "inmcm4" : "Institute for Numerical Mathematics",
             
-            "IPSL-CM5A-LR" : "placeholder",
+            "IPSL-CM5A-LR" : "Institut Pierre-Simon Laplace",
             
-            "IPSL-CM5A-MR" : "placeholder",
+            "IPSL-CM5A-MR" : "Institut Pierre-Simon Laplace",
             
-            "MIROC-ESM" : "placeholder",
+            "MIROC-ESM" : "Japan Agency for Marine-Earth Science and Technology, Atmosphere and Ocean Research Institute (The University of Tokyo), and National Institute for Environmental Studies",
             
-            "MIROC-ESM-CHEM" : "placeholder",
+            "MIROC-ESM-CHEM" : "Japan Agency for Marine-Earth Science and Technology, Atmosphere and Ocean Research Institute (The University of Tokyo), and National Institute for Environmental Studies",
             
-            "MIROC5" : "placeholder",
+            "MIROC5" : "Atmosphere and Ocean Research Institute (The University of Tokyo), National Institute for Environmental Studies, and Japan Agency for Marine-Earth Science and Technology",
             
-            "MPI-ESM-LR" : "placeholder",
+            "MPI-ESM-LR" : "Max-Planck-Institut für Meteorologie (Max Planck Institute for Meteorology)",
             
-            "MPI-ESM-MR" : "placeholder",
+            "MPI-ESM-MR" : "Max-Planck-Institut für Meteorologie (Max Planck Institute for Meteorology)",
             
-            "MRI-CGCM3" : "placeholder"
+            "MRI-CGCM3" : "Meteorological Research Institute"
 
 			}
 
@@ -96,7 +96,7 @@
 
 			"helptext" : {
 
-			"plotWindowIntroText" : "This web portal allows visualization and downloading of future climate projections from a group of 'statistically downscaled' global climate models (GCMs). Temperature and precipitation projections from these models have been used to calculate derivative climate indicators that measure the number of days that exceed certain thresholds. You can control what is shown on the map and this plot window using the toolbar on the left.<br><br>All derivative climate indicators on this page have been derived from a suite of downscaled <a href=\"http://www-pcmdi.llnl.gov/ipcc/about_ipcc.php\" target=\"_blank\"> World Climate Research Program Coupled Model Inter-comparison Project 3</a> atmospheric-oceanic general circulation model simulations using four scenarios from the <a href=\"http://sedac.ciesin.columbia.edu/ddc/sres/\" target=\"_blank\">International Panel on Climate Change Special Report on Emissions Scenarios.</a><br><br>The current downscaled data used to derive the indices available in the portal were provided by Hayhoe, Stoner, and Yang. <a href=\"http://cida.usgs.gov/thredds/catalog.html?dataset=cida.usgs.gov/thredds/dcp/conus\" target=\"_blank\">Documentation summarizing this dataset can be found here.</a><br><br><a href=\"http://dx.doi.org/10.1002/joc.3603\" target=\"_blank\">A peer reviewed journal publication summarizing the data used in this application is available here.</a><br><br>Spatial statistics of these derivatives were calculated using the  <a href=\"https://my.usgs.gov/confluence/display/GeoDataPortal/GDP+Home\" target=\"_blank\">USGS Geo Data Portal</a> Feature Weighted Grid Statistics Algorithm. <a href=\"http://pubs.usgs.gov/of/2011/1157/pdf/ofr2011-1157.pdf\" target=\"_blank\">Description and testing of this web processing service algorithm is available here.</a><br><br>Although this program has been used by the U.S. Geological Survey (USGS), no warranty, expressed or implied, is made by the USGS or the U.S. Government as to the accuracy and functioning of the program and related program material nor shall the fact of distribution constitute any such warranty, and no responsibility is assumed by the USGS in connection therewith.<br>",
+			"plotWindowIntroText" : "This web portal allows visualization and downloading of future climate projections from a group of 'statistically downscaled' global climate models (GCMs). Temperature and precipitation projections from these models have been used to calculate derivative climate indicators that measure the number of days that exceed certain thresholds. You can control what is shown on the map and this plot window using the toolbar on the left.<br><br>All derivative climate indicators on this page have been derived from a suite of downscaled <a href=\"http://cmip-pcmdi.llnl.gov/cmip5/\" target=\"_blank\"> World Climate Research Program Coupled Model Inter-comparison Project 5</a> atmospheric-oceanic general circulation model simulations using four scenarios from the <a href=\"http://sedac.ipcc-data.org/ddc/ar5_scenario_process/RCPs.html\" target=\"_blank\">International Panel on Climate Change Special Report on Emissions Scenarios.</a><br><br>The current downscaled data used to derive the indices available in the portal <a href=\"http://gdo-dcp.ucllnl.org/downscaled_cmip_projections/\" target=\"_blank\">are documented in depth here.</a><br><br><a href=\"http://cida.usgs.gov/thredds/catalog.html\" target=\"_blank\">Web services providing these data (BCCA CMIP5) are available here.</a><br><br>Spatial statistics of these derivatives were calculated using the  <a href=\"https://my.usgs.gov/confluence/display/GeoDataPortal/GDP+Home\" target=\"_blank\">USGS Geo Data Portal</a> Feature Weighted Grid Statistics Algorithm. <a href=\"http://pubs.usgs.gov/of/2011/1157/pdf/ofr2011-1157.pdf\" target=\"_blank\">Description and testing of this web processing service algorithm is available here.</a><br><br><a href=\"https://github.com/jjvanderwal/climates\" target=\"_blank\">Climate indices were generated with R code from the climates package.</a><br><br>Although this program has been used by the U.S. Geological Survey (USGS), no warranty, expressed or implied, is made by the USGS or the U.S. Government as to the accuracy and functioning of the program and related program material nor shall the fact of distribution constitute any such warranty, and no responsibility is assumed by the USGS in connection therewith.<br>",
 
 			"plotHelp" : "This plot displays annual time series of the selected derivative climate indicator. Each scenario is summarized using a solid line to represent a climate model ensemble average and a shaded envelope representing the minimum and maximum values indicated by the suite of climate models used to generate the ensemble. You can zoom in and pan through the plot using the left and right handles and by dragging the selected time period below the plot. Data used to generate this plot is available at the Download button on the right.",
 
