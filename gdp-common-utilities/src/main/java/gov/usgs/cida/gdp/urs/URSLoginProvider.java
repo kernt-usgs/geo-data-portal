@@ -51,9 +51,9 @@ public class URSLoginProvider implements HttpLoginProvider {
 	private boolean loggedIn = false;
 
 	public URSLoginProvider() {
-		this(AppConstant.URS_USERNAME.toString(),
-				AppConstant.URS_PASSWORD.toString(),
-				AppConstant.URS_HOST.toString());
+		this(AppConstant.URS_USERNAME.getValue(),
+				AppConstant.URS_PASSWORD.getValue(),
+				AppConstant.URS_HOST.getValue());
 	}
 
 	public URSLoginProvider(String username, String password, String ursHost) {
@@ -97,6 +97,8 @@ public class URSLoginProvider implements HttpLoginProvider {
 						} else {
 							throw new IllegalStateException("Received redirect without Location header");
 						}
+					} else if (statusCode >= 400) {
+						throw new RuntimeException(response.getStatusLine().getReasonPhrase());
 					}
 				} finally {
 					HttpClientUtils.closeQuietly(response);
