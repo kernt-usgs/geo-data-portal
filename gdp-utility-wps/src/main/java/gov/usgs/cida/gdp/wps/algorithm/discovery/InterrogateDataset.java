@@ -1,14 +1,18 @@
 package gov.usgs.cida.gdp.wps.algorithm.discovery;
 
 import gov.usgs.cida.gdp.urs.URSLoginProvider;
-import gov.usgs.cida.gdp.utilities.OPeNDAPUtils;
 import gov.usgs.cida.proxy.registration.HttpLoginProvider;
 import gov.usgs.cida.proxy.registration.ProxyRegistrator;
 import gov.usgs.cida.proxy.registration.ProxyRegistry;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
+import java.util.Enumeration;
+import opendap.dap.BaseType;
+import opendap.dap.DAP2Exception;
+import opendap.dap.DConnect2;
+import opendap.dap.DDS;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.n52.wps.ServerDocument;
@@ -71,7 +75,7 @@ public class InterrogateDataset extends AbstractAnnotatedAlgorithm {
 			
 			provider = new URSLoginProvider();
 			URI checkUri = new URI(uri.toString() + ".info");
-			isURS = provider.checkResource(uri.toURL());
+			isURS = provider.checkResource(checkUri.toURL());
 			
 			// other options could come here
 			
@@ -86,7 +90,6 @@ public class InterrogateDataset extends AbstractAnnotatedAlgorithm {
 					String proxyTo = new URIBuilder().setScheme(uri.getScheme())
 							.setHost(host).setPort(uri.getPort()).build().toString();
 					proxyRegistry.setRegistryEntry(host, proxyTo, provider);
-					path = host;
 				}
 				WPSConfigurationDocumentImpl.WPSConfigurationImpl wpsConfig = WPSConfig.getInstance().getWPSConfig();
 				ServerDocument.Server server = wpsConfig.getServer();
@@ -100,10 +103,9 @@ public class InterrogateDataset extends AbstractAnnotatedAlgorithm {
 						.append("/")
 						.append(REGISTRY_NAME)
 						.append("/")
-						.append(path);
+						.append(host);
 				if (StringUtils.isNotBlank(uri.getPath())) {
-					proxiedPath.append("/")
-						.append(uri.getPath());
+					proxiedPath.append(uri.getPath());
 				}
 				if (StringUtils.isNotBlank(uri.getQuery())) {
 					proxiedPath.append("?")
@@ -114,11 +116,28 @@ public class InterrogateDataset extends AbstractAnnotatedAlgorithm {
 			}
 			
 			
-			if (OPeNDAPUtils.isOPeNDAP(new URI(proxiedPath.toString()))) {
-				response.append("true");
+			if (isURS) {
+				response.append("URS:\ttrue\n\n");
 			} else {
-				response.append("false");
+				response.append("URS:\tfalse\n\n");
 			}
+			try {
+				DConnect2 dodsConnection = new DConnect2(proxiedPath.toString(), true);
+				DDS dds = dodsConnection.getDDS();
+				Enumeration<BaseType> variables = dds.getVariables();
+				response.append("Variables:\n");
+				while (variables.hasMoreElements()) {
+					BaseType var = variables.nextElement();
+					response.append("\t")
+							.append(var.getLongName())
+							.append("\n");
+				}
+			} catch (IOException | DAP2Exception ex) {
+				log.error("Error interrogating OPeNDAP", ex);
+			} finally {
+				
+			}
+			
 		} catch (MalformedURLException | URISyntaxException ex) {
 			throw new RuntimeException("DATASET_URI is invalid", ex);
 		} finally {
