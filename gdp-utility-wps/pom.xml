@@ -129,5 +129,9 @@
 			<groupId>gov.usgs.cida</groupId>
 			<artifactId>dynamicProperties</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>gov.usgs.cida</groupId>
+			<artifactId>proxy-utils</artifactId>
+		</dependency>
 	</dependencies>
 </project>

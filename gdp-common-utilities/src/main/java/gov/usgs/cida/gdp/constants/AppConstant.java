@@ -33,7 +33,12 @@ public enum AppConstant {
     FROM_EMAIL("gdp.communication.from.addr"), // Email address from which to send messages
     TRACK_EMAIL("gdp.communication.bcc.addr"), // Email address to track requests on
     EMAIL_HOST("gdp.communication.smtp.host"), // Email smtp server address
-    EMAIL_PORT("gdp.communication.smtp.port"); // Email smtp port number
+    EMAIL_PORT("gdp.communication.smtp.port"), // Email smtp port number
+
+    URS_USERNAME("gdp.login.urs.username"), // Username to use when passing through to URS resources
+    URS_PASSWORD("gdp.login.urs.password"), // Password to use when passing through to URS resources
+    URS_HOST("gdp.login.urs.host"); // URS hostname that servers redirect to (may need to be list in future)
+
     private String input;
     private String value;
     private final String BASE_LOCATION = System.getProperty("java.io.tmpdir") + File.separator + "GDP";
@@ -149,6 +154,19 @@ public enum AppConstant {
             // TRACK_EMAIL
             if (input.equals("gdp.communication.bcc.addr")) {
                 result = "gdp_data@usgs.gov";
+            }
+
+            // URS_USERNAME
+            if (input.equals("gdp.login.urs.username")) {
+                result = "test";
+            }
+            // URS_PASSWORD
+            if (input.equals("gdp.login.urs.password")) {
+                result = "test";
+            }
+            // URS_ENDPOINT
+            if (input.equals("gdp.login.urs.host")) {
+                result = "uat.urs.earthdata.nasa.gov";
             }
 
             System.setProperty(input, result);
