@@ -50,6 +50,7 @@ public class InterrogateDataset extends AbstractAnnotatedAlgorithm {
 	
 	private String datasetUri;
 	private StringBuilder response = new StringBuilder();
+	private StringBuilder proxyUrl = new StringBuilder();
 	
 	@LiteralDataInput(
 			identifier = "DATASET_URI",
@@ -62,6 +63,11 @@ public class InterrogateDataset extends AbstractAnnotatedAlgorithm {
 	@LiteralDataOutput(identifier = "DESCRIPTION")
 	public String getResult() {
 		return response.toString();
+	}
+	
+	@LiteralDataOutput(identifier = "PROXY_URL")
+	public String getProxy() {
+		return proxyUrl.toString();
 	}
 
 	@Execute
@@ -83,7 +89,6 @@ public class InterrogateDataset extends AbstractAnnotatedAlgorithm {
 			if (isURS) {
 				ProxyRegistrator registrator = ProxyRegistrator.getInstance();
 				ProxyRegistry proxyRegistry = registrator.getRegistry(REGISTRY_NAME);
-				StringBuilder proxiedPath = new StringBuilder();
 				if (proxyRegistry != null) {
 					// simplifying by host for now (may need more complex rules in future)
 					String path = proxyRegistry.getRegistryUrl(host);
@@ -94,7 +99,7 @@ public class InterrogateDataset extends AbstractAnnotatedAlgorithm {
 					}
 					WPSConfigurationDocumentImpl.WPSConfigurationImpl wpsConfig = WPSConfig.getInstance().getWPSConfig();
 					ServerDocument.Server server = wpsConfig.getServer();
-					proxiedPath.append(server.getProtocol())
+					proxyUrl.append(server.getProtocol())
 							.append("://")
 							.append(server.getHostname())
 							.append(":")
@@ -105,11 +110,12 @@ public class InterrogateDataset extends AbstractAnnotatedAlgorithm {
 							.append(REGISTRY_NAME)
 							.append("/")
 							.append(host);
+					
 					if (StringUtils.isNotBlank(uri.getPath())) {
-						proxiedPath.append(uri.getPath());
+						proxyUrl.append(uri.getPath());
 					}
 					if (StringUtils.isNotBlank(uri.getQuery())) {
-						proxiedPath.append("?")
+						proxyUrl.append("?")
 								.append(uri.getQuery());
 					}
 				} else {
@@ -117,7 +123,8 @@ public class InterrogateDataset extends AbstractAnnotatedAlgorithm {
 				}
 
 				try {
-					DConnect2 dodsConnection = new DConnect2(proxiedPath.toString(), true);
+					// Get the DESCRIPTION output
+					DConnect2 dodsConnection = new DConnect2(proxyUrl.toString(), true);
 					DDS dds = dodsConnection.getDDS();
 					Enumeration<BaseType> variables = dds.getVariables();
 					response.append("Variables:\n");
@@ -127,10 +134,13 @@ public class InterrogateDataset extends AbstractAnnotatedAlgorithm {
 								.append(var.getLongName())
 								.append("\n");
 					}
+					
+					// Add newline for PROXY_URL output
+					proxyUrl.append("\n");
 				} catch (IOException | DAP2Exception ex) {
 					log.error("Error interrogating OPeNDAP", ex);
 				}
-			} else { 
+			} else {
 				throw new UnsupportedOperationException("Currently only URS endpoints are supported");
 			}
 		} catch (MalformedURLException | URISyntaxException ex) {
