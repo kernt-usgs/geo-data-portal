@@ -80,76 +80,62 @@ public class InterrogateDataset extends AbstractAnnotatedAlgorithm {
 			// other options could come here
 			
 			// do something with eventual provider
-			ProxyRegistrator registrator = ProxyRegistrator.getInstance();
-			ProxyRegistry proxyRegistry = registrator.getRegistry(REGISTRY_NAME);
-			StringBuilder proxiedPath = new StringBuilder();
-			if (proxyRegistry != null) {
-				// simplifying by host for now (may need more complex rules in future)
-				String path = proxyRegistry.getRegistryUrl(host);
-				if (path == null) {
-					String proxyTo = new URIBuilder().setScheme(uri.getScheme())
-							.setHost(host).setPort(uri.getPort()).build().toString();
-					proxyRegistry.setRegistryEntry(host, proxyTo, provider);
-				}
-				WPSConfigurationDocumentImpl.WPSConfigurationImpl wpsConfig = WPSConfig.getInstance().getWPSConfig();
-				ServerDocument.Server server = wpsConfig.getServer();
-				proxiedPath.append(server.getProtocol())
-						.append("://")
-						.append(server.getHostname())
-						.append(":")
-						.append(server.getHostport())
-						.append("/")
-						.append(server.getWebappPath())
-						.append("/")
-						.append(REGISTRY_NAME)
-						.append("/")
-						.append(host);
-				if (StringUtils.isNotBlank(uri.getPath())) {
-					proxiedPath.append(uri.getPath());
-				}
-				if (StringUtils.isNotBlank(uri.getQuery())) {
-					proxiedPath.append("?")
-							.append(uri.getQuery());
-				}
-			} else {
-				throw new RuntimeException("Proxy must be registered in order to use this algorithm");
-			}
-			
-			
 			if (isURS) {
-				response.append("URS:\ttrue\n\n");
-			} else {
-				response.append("URS:\tfalse\n\n");
-			}
-			try {
-				DConnect2 dodsConnection = new DConnect2(proxiedPath.toString(), true);
-				DDS dds = dodsConnection.getDDS();
-				Enumeration<BaseType> variables = dds.getVariables();
-				response.append("Variables:\n");
-				while (variables.hasMoreElements()) {
-					BaseType var = variables.nextElement();
-					response.append("\t")
-							.append(var.getLongName())
-							.append("\n");
+				ProxyRegistrator registrator = ProxyRegistrator.getInstance();
+				ProxyRegistry proxyRegistry = registrator.getRegistry(REGISTRY_NAME);
+				StringBuilder proxiedPath = new StringBuilder();
+				if (proxyRegistry != null) {
+					// simplifying by host for now (may need more complex rules in future)
+					String path = proxyRegistry.getRegistryUrl(host);
+					if (path == null) {
+						String proxyTo = new URIBuilder().setScheme(uri.getScheme())
+								.setHost(host).setPort(uri.getPort()).build().toString();
+						proxyRegistry.setRegistryEntry(host, proxyTo, provider);
+					}
+					WPSConfigurationDocumentImpl.WPSConfigurationImpl wpsConfig = WPSConfig.getInstance().getWPSConfig();
+					ServerDocument.Server server = wpsConfig.getServer();
+					proxiedPath.append(server.getProtocol())
+							.append("://")
+							.append(server.getHostname())
+							.append(":")
+							.append(server.getHostport())
+							.append("/")
+							.append(server.getWebappPath())
+							.append("/")
+							.append(REGISTRY_NAME)
+							.append("/")
+							.append(host);
+					if (StringUtils.isNotBlank(uri.getPath())) {
+						proxiedPath.append(uri.getPath());
+					}
+					if (StringUtils.isNotBlank(uri.getQuery())) {
+						proxiedPath.append("?")
+								.append(uri.getQuery());
+					}
+				} else {
+					throw new RuntimeException("Proxy must be registered in order to use this algorithm");
 				}
-			} catch (IOException | DAP2Exception ex) {
-				log.error("Error interrogating OPeNDAP", ex);
-			} finally {
-				
+
+				try {
+					DConnect2 dodsConnection = new DConnect2(proxiedPath.toString(), true);
+					DDS dds = dodsConnection.getDDS();
+					Enumeration<BaseType> variables = dds.getVariables();
+					response.append("Variables:\n");
+					while (variables.hasMoreElements()) {
+						BaseType var = variables.nextElement();
+						response.append("\t")
+								.append(var.getLongName())
+								.append("\n");
+					}
+				} catch (IOException | DAP2Exception ex) {
+					log.error("Error interrogating OPeNDAP", ex);
+				}
+			} else { 
+				throw new UnsupportedOperationException("Currently only URS endpoints are supported");
 			}
-			
 		} catch (MalformedURLException | URISyntaxException ex) {
 			throw new RuntimeException("DATASET_URI is invalid", ex);
-		} finally {
-			if (provider != null) {
-				try {
-					provider.close();
-				} catch (Exception ex) {
-					log.error("Problems closing http provider", ex);
-				}
-			}
 		}
-		// add others checks here
 		
 	}
 }
