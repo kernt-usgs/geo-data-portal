@@ -638,7 +638,7 @@
 			<dependency>
 				<groupId>gov.usgs.cida</groupId>
 				<artifactId>proxy-utils</artifactId>
-				<version>1.0.8-SNAPSHOT</version>
+				<version>1.0.9</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
