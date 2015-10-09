@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>gov.usgs.cida.gdp</groupId>
 		<artifactId>gdp</artifactId>
-		<version>44</version>
+		<version>45-SNAPSHOT</version>
 	</parent>
 	<artifactId>gdp-liquibase-changelogs</artifactId>
 	<packaging>jar</packaging>
