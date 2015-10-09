@@ -27,6 +27,19 @@ import static org.n52.wps.algorithm.annotation.LiteralDataInput.ENUM_COUNT;
 import org.n52.wps.server.AbstractAnnotatedAlgorithm;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import gov.usgs.cida.gdp.constants.AppConstant;
+import gov.usgs.cida.gdp.coreprocessing.Delimiter;
+import gov.usgs.cida.gdp.coreprocessing.analysis.grid.FeatureCoverageWeightedGridStatistics;
+import gov.usgs.cida.gdp.coreprocessing.analysis.grid.Statistics1DWriter.GroupBy;
+import gov.usgs.cida.gdp.coreprocessing.analysis.grid.Statistics1DWriter.Statistic;
+import gov.usgs.cida.gdp.wps.algorithm.heuristic.FWGSGeometrySizeAlgorithmHeuristic;
+import gov.usgs.cida.gdp.wps.algorithm.heuristic.FWGSOutputSizeAlgorithmHeuristic;
+import gov.usgs.cida.gdp.wps.algorithm.heuristic.exception.AlgorithmHeuristicException;
+import gov.usgs.cida.gdp.wps.binding.CSVFileBinding;
+import gov.usgs.cida.gdp.wps.binding.GMLStreamingFeatureCollectionBinding;
 import ucar.ma2.InvalidRangeException;
 import ucar.ma2.Range;
 import ucar.nc2.dt.GridDatatype;
@@ -55,6 +68,9 @@ public class FeatureWeightedGridStatisticsAlgorithm extends AbstractAnnotatedAlg
     private boolean summarizeFeatureAttribute = false;
 
     private File output;
+    
+    private FWGSGeometrySizeAlgorithmHeuristic geometrySizeHeuristic = new FWGSGeometrySizeAlgorithmHeuristic();
+    private FWGSOutputSizeAlgorithmHeuristic outputSizeHeuristic = new FWGSOutputSizeAlgorithmHeuristic();
 
     @ComplexDataInput(
             identifier=GDPAlgorithmConstants.FEATURE_COLLECTION_IDENTIFIER,
@@ -63,6 +79,8 @@ public class FeatureWeightedGridStatisticsAlgorithm extends AbstractAnnotatedAlg
             binding=GMLStreamingFeatureCollectionBinding.class)
     public void setFeatureCollection(FeatureCollection featureCollection) {
         this.featureCollection = featureCollection;
+        this.geometrySizeHeuristic.setFeatureCollection(featureCollection);
+        this.outputSizeHeuristic.setFeatureCollection(featureCollection);
     }
 
     @LiteralDataInput(
@@ -71,6 +89,8 @@ public class FeatureWeightedGridStatisticsAlgorithm extends AbstractAnnotatedAlg
             abstrakt=GDPAlgorithmConstants.FEATURE_ATTRIBUTE_NAME_ABSTRACT)
     public void setFeatureAttributeName(String featureAttributeName) {
         this.featureAttributeName = featureAttributeName;
+        this.geometrySizeHeuristic.setAttributeName(featureAttributeName);
+        this.outputSizeHeuristic.setAttributeName(featureAttributeName);
     }
 
     @LiteralDataInput(
@@ -97,6 +117,8 @@ public class FeatureWeightedGridStatisticsAlgorithm extends AbstractAnnotatedAlg
             defaultValue="true")
     public void setRequireFullCoverage(boolean requireFullCoverage) {
         this.requireFullCoverage = requireFullCoverage;
+        this.geometrySizeHeuristic.setRequireFullCoverage(requireFullCoverage);
+        this.outputSizeHeuristic.setRequireFullCoverage(requireFullCoverage);
     }
 
     @LiteralDataInput(
@@ -174,8 +196,61 @@ public class FeatureWeightedGridStatisticsAlgorithm extends AbstractAnnotatedAlg
 
     @Execute
     public void process() {
-
-//        FeatureDataset featureDataset = null;
+    	if (featureCollection.getSchema().getDescriptor(featureAttributeName) == null) {
+            addError("Attribute " + featureAttributeName + " not found in feature collection");
+            return;
+        }
+        
+        /*
+         * Lets run our geometry size heuristic to see if we should go ahead and process
+         * this bounds.  All geometry size should be relative regardless of the dataset
+         * variable.
+         * 
+         * Lets get the first variable and create a GridDatatype
+         */
+        if(datasetId.isEmpty()) {
+        	log.error("Error subsetting gridded data.  Grid variable list is empty! ");
+        	addError("Error subsetting gridded data.  Grid variable list is empty! ");
+        	return;
+        }
+        
+        GridDatatype heuristicGridDatatype = GDPAlgorithmUtil.generateGridDataType(
+                datasetURI,
+                datasetId.get(0),
+                featureCollection.getBounds(),
+                requireFullCoverage);
+        geometrySizeHeuristic.setGridDataType(heuristicGridDatatype);
+        try {
+			if(!geometrySizeHeuristic.validated()) {
+				log.error(geometrySizeHeuristic.getError());
+				addError(geometrySizeHeuristic.getError());
+				return;
+			}
+		} catch (AlgorithmHeuristicException e) {
+			log.error("Heuristic Error: ", e);
+            addError("Heuristic Error: " + e.getMessage());
+		}
+        
+        /*
+         * Geometry size heuristic passed, lets do the output size next
+         */
+        Range outputTimeRange = GDPAlgorithmUtil.generateTimeRange(
+        		heuristicGridDatatype,
+                timeStart,
+                timeEnd);
+        outputSizeHeuristic.setGridDataType(heuristicGridDatatype);
+        outputSizeHeuristic.setOutputTimeRange(outputTimeRange);
+        try {
+			if(!outputSizeHeuristic.validated()) {
+				log.error(outputSizeHeuristic.getError());
+				addError(outputSizeHeuristic.getError());
+				return;
+			}
+		} catch (AlgorithmHeuristicException e) {
+			log.error("Heuristic Error: ", e);
+            addError("Heuristic Error: " + e.getMessage());
+		}
+        
         BufferedWriter writer = null;
         try {
             if (featureCollection.getSchema().getDescriptor(featureAttributeName) == null) {
