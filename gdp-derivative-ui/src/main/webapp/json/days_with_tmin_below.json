@@ -37,7 +37,7 @@
            ]
        },
        "serviceIdentification" : {
-           "sos" : "http://cida-eros-derivativedev.er.usgs.gov:8080/thredds/sos/bcca/sos/{shapefile}/{gcm}_{scenario}_r1i1p1-days_tmin_blw-{threshold}.nc?observedProperty={gcm}_{scenario}_r1i1p1-days_tmin_blw&"
+           "sos" : "http://cida-eros-derivativeprod.er.usgs.gov:8080/thredds/sos/bcca/sos/{shapefile}/{gcm}_{scenario}_r1i1p1-days_tmin_blw-{threshold}.nc?observedProperty={gcm}_{scenario}_r1i1p1-days_tmin_blw&"
        }
    }
 ]
