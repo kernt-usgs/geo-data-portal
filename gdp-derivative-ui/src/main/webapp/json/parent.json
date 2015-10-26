@@ -76,7 +76,9 @@
             
             "MPI-ESM-MR" : "Max-Planck-Institut für Meteorologie (Max Planck Institute for Meteorology)",
             
-            "MRI-CGCM3" : "Meteorological Research Institute"
+            "MRI-CGCM3" : "Meteorological Research Institute",
+            
+            "NorESM1-M" : "Norwegian Earth System Model"
 
 			}
 
