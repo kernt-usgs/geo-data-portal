@@ -437,7 +437,7 @@ GDP.Plotter = Ext.extend(Ext.Panel, {
                             });
                         });
 
-                        var csv = '#' + scope.plotterTitle + ' calculated by ' + window.location + '\n';
+                        var csv = '#' + scope.plotterTitle + ' See: ' + window.location + ' for documentation of source data.\n';
                         var line = 'date, ';
                         Ext.each(scenarios, function (scenario) {
                             Ext.each(gcms, function (gcm) {
