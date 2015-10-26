@@ -52,6 +52,8 @@
             
             "CESM1-BGC" : "Community Earth System Model Contributors",
             
+            "CNRM-CM5" : "National Centre for Meteorological Research - France",
+            
             "CSIRO-Mk3-6-0" : "Commonwealth Scientific and Industrial Research Organization in collaboration with Queensland Climate Change Centre of Excellence",
             
             "GFDL-CM3" : "NOAA Geophysical Fluid Dynamics Laboratory",
@@ -88,9 +90,9 @@
 
 			"derivative" : "Choose the derivative you are interested in mapping and plotting.",
 
-			"scenario" : "Choose a scenario. A scenario is a coherent, internally consistent and plausible description of a possible future state of the world. It is not a forecast; rather, each scenario is one alternative image of how the future can unfold. A projection may serve as the raw material for a scenario, but scenarios often require additional information (e.g., about baseline conditions). A set of scenarios is often adopted to reflect, as well as possible, the range of uncertainty in projections. Other terms that have been used as synonyms for scenario are \"characterization\", \"storyline\" and \"construction\".",
+			"scenario" : "Choose a scenario. A scenario is a coherent, internally consistent and plausible description of a possible future state of the world. It is not a forecast; rather, each scenario is one alternative image of how the future can unfold. A projection may serve as the raw material for a scenario, but scenarios often require additional information (e.g., about baseline conditions). A set of scenarios is often adopted to reflect, as well as possible, the range of uncertainty in projections. Other terms that have been used as synonyms for scenario are characterization, storyline and construction.",
 
-			"gcm" : "Choose a Climate Model.",
+			"gcm" : "Choose a Climate Model. While the ensamble mean of all the available climate models is shown by default, other models can be chosen to view the variability of projected future climate conditions.",
 
 			"timeperiod" : "Choose a Time Period."
 
@@ -132,6 +134,7 @@
                 "CanESM2",
                 "CCSM4",
                 "CESM1-BGC",
+                "CNRM-CM5",
                 "CSIRO-Mk3-6-0",
                 "GFDL-CM3",
                 "GFDL-ESM2G",
