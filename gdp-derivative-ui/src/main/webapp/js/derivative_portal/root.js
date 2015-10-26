@@ -200,24 +200,6 @@ function initializeMapping() {
                 numZoomLevels : 7
             }
             ),
-        new OpenLayers.Layer.WMS(
-            "Blue Marble",
-            "http://maps.opengeo.org/geowebcache/service/wms",
-            {
-                layers: "bluemarble",
-                isBaseLayer : true,
-                numZoomLevels : 7
-            }
-            ),
-        new OpenLayers.Layer.WMS(
-            "NAIP",
-            "http://isse.cr.usgs.gov/ArcGIS/services/Combined/SDDS_Imagery/MapServer/WMSServer",
-            {
-                layers: "0",
-                isBaseLayer : true,
-                numZoomLevels : 7
-            }
-            ),
         new OpenLayers.Layer.XYZ(
             "Street Map",
             "http://server.arcgisonline.com/ArcGIS/rest/services/ESRI_StreetMap_World_2D/MapServer/tile/${z}/${y}/${x}",
@@ -291,7 +273,7 @@ function initializeMapping() {
         legendDiv : 'dygraph-legend',
         region : 'south',
         border : true,
-        height : 200,
+        height : 250,
         controller : layerController
     });
 
