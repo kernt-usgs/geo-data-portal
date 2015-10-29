@@ -80,7 +80,9 @@
             
             "MRI-CGCM3" : "Meteorological Research Institute",
             
-            "NorESM1-M" : "Norwegian Earth System Model"
+            "NorESM1-M" : "Norwegian Earth System Model",
+            
+            "ensemble" : "The ensemble mean of all models"
 
 			}
 
