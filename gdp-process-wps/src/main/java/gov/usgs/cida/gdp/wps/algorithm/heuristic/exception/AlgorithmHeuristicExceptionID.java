@@ -29,4 +29,8 @@ public class AlgorithmHeuristicExceptionID {
     public static final AlgorithmHeuristicExceptionID GDP_GRID_UTILITY_EXCEPTION =
             new AlgorithmHeuristicExceptionID("AlgorithmHeuristicException GDP Grid Utility Exception : " +
                     "Internal Grid Utility exception was thrown.", 0x01000);
+
+    public static final AlgorithmHeuristicExceptionID GDP_MAX_TIME_EXCEEDED_EXCEPTION =
+            new AlgorithmHeuristicExceptionID("AlgorithmHeuristicException Max Time Exception : " +
+                    "Estimated process time exceeds preset limit.", 0x01001);
 }

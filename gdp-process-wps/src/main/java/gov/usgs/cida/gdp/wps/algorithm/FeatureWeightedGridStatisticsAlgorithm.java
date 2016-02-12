@@ -1,12 +1,5 @@
 package gov.usgs.cida.gdp.wps.algorithm;
 
-import gov.usgs.cida.gdp.constants.AppConstant;
-import gov.usgs.cida.gdp.coreprocessing.Delimiter;
-import gov.usgs.cida.gdp.coreprocessing.analysis.grid.FeatureCoverageWeightedGridStatistics;
-import gov.usgs.cida.gdp.coreprocessing.analysis.grid.Statistics1DWriter.GroupBy;
-import gov.usgs.cida.gdp.coreprocessing.analysis.grid.Statistics1DWriter.Statistic;
-import gov.usgs.cida.gdp.wps.binding.CSVFileBinding;
-import gov.usgs.cida.gdp.wps.binding.GMLStreamingFeatureCollectionBinding;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -23,7 +16,9 @@ import org.n52.wps.algorithm.annotation.ComplexDataInput;
 import org.n52.wps.algorithm.annotation.ComplexDataOutput;
 import org.n52.wps.algorithm.annotation.Execute;
 import org.n52.wps.algorithm.annotation.LiteralDataInput;
+
 import static org.n52.wps.algorithm.annotation.LiteralDataInput.ENUM_COUNT;
+
 import org.n52.wps.server.AbstractAnnotatedAlgorithm;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
@@ -37,6 +32,7 @@ import gov.usgs.cida.gdp.coreprocessing.analysis.grid.Statistics1DWriter.GroupBy
 import gov.usgs.cida.gdp.coreprocessing.analysis.grid.Statistics1DWriter.Statistic;
 import gov.usgs.cida.gdp.wps.algorithm.heuristic.FWGSGeometrySizeAlgorithmHeuristic;
 import gov.usgs.cida.gdp.wps.algorithm.heuristic.FWGSOutputSizeAlgorithmHeuristic;
+import gov.usgs.cida.gdp.wps.algorithm.heuristic.TimingHeuristicGridCellVisitor;
 import gov.usgs.cida.gdp.wps.algorithm.heuristic.exception.AlgorithmHeuristicException;
 import gov.usgs.cida.gdp.wps.binding.CSVFileBinding;
 import gov.usgs.cida.gdp.wps.binding.GMLStreamingFeatureCollectionBinding;
@@ -53,6 +49,8 @@ import ucar.nc2.dt.GridDatatype;
     title="Area Grid Statistics (weighted)",
     abstrakt="This algorithm generates area weighted statistics of a gridded dataset for a set of vector polygon features. Using the bounding-box that encloses the feature data and the time range, if provided, a subset of the gridded dataset is requested from the remote gridded data server. Polygon representations are generated for cells in the retrieved grid. The polygon grid-cell representations are then projected to the feature data coordinate reference system. The grid-cells are used to calculate per grid-cell feature coverage fractions. Area-weighted statistics are then calculated for each feature using the grid values and fractions as weights. If the gridded dataset has a time range the last step is repeated for each time step within the time range or all time steps if a time range was not supplied.")
 public class FeatureWeightedGridStatisticsAlgorithm extends AbstractAnnotatedAlgorithm {
+
+    private static final Logger log = LoggerFactory.getLogger(FeatureCategoricalGridCoverageAlgorithm.class);
 
     private FeatureCollection featureCollection;
     private String featureAttributeName;
@@ -71,6 +69,7 @@ public class FeatureWeightedGridStatisticsAlgorithm extends AbstractAnnotatedAlg
     
     private FWGSGeometrySizeAlgorithmHeuristic geometrySizeHeuristic = new FWGSGeometrySizeAlgorithmHeuristic();
     private FWGSOutputSizeAlgorithmHeuristic outputSizeHeuristic = new FWGSOutputSizeAlgorithmHeuristic();
+    private TimingHeuristicGridCellVisitor timingHeuristic = new TimingHeuristicGridCellVisitor();
 
     @ComplexDataInput(
             identifier=GDPAlgorithmConstants.FEATURE_COLLECTION_IDENTIFIER,
@@ -196,7 +195,7 @@ public class FeatureWeightedGridStatisticsAlgorithm extends AbstractAnnotatedAlg
 
     @Execute
     public void process() {
-    	if (featureCollection.getSchema().getDescriptor(featureAttributeName) == null) {
+        if (featureCollection.getSchema().getDescriptor(featureAttributeName) == null) {
             addError("Attribute " + featureAttributeName + " not found in feature collection");
             return;
         }
@@ -209,9 +208,9 @@ public class FeatureWeightedGridStatisticsAlgorithm extends AbstractAnnotatedAlg
          * Lets get the first variable and create a GridDatatype
          */
         if(datasetId.isEmpty()) {
-        	log.error("Error subsetting gridded data.  Grid variable list is empty! ");
-        	addError("Error subsetting gridded data.  Grid variable list is empty! ");
-        	return;
+            log.error("Error subsetting gridded data.  Grid variable list is empty! ");
+            addError("Error subsetting gridded data.  Grid variable list is empty! ");
+            return;
         }
         
         GridDatatype heuristicGridDatatype = GDPAlgorithmUtil.generateGridDataType(
@@ -220,36 +219,38 @@ public class FeatureWeightedGridStatisticsAlgorithm extends AbstractAnnotatedAlg
                 featureCollection.getBounds(),
                 requireFullCoverage);
         geometrySizeHeuristic.setGridDataType(heuristicGridDatatype);
+        timingHeuristic.setDatasetCount(datasetId.size());
         try {
-			if(!geometrySizeHeuristic.validated()) {
-				log.error(geometrySizeHeuristic.getError());
-				addError(geometrySizeHeuristic.getError());
-				return;
-			}
-		} catch (AlgorithmHeuristicException e) {
-			log.error("Heuristic Error: ", e);
+            if(!geometrySizeHeuristic.validated()) {
+                log.error(geometrySizeHeuristic.getError());
+                addError(geometrySizeHeuristic.getError());
+                return;
+            }
+        } catch (AlgorithmHeuristicException e) {
+            log.error("Heuristic Error: ", e);
             addError("Heuristic Error: " + e.getMessage());
-		}
+        }
         
         /*
          * Geometry size heuristic passed, lets do the output size next
          */
         Range outputTimeRange = GDPAlgorithmUtil.generateTimeRange(
-        		heuristicGridDatatype,
+                heuristicGridDatatype,
                 timeStart,
                 timeEnd);
         outputSizeHeuristic.setGridDataType(heuristicGridDatatype);
         outputSizeHeuristic.setOutputTimeRange(outputTimeRange);
+        timingHeuristic.setTotalTimesteps(outputTimeRange.length());
         try {
-			if(!outputSizeHeuristic.validated()) {
-				log.error(outputSizeHeuristic.getError());
-				addError(outputSizeHeuristic.getError());
-				return;
-			}
-		} catch (AlgorithmHeuristicException e) {
-			log.error("Heuristic Error: ", e);
+            if(!outputSizeHeuristic.validated()) {
+                log.error(outputSizeHeuristic.getError());
+                addError(outputSizeHeuristic.getError());
+                return;
+            }
+        } catch (AlgorithmHeuristicException e) {
+            log.error("Heuristic Error: ", e);
             addError("Heuristic Error: " + e.getMessage());
-		}
+        }
         
         BufferedWriter writer = null;
         try {
@@ -259,7 +260,7 @@ public class FeatureWeightedGridStatisticsAlgorithm extends AbstractAnnotatedAlg
             }
             output = File.createTempFile(getClass().getSimpleName(), delimiter.extension, new File(AppConstant.WORK_LOCATION.getValue()));
             writer = new BufferedWriter(new FileWriter(output));
-            
+
             for (String currentDatasetId : datasetId) {
                 GridDatatype gridDatatype = GDPAlgorithmUtil.generateGridDataType(
                         datasetURI,
@@ -278,6 +279,7 @@ public class FeatureWeightedGridStatisticsAlgorithm extends AbstractAnnotatedAlg
                         featureCollection,
                         featureAttributeName,
                         gridDatatype.makeSubset(null, null, timeRange, null, null, null),
+                        Arrays.asList(timingHeuristic),
                         statistics == null || statistics.isEmpty() ? Arrays.asList(Statistic.values()) : statistics,
                         writer,
                         groupBy == null ? GroupBy.STATISTIC : groupBy,
@@ -299,8 +301,7 @@ public class FeatureWeightedGridStatisticsAlgorithm extends AbstractAnnotatedAlg
         } catch (Exception e) {
             addError("General Error: " + e.getMessage());
         } finally {
-//            if (featureDataset != null) try { featureDataset.close(); } catch (IOException e) { }
             IOUtils.closeQuietly(writer);
         }
-    }	
+    }
 }
