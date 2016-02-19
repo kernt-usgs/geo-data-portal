@@ -88,7 +88,7 @@ public class GridCellCoverageTest {
                 (GridDataset) dataset,
                 variableName,
                 timeRange,
-                null,
+                Arrays.asList(),
                 Arrays.asList(new Statistics1DWriter.Statistic[]{
                     Statistics1DWriter.Statistic.MEAN,
                     Statistics1DWriter.Statistic.MAXIMUM,}),
@@ -108,7 +108,7 @@ public class GridCellCoverageTest {
                 (GridDataset) dataset,
                 variableName,
                 timeRange,
-                null,
+                Arrays.asList(),
                 Arrays.asList(new Statistics1DWriter.Statistic[]{
                     Statistics1DWriter.Statistic.MEAN,
                     Statistics1DWriter.Statistic.MAXIMUM,}),
@@ -166,7 +166,7 @@ public class GridCellCoverageTest {
                 (GridDataset) dataset,
                 variableName,
                 timeRange,
-                null,
+                Arrays.asList(),
                 Arrays.asList(new Statistics1DWriter.Statistic[]{
                     Statistics1DWriter.Statistic.MEAN,
                     Statistics1DWriter.Statistic.MAXIMUM,}),
@@ -183,7 +183,7 @@ public class GridCellCoverageTest {
                 (GridDataset) dataset,
                 variableName,
                 timeRange,
-                null,
+                Arrays.asList(),
                 Arrays.asList(new Statistics1DWriter.Statistic[]{
                     Statistics1DWriter.Statistic.MEAN,
                     Statistics1DWriter.Statistic.MAXIMUM,
