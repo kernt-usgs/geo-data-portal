@@ -131,6 +131,7 @@ public class FeatureCoverageWeightedGridStatisticsTest {
                 featureCollection,
                 "GRIDCODE",
                 getGrid(gridName),
+                null,
                 Arrays.asList(Statistic.values()),
                 writer,
                 GroupBy.STATISTIC,
