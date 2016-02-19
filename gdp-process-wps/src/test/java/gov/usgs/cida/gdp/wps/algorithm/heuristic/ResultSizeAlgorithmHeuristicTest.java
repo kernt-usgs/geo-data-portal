@@ -7,7 +7,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import gov.usgs.cida.gdp.wps.algorithm.heuristic.exception.AlgorithmHeuristicException;
-import gov.usgs.cida.gdp.wps.algorithm.heuristic.exception.AlgorithmHeuristicExceptionID;
 
 import java.io.IOException;
 import java.text.DateFormat;
@@ -95,7 +94,7 @@ public class ResultSizeAlgorithmHeuristicTest {
 		
 	@Test
 	public void testResultSizeAlgorithmHeuristicConstructor() {
-		ResultSizeAlgorithmHeuristic resultSizeHeuristic = new ResultSizeAlgorithmHeuristic();
+		CoverageSizeAlgorithmHeuristic resultSizeHeuristic = new CoverageSizeAlgorithmHeuristic();
 		
 		assert(resultSizeHeuristic.getError().equals(""));
 		
@@ -130,7 +129,7 @@ public class ResultSizeAlgorithmHeuristicTest {
         } catch (ParseException e) {}
         assertNotNull(endDate);
         
-        ResultSizeAlgorithmHeuristic resultSizeHeuristic = new ResultSizeAlgorithmHeuristic(daymetGridDataSet, 
+        CoverageSizeAlgorithmHeuristic resultSizeHeuristic = new CoverageSizeAlgorithmHeuristic(daymetGridDataSet, 
                 gridVariableList, featureCollection, startDate, endDate, true);
         
         /*
@@ -180,7 +179,7 @@ public class ResultSizeAlgorithmHeuristicTest {
         } catch (ParseException e) {}
         assertNotNull(endDate);
         
-        ResultSizeAlgorithmHeuristic resultSizeHeuristic = new ResultSizeAlgorithmHeuristic(prismGridDataSet, 
+        CoverageSizeAlgorithmHeuristic resultSizeHeuristic = new CoverageSizeAlgorithmHeuristic(prismGridDataSet, 
                 gridVariableList, featureCollection, startDate, endDate, true);
         
         /*
@@ -230,7 +229,7 @@ public class ResultSizeAlgorithmHeuristicTest {
         } catch (ParseException e) {}
         assertNotNull(endDate);
         
-        ResultSizeAlgorithmHeuristic resultSizeHeuristic = new ResultSizeAlgorithmHeuristic(ssebopetaGridDataSet, 
+        CoverageSizeAlgorithmHeuristic resultSizeHeuristic = new CoverageSizeAlgorithmHeuristic(ssebopetaGridDataSet, 
                 gridVariableList, featureCollection, startDate, endDate, true);
         
         /*

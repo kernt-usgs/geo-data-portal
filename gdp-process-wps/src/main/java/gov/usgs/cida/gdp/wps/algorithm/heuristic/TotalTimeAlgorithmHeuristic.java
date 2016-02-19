@@ -1,15 +1,21 @@
 package gov.usgs.cida.gdp.wps.algorithm.heuristic;
 
-import gov.usgs.cida.gdp.coreprocessing.analysis.grid.GridCellVisitor;
 import gov.usgs.cida.gdp.wps.algorithm.heuristic.exception.AlgorithmHeuristicException;
-import gov.usgs.cida.gdp.wps.algorithm.heuristic.exception.AlgorithmHeuristicExceptionID;
 import org.apache.commons.lang.time.StopWatch;
+import org.joda.time.MutablePeriod;
+import org.joda.time.ReadablePeriod;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import ucar.nc2.Dimension;
+import ucar.nc2.dt.GridDatatype;
 
 /**
  *
  * @author Jordan Walker <jiwalker@usgs.gov>
  */
-public class TimingHeuristicGridCellVisitor extends GridCellVisitor {
+public class TotalTimeAlgorithmHeuristic extends AlgorithmHeuristic {
+	
+	private static final Logger log = LoggerFactory.getLogger(TotalTimeAlgorithmHeuristic.class);
 
 	private static final int DEFAULT_EVALUATION_STEPS = 7;
 	private static final long DEFAULT_MAX_ALLOWED_TIME = 24 * 60 * 60 * 1000;
@@ -22,25 +28,23 @@ public class TimingHeuristicGridCellVisitor extends GridCellVisitor {
 	private int stepsToTime;
 	private long maxTime;
 	
-	public TimingHeuristicGridCellVisitor(int datasetCount, int totalTimestepsPerDataset, int evalSteps, long maxTime) {
+	public TotalTimeAlgorithmHeuristic(int datasetCount, int evalSteps, long maxTime) {
 		this.datasetCount = datasetCount;
-		this.totalTimestepsPerDataset = totalTimestepsPerDataset;
+		this.totalTimestepsPerDataset = -1;
 		this.stepsTimed = 0;
 		this.stepsToTime = evalSteps;
 		this.maxTime = maxTime;
 		this.stopwatch = new StopWatch();
 	}
 	
-	public TimingHeuristicGridCellVisitor() {
-		this(0, 0, DEFAULT_EVALUATION_STEPS, DEFAULT_MAX_ALLOWED_TIME);
+	public TotalTimeAlgorithmHeuristic(int datasetCount) {
+		this(datasetCount, DEFAULT_EVALUATION_STEPS, DEFAULT_MAX_ALLOWED_TIME);
 	}
-
-	public void setDatasetCount(int datasetCount) {
-		this.datasetCount = datasetCount;
-	}
-
-	public void setTotalTimesteps(int totalTimesteps) {
-		this.totalTimestepsPerDataset = totalTimesteps;
+	
+	@Override
+	public void traverseStart(GridDatatype gridDatatype) {
+		Dimension timeDimension = gridDatatype.getTimeDimension();
+		totalTimestepsPerDataset = timeDimension.getLength();
 	}
 	
 	@Override
@@ -50,7 +54,7 @@ public class TimingHeuristicGridCellVisitor extends GridCellVisitor {
 			stopwatch.stop();
 			long estimatedTime = estimateTotalTime();
 			if (estimatedTime > maxTime) {
-				throw new RuntimeException(new AlgorithmHeuristicException(AlgorithmHeuristicExceptionID.GDP_MAX_TIME_EXCEEDED_EXCEPTION, this.getClass().getSimpleName(), null, null));
+				throw new AlgorithmHeuristicException("Max Time Exception : Estimated process time exceeds preset limit.");
 			}
 		}
 	}
@@ -68,15 +72,16 @@ public class TimingHeuristicGridCellVisitor extends GridCellVisitor {
 		return (stepsTimed < stepsToTime);
 	}
 	
-	@Override
-	public void processGridCell(int xCellIndex, int yCellIndex, double value) {
-		// Don't actually do anything with grid cells, just looking for time
-	}
-	
 	public long estimateTotalTime() {
+		long totalTime = -1;
+		if (totalTimestepsPerDataset <= 0) {
+			throw new IllegalStateException("Traverse start must be called before time end");
+		}
 		double percentComplete = (double)stepsTimed / (double)(datasetCount * totalTimestepsPerDataset);
-		double totalTime = stopwatch.getTime() / percentComplete;
-		return Math.round(totalTime);
+		totalTime = Math.round(stopwatch.getTime() / percentComplete);
+		ReadablePeriod period = new MutablePeriod(totalTime);
+		log.debug("Total estimated time: {}", period);
+		return totalTime;
 	}
 
 }

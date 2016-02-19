@@ -14,7 +14,7 @@ public class TimingHeuristicGridCellVisitorTest {
 	
 	@Test
 	public void testTEnd() {
-		TimingHeuristicGridCellVisitor instance = new TimingHeuristicGridCellVisitor();
+		TotalTimeAlgorithmHeuristic instance = new TotalTimeAlgorithmHeuristic(1);
 		instance.tStart(1);
 		instance.tEnd(1);
 		assertThat(instance.traverseContinue(), is(true));
@@ -22,14 +22,14 @@ public class TimingHeuristicGridCellVisitorTest {
 
 	@Test
 	public void testTStart() {
-		TimingHeuristicGridCellVisitor instance = new TimingHeuristicGridCellVisitor();
+		TotalTimeAlgorithmHeuristic instance = new TotalTimeAlgorithmHeuristic(1);
 		boolean result = instance.tStart(1);
 		assertThat(result, is(true));
 	}
 
 	@Test
 	public void testEstimateTotalTime() throws InterruptedException {
-		TimingHeuristicGridCellVisitor instance = new TimingHeuristicGridCellVisitor(2, 5, 1, Long.MAX_VALUE);
+		TotalTimeAlgorithmHeuristic instance = new TotalTimeAlgorithmHeuristic(2, 1, Long.MAX_VALUE);
 		instance.tStart(1);
 		Thread.sleep(500);
 		instance.tEnd(1);
@@ -39,7 +39,7 @@ public class TimingHeuristicGridCellVisitorTest {
 	
 	@Test(expected = RuntimeException.class)
 	public void testExceedsTotalTime() throws InterruptedException {
-		TimingHeuristicGridCellVisitor instance = new TimingHeuristicGridCellVisitor(2, 5, 1, 4999);
+		TotalTimeAlgorithmHeuristic instance = new TotalTimeAlgorithmHeuristic(2, 1, 4999);
 		instance.tStart(1);
 		Thread.sleep(500);
 		instance.tEnd(1);
