@@ -48,7 +48,7 @@ public class SummaryOutputSizeAlgorithmHeuristic extends AlgorithmHeuristic {
 			long bytesSoFar = cos.getByteCount();
 			long estimatedTime = estimateTotalBytes(bytesSoFar);
 			if (estimatedTime > maximumSizeConfigured) {
-				throw new AlgorithmHeuristicException("Maximum Output Size Exception : Estimated process output exceeds preset limit.");
+				throw new AlgorithmHeuristicException("Maximum Output Size Exception: Estimated process output exceeds preset limit.");
 			}
 		}
 	}
@@ -61,7 +61,7 @@ public class SummaryOutputSizeAlgorithmHeuristic extends AlgorithmHeuristic {
 	public long estimateTotalBytes(long bytesSoFar) {
 		long totalBytes = -1l;
 		if (totalTimestepsPerDataset <= 0) {
-			throw new IllegalStateException("Traverse start must be called before time end")
+			throw new IllegalStateException("Traverse start must be called before time end");
 		}
 		double percentComplete = (double)stepsCounted / (double)(datasetCount * totalTimestepsPerDataset);
 		totalBytes = Math.round(bytesSoFar / percentComplete);

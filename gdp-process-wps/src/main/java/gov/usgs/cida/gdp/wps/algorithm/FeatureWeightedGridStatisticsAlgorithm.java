@@ -264,7 +264,7 @@ public class FeatureWeightedGridStatisticsAlgorithm extends AbstractAnnotatedAlg
 
 	private List<GridCellVisitor> setupHeuristics(CountingOutputStream cos) {
 		List<GridCellVisitor> heuristics = new LinkedList<>();
-		heuristics.add(new GeometrySizeAlgorithmHeuristic());
+		heuristics.add(new GeometrySizeAlgorithmHeuristic(featureCollection, requireFullCoverage));
 		heuristics.add(new SummaryOutputSizeAlgorithmHeuristic(cos, datasetId.size()));
 		heuristics.add(new TotalTimeAlgorithmHeuristic(datasetId.size()));
 		return heuristics;
