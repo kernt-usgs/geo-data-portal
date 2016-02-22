@@ -5,7 +5,6 @@ import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 
 import gov.usgs.cida.gdp.coreprocessing.analysis.grid.GridUtility;
-import static gov.usgs.cida.gdp.wps.algorithm.heuristic.GeometrySizeAlgorithmHeuristic.SIDES_PER_GRID_CELL;
 import gov.usgs.cida.gdp.wps.algorithm.heuristic.exception.AlgorithmHeuristicException;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
@@ -17,11 +16,12 @@ import ucar.nc2.dt.GridDatatype;
 
 public class GeometrySizeAlgorithmHeuristic extends AlgorithmHeuristic {
 
-	private static Logger log = LoggerFactory.getLogger(GeometrySizeAlgorithmHeuristic.class);
+	private static final Logger log = LoggerFactory.getLogger(GeometrySizeAlgorithmHeuristic.class);
 
-	public static final long DEFAULT_MAXIMUM_GRID_SIZE = 1024 * 1024 * 1024 * 2; // 2GB
+	public static final long DEFAULT_MAXIMUM_GRID_SIZE = 1024l * 1024l * 1024l * 2l; // 2GB
 	public static final int DEFAULT_FEATURE_SIZE_HEURISTIC = 100; // Very rough heuristic
-	public static final int SIDES_PER_GRID_CELL = 4;
+	
+	private static final int SIDES_PER_GRID_CELL = 4;
 
 	private FeatureCollection<SimpleFeatureType, SimpleFeature> featureCollection;
 	private boolean requireFullCoverage;

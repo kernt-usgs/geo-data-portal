@@ -1,16 +1,31 @@
 package gov.usgs.cida.gdp.wps.algorithm.heuristic;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
+import ucar.nc2.Dimension;
+import ucar.nc2.dt.GridDatatype;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  *
  * @author jiwalker
  */
 public class TimingHeuristicGridCellVisitorTest {
+	
+	private static GridDatatype datatype;
+	
+	@BeforeClass
+	public static void setupClass() {
+		datatype = mock(GridDatatype.class);
+		Dimension timeDim = mock(Dimension.class);
+		when(timeDim.getLength()).thenReturn(5);
+		when(datatype.getTimeDimension()).thenReturn(timeDim);
+	}
 	
 	@Test
 	public void testTEnd() {
@@ -30,6 +45,7 @@ public class TimingHeuristicGridCellVisitorTest {
 	@Test
 	public void testEstimateTotalTime() throws InterruptedException {
 		TotalTimeAlgorithmHeuristic instance = new TotalTimeAlgorithmHeuristic(2, 1, Long.MAX_VALUE);
+		instance.traverseStart(datatype);
 		instance.tStart(1);
 		Thread.sleep(500);
 		instance.tEnd(1);

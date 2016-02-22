@@ -10,10 +10,10 @@ import ucar.nc2.dt.GridDatatype;
 
 public class SummaryOutputSizeAlgorithmHeuristic extends AlgorithmHeuristic {
 
-	static private Logger log = LoggerFactory.getLogger(SummaryOutputSizeAlgorithmHeuristic.class);
+	private static final Logger log = LoggerFactory.getLogger(SummaryOutputSizeAlgorithmHeuristic.class);
 
 	private static final int DEFAULT_EVALUATION_STEPS = 7;
-	public static final long DEFAULT_MAXIMUM_OUTPUT_SIZE = 1024 * 1024 * 1024 * 5; // 5 GB
+	public static final long DEFAULT_MAXIMUM_OUTPUT_SIZE = 1024l * 1024l * 1024l * 5l; // 5 GB
 	
 	private CountingOutputStream cos;
 	private int datasetCount;

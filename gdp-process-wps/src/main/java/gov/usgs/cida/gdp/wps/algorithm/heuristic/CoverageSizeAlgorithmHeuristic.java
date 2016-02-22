@@ -37,11 +37,10 @@ import ucar.nc2.dt.GridDatatype;
  */
 public class CoverageSizeAlgorithmHeuristic extends AlgorithmHeuristic {
 
-	private static Logger log = LoggerFactory.getLogger(CoverageSizeAlgorithmHeuristic.class);
+	private static final Logger log = LoggerFactory.getLogger(CoverageSizeAlgorithmHeuristic.class);
 
-	public static final long DEFAULT_MAXIMUM_DATA_SET_SIZE = 1024 * 1024 * 500; // 500 MB
+	public static final long DEFAULT_MAXIMUM_DATA_SET_SIZE = 1024l * 1024l * 500l; // 500 MB
 	private static final int DEFAULT_DATATYPES_TO_ESTIMATE = 1;
-	private long maximumSizeConfigured = DEFAULT_MAXIMUM_DATA_SET_SIZE;
 
 	private GridDataset gridDataset;
 	private List<String> gridVariableList;
@@ -50,25 +49,23 @@ public class CoverageSizeAlgorithmHeuristic extends AlgorithmHeuristic {
 	private Date dateTimeEnd;
 	private boolean requireFullCoverage;
 	
+	private long maximumSizeConfigured;
 	private int dataTypesEstimated = 0;
 
-	public CoverageSizeAlgorithmHeuristic() {
-		this.gridDataset = null;
-		this.gridVariableList = null;
-		this.featureCollection = null;
-		this.dateTimeStart = null;
-		this.dateTimeEnd = null;
-		this.requireFullCoverage = false;
-	}
-
-	public CoverageSizeAlgorithmHeuristic(List<String> gridVariableList, FeatureCollection<?, ?> featureCollection,
+	public CoverageSizeAlgorithmHeuristic(GridDataset gridDataset, List<String> gridVariableList, FeatureCollection<?, ?> featureCollection,
 			Date dateTimeStart, Date dateTimeEnd, boolean requireFullCoverage) {
-		this.gridDataset = null;
+		this(gridDataset, gridVariableList, featureCollection, dateTimeStart, dateTimeEnd, requireFullCoverage, DEFAULT_MAXIMUM_DATA_SET_SIZE);
+	}
+	
+	public CoverageSizeAlgorithmHeuristic(GridDataset gridDataset, List<String> gridVariableList, FeatureCollection<?, ?> featureCollection,
+			Date dateTimeStart, Date dateTimeEnd, boolean requireFullCoverage, long maxSize) {
+		this.gridDataset = gridDataset;
 		this.gridVariableList = gridVariableList;
 		this.featureCollection = featureCollection;
 		this.dateTimeStart = dateTimeStart;
 		this.dateTimeEnd = dateTimeEnd;
 		this.requireFullCoverage = requireFullCoverage;
+		this.maximumSizeConfigured = maxSize;
 	}
 
 	/**
@@ -133,5 +130,4 @@ public class CoverageSizeAlgorithmHeuristic extends AlgorithmHeuristic {
 			throw new AlgorithmHeuristicException(message.toString());
 		}
 	}
-
 }

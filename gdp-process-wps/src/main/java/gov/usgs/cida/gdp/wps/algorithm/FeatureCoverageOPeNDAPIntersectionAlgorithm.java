@@ -144,9 +144,9 @@ public class FeatureCoverageOPeNDAPIntersectionAlgorithm extends AbstractAnnotat
 	@Execute
 	public void process() {
 		GridDataset gridDataSet = null;
-		List<GridCellVisitor> heuristics = setupHeuristics();
 		try {
 			gridDataSet = GDPAlgorithmUtil.generateGridDataSet(datasetURI);
+			List<GridCellVisitor> heuristics = setupHeuristics(gridDataSet);
 			// Pretend that we are starting traversal using visitor
 			for (GridCellVisitor visitor : heuristics) {
 				visitor.traverseStart(gridDataSet.findGridDatatype(datasetId.get(0)));
@@ -204,9 +204,9 @@ public class FeatureCoverageOPeNDAPIntersectionAlgorithm extends AbstractAnnotat
 		}
 	}
 
-	private List<GridCellVisitor> setupHeuristics() {
+	private List<GridCellVisitor> setupHeuristics(GridDataset gridDataset) {
 		List<GridCellVisitor> heuristics = new LinkedList<>();
-		CoverageSizeAlgorithmHeuristic coverageSize = new CoverageSizeAlgorithmHeuristic(datasetId, featureCollection, timeStart, timeEnd, requireFullCoverage);
+		CoverageSizeAlgorithmHeuristic coverageSize = new CoverageSizeAlgorithmHeuristic(gridDataset, datasetId, featureCollection, timeStart, timeEnd, requireFullCoverage);
 		heuristics.add(coverageSize);
 		return heuristics;
 	}
