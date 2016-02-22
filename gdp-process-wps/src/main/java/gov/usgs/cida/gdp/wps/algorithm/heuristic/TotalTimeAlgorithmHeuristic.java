@@ -1,5 +1,6 @@
 package gov.usgs.cida.gdp.wps.algorithm.heuristic;
 
+import gov.usgs.cida.gdp.constants.AppConstant;
 import gov.usgs.cida.gdp.wps.algorithm.heuristic.exception.AlgorithmHeuristicException;
 import org.apache.commons.lang.time.StopWatch;
 import org.joda.time.MutablePeriod;
@@ -16,9 +17,6 @@ import ucar.nc2.dt.GridDatatype;
 public class TotalTimeAlgorithmHeuristic extends AlgorithmHeuristic {
 	
 	private static final Logger log = LoggerFactory.getLogger(TotalTimeAlgorithmHeuristic.class);
-
-	private static final int DEFAULT_EVALUATION_STEPS = 7;
-	private static final long DEFAULT_MAX_ALLOWED_TIME = 24 * 60 * 60 * 1000;
 	
 	private int datasetCount;
 	private int totalTimestepsPerDataset;
@@ -38,7 +36,8 @@ public class TotalTimeAlgorithmHeuristic extends AlgorithmHeuristic {
 	}
 	
 	public TotalTimeAlgorithmHeuristic(int datasetCount) {
-		this(datasetCount, DEFAULT_EVALUATION_STEPS, DEFAULT_MAX_ALLOWED_TIME);
+		this(datasetCount, Integer.parseInt(AppConstant.HEURISTIC_EVALUATION_STEPS.getValue()),
+				Long.parseLong(AppConstant.HEURISTIC_TIME_TOTAL_MAX.getValue()));
 	}
 	
 	@Override

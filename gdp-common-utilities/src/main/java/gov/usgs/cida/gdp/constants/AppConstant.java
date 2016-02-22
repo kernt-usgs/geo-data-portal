@@ -37,7 +37,14 @@ public enum AppConstant {
 
     URS_USERNAME("gdp.login.urs.username"), // Username to use when passing through to URS resources
     URS_PASSWORD("gdp.login.urs.password"), // Password to use when passing through to URS resources
-    URS_HOST("gdp.login.urs.host"); // URS hostname that servers redirect to (may need to be list in future)
+    URS_HOST("gdp.login.urs.host"), // URS hostname that servers redirect to (may need to be list in future)
+
+    HEURISTIC_EVALUATION_STEPS("gdp.heuristic.evaluation.steps"), // Number of timesteps to use for heuristic estimate
+    HEURISTIC_COVERAGE_OUTPUT_MAX("gdp.heuristic.coverage.output.max"), // Max bytes for heuristic to fail on
+    HEURISTIC_GEOMETRY_MEMORY_MAX("gdp.heuristic.geometry.memory.max"), // Max bytes for process at single timestep
+    HEURISTIC_GEOMETRY_FEATURE_EDGES("gdp.heuristic.geometry.feature.edges"), // Heuristic value for edges per feature
+    HEURISTIC_SUMMARY_OUTPUT_MAX("gdp.heuristic.summary.output.max"), // Max size for csv/tsv file
+    HEURISTIC_TIME_TOTAL_MAX("gdp.heuristic.time.max"); // Total job time to allow before failing (actual processing)
 
     private String input;
     private String value;
@@ -169,6 +176,30 @@ public enum AppConstant {
                 result = "uat.urs.earthdata.nasa.gov";
             }
 
+            // HEURISTIC_EVALUATION_STEPS
+            if (input.equals("gdp.heuristic.evaluation.steps")) {
+                result = "7";
+            }
+            // HEURISTIC_COVERAGE_OUTPUT_MAX
+            if (input.equals("gdp.heuristic.coverage.output.max")) {
+                result = String.valueOf(1024l * 1024l * 500l); // 500 MB
+            }
+            // HEURISTIC_GEOMETRY_MEMORY_MAX
+            if (input.equals("gdp.heuristic.geometry.memory.max")) {
+                result = String.valueOf(1024l * 1024l * 1024l * 2l); // 2 GB
+            }
+            // HEURISTIC_GEOMETRY_FEATURE_EDGES
+            if (input.equals("gdp.heuristic.geometry.feature.edges")) {
+                result = "100";
+            }
+            // HEURISTIC_SUMMARY_OUTPUT_MAX
+            if (input.equals("gdp.heuristic.summary.output.max")) {
+                result = String.valueOf(1024l * 1024l * 1024l * 5l); // 5 GB
+            }
+            // HEURISTIC_TIME_TOTAL_MAX
+            if (input.equals("gdp.heuristic.time.max")) {
+                result = String.valueOf(24l * 60l * 60l * 1000l); // 24 hours
+            }
             System.setProperty(input, result);
         }
 

@@ -1,5 +1,6 @@
 package gov.usgs.cida.gdp.wps.algorithm.heuristic;
 
+import gov.usgs.cida.gdp.constants.AppConstant;
 import gov.usgs.cida.gdp.coreprocessing.analysis.grid.GridUtility;
 import gov.usgs.cida.gdp.utilities.OPeNDAPUtils;
 import gov.usgs.cida.gdp.utilities.exception.OPeNDAPUtilException;
@@ -39,7 +40,6 @@ public class CoverageSizeAlgorithmHeuristic extends AlgorithmHeuristic {
 
 	private static final Logger log = LoggerFactory.getLogger(CoverageSizeAlgorithmHeuristic.class);
 
-	public static final long DEFAULT_MAXIMUM_DATA_SET_SIZE = 1024l * 1024l * 500l; // 500 MB
 	private static final int DEFAULT_DATATYPES_TO_ESTIMATE = 1;
 
 	private GridDataset gridDataset;
@@ -54,7 +54,8 @@ public class CoverageSizeAlgorithmHeuristic extends AlgorithmHeuristic {
 
 	public CoverageSizeAlgorithmHeuristic(GridDataset gridDataset, List<String> gridVariableList, FeatureCollection<?, ?> featureCollection,
 			Date dateTimeStart, Date dateTimeEnd, boolean requireFullCoverage) {
-		this(gridDataset, gridVariableList, featureCollection, dateTimeStart, dateTimeEnd, requireFullCoverage, DEFAULT_MAXIMUM_DATA_SET_SIZE);
+		this(gridDataset, gridVariableList, featureCollection, dateTimeStart, dateTimeEnd,
+				requireFullCoverage, Long.parseLong(AppConstant.HEURISTIC_COVERAGE_OUTPUT_MAX.getValue()));
 	}
 	
 	public CoverageSizeAlgorithmHeuristic(GridDataset gridDataset, List<String> gridVariableList, FeatureCollection<?, ?> featureCollection,

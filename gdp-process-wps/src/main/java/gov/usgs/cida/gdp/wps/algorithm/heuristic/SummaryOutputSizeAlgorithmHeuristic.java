@@ -1,6 +1,7 @@
 package gov.usgs.cida.gdp.wps.algorithm.heuristic;
 
 
+import gov.usgs.cida.gdp.constants.AppConstant;
 import gov.usgs.cida.gdp.wps.algorithm.heuristic.exception.AlgorithmHeuristicException;
 import org.apache.commons.io.output.CountingOutputStream;
 import org.slf4j.Logger;
@@ -11,9 +12,6 @@ import ucar.nc2.dt.GridDatatype;
 public class SummaryOutputSizeAlgorithmHeuristic extends AlgorithmHeuristic {
 
 	private static final Logger log = LoggerFactory.getLogger(SummaryOutputSizeAlgorithmHeuristic.class);
-
-	private static final int DEFAULT_EVALUATION_STEPS = 7;
-	public static final long DEFAULT_MAXIMUM_OUTPUT_SIZE = 1024l * 1024l * 1024l * 5l; // 5 GB
 	
 	private CountingOutputStream cos;
 	private int datasetCount;
@@ -32,7 +30,8 @@ public class SummaryOutputSizeAlgorithmHeuristic extends AlgorithmHeuristic {
 	}
 	
 	public SummaryOutputSizeAlgorithmHeuristic(CountingOutputStream cos, int datasetCount) {
-		this(cos, datasetCount, DEFAULT_EVALUATION_STEPS, DEFAULT_MAXIMUM_OUTPUT_SIZE);
+		this(cos, datasetCount, Integer.parseInt(AppConstant.HEURISTIC_EVALUATION_STEPS.getValue()),
+				Long.parseLong(AppConstant.HEURISTIC_SUMMARY_OUTPUT_MAX.getValue()));
 	}
 
 	@Override

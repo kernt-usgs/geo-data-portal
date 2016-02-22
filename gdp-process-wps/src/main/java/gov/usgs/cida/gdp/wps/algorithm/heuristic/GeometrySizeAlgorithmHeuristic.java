@@ -1,5 +1,6 @@
 package gov.usgs.cida.gdp.wps.algorithm.heuristic;
 
+import gov.usgs.cida.gdp.constants.AppConstant;
 import org.geotools.feature.FeatureCollection;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
@@ -17,9 +18,6 @@ import ucar.nc2.dt.GridDatatype;
 public class GeometrySizeAlgorithmHeuristic extends AlgorithmHeuristic {
 
 	private static final Logger log = LoggerFactory.getLogger(GeometrySizeAlgorithmHeuristic.class);
-
-	public static final long DEFAULT_MAXIMUM_GRID_SIZE = 1024l * 1024l * 1024l * 2l; // 2GB
-	public static final int DEFAULT_FEATURE_SIZE_HEURISTIC = 100; // Very rough heuristic
 	
 	private static final int SIDES_PER_GRID_CELL = 4;
 
@@ -30,7 +28,8 @@ public class GeometrySizeAlgorithmHeuristic extends AlgorithmHeuristic {
 
 	public GeometrySizeAlgorithmHeuristic(FeatureCollection<SimpleFeatureType, SimpleFeature> featureCollection,
 			boolean requireFullCoverage) {
-		this(featureCollection, requireFullCoverage, DEFAULT_FEATURE_SIZE_HEURISTIC, DEFAULT_MAXIMUM_GRID_SIZE);
+		this(featureCollection, requireFullCoverage, Integer.parseInt(AppConstant.HEURISTIC_GEOMETRY_FEATURE_EDGES.getValue()),
+				Long.parseLong(AppConstant.HEURISTIC_GEOMETRY_MEMORY_MAX.getValue()));
 	}
 
 	public GeometrySizeAlgorithmHeuristic(FeatureCollection<SimpleFeatureType, SimpleFeature> featureCollection,
