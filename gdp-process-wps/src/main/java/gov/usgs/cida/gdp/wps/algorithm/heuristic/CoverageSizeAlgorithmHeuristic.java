@@ -126,7 +126,7 @@ public class CoverageSizeAlgorithmHeuristic extends AlgorithmHeuristic {
 					.append("documentation for more information: ")
 					.append(OPeNDAPurl);
 			} catch (OPeNDAPUtilException e) {
-				message.append(String.format("Unable to generate OPeNDAP URI [{}]", e.getMessage()));
+				message.append(String.format("  Unable to generate OPeNDAP URI [{}]", e.getMessage()));
 			}
 			throw new AlgorithmHeuristicException(message.toString());
 		}
