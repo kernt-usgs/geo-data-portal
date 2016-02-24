@@ -22,7 +22,7 @@ $(document).ready(function () {
 					$.each(processJSON, function (idx, data) {
 						var $dataRow = $(trString).appendTo($table);
 						$dataRow.append(
-							$(tdString).append($('<a/>').attr('href', data.requestLink).html('->')),
+							$(tdString).append($('<a/>').attr('href', data.requestLink).attr('target', '_blank').html('->')),
 							$(tdString).text(data.identifier),
 							$(tdString).text(data.status),
 							$(tdString).text(data.creationTime),
