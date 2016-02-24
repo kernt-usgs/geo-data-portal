@@ -15,6 +15,9 @@
         <p>Geo Data Portal Web Processing Service Dashboard</p>
         <input id="loadProcessesButton" type="button" value="Load Processes" />Last loaded: <span id="lastProcessLoad">never</span>
         <br />
+        <input id="previousPageButton" type="button" value="&lt; Previous Page"/>
+        <input id="nextPageButton" type="button" value="Next Page &gt;"/>
+
         <div id="processData">Load processes...</div>
     </body>
 </html>

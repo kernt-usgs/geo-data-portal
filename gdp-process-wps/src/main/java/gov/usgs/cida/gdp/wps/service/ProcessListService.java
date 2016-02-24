@@ -23,6 +23,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.transform.stream.StreamSource;
 import net.opengis.wps.v_1_0_0.ExecuteResponse;
 import net.opengis.wps.v_1_0_0.StatusType;
+import org.apache.commons.lang.ClassUtils;
 import org.apache.commons.lang.StringUtils;
 import org.n52.wps.ServerDocument;
 import org.n52.wps.commons.WPSConfig;
@@ -121,7 +122,7 @@ public class ProcessListService extends BaseProcessServlet {
 						startTime = startDate.getTime();
 					}
 					data.setRequestId(requestId);
-					data.setIdentifier(wpsAlgorithmIdentifier);
+					data.setIdentifier(ClassUtils.getShortClassName(wpsAlgorithmIdentifier));
 					data.setErrorMessage(exceptionText);
 					data.setStatus(status);
 					data.setCreationTime(creationDate.getTime());

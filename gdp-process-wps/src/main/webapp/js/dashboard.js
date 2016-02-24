@@ -3,10 +3,11 @@ $(document).ready(function () {
 	var trString = "<tr />";
 	var thString = "<th />";
 	var tdString = "<td />";
+	var page = 1;
 	
-	$('#loadProcessesButton').click(function () {
+	var reload = function () {
 		$('#lastProcessLoad').text(new Date().timeNow());
-		$.get('list')
+		$.get('list?page=' + page)
 			.done(function (processJSON) {
 				$('#processData').empty();
 				if (processJSON.length) {
@@ -36,6 +37,19 @@ $(document).ready(function () {
 			.fail(function (jqXHR) {
 				$('#processData').html(jqXHR.responseText);
 			});
+	};
+	
+	$('#loadProcessesButton').click(reload);
+	
+	$('#previousPageButton').click(function() {
+		if (page > 1) {
+			page--;
+		}
+		reload();
+	});
+	$('#nextPageButton').click(function() {
+		page++;
+		reload();
 	});
 
 	$('#reportButton').click(function () {
