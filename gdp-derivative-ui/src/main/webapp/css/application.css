@@ -78,6 +78,10 @@ div#title.xtb-text span.x-combo-list-item {
     border-color: #D0DEF0 !important;
 }
 
+.x-combo-list-item {
+    width: 400px;
+}
+
 #plotter-prefill-text {
     color: #15428B; 
     width: 100%;

@@ -30,7 +30,7 @@
            ]
        },
        "serviceIdentification" : {
-           "wms" : "http://cida-eros-threddsqa.er.usgs.gov:8080/thredds/wms/cmip5_bcca/derivatives/ncml/days_tmax_abv_cmip5_der_periods_rcp45.ncml?service=WMS&version=1.1.1&request=GetCapabilities"
+           "wms" : "http://cida.usgs.gov/thredds/wms/cmip5_bcca/derivatives/ncml/days_tmax_abv_cmip5_der_periods_rcp45.ncml?service=WMS&version=1.1.1&request=GetCapabilities"
        }
    },{
        "identifier" : "days_with_tmax_above_rcp60",
@@ -55,7 +55,7 @@
            ]
        },
        "serviceIdentification" : {
-           "wms" : "http://cida-eros-threddsqa.er.usgs.gov:8080/thredds/wms/cmip5_bcca/derivatives/ncml/days_tmax_abv_cmip5_der_periods_rcp60.ncml?service=WMS&version=1.1.1&request=GetCapabilities"
+           "wms" : "http://cida.usgs.gov/thredds/wms/cmip5_bcca/derivatives/ncml/days_tmax_abv_cmip5_der_periods_rcp60.ncml?service=WMS&version=1.1.1&request=GetCapabilities"
        }
    },{
        "identifier" : "days_with_tmax_above_rcp26",
@@ -84,7 +84,7 @@
            ]
        },
        "serviceIdentification" : {
-           "wms" : "http://cida-eros-threddsqa.er.usgs.gov:8080/thredds/wms/cmip5_bcca/derivatives/ncml/days_tmax_abv_cmip5_der_periods_rcp26.ncml?service=WMS&version=1.1.1&request=GetCapabilities"
+           "wms" : "http://cida.usgs.gov/thredds/wms/cmip5_bcca/derivatives/ncml/days_tmax_abv_cmip5_der_periods_rcp26.ncml?service=WMS&version=1.1.1&request=GetCapabilities"
        }
    },{
        "identifier" : "days_with_tmax_above_rcp85",
@@ -118,7 +118,7 @@
            ]
        },
        "serviceIdentification" : {
-           "wms" : "http://cida-eros-threddsqa.er.usgs.gov:8080/thredds/wms/cmip5_bcca/derivatives/ncml/days_tmax_abv_cmip5_der_periods_rcp85.ncml?service=WMS&version=1.1.1&request=GetCapabilities"
+           "wms" : "http://cida.usgs.gov/thredds/wms/cmip5_bcca/derivatives/ncml/days_tmax_abv_cmip5_der_periods_rcp85.ncml?service=WMS&version=1.1.1&request=GetCapabilities"
        }
    }
 ]
