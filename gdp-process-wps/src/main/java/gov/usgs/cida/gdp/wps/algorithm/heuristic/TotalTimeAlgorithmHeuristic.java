@@ -53,8 +53,8 @@ public class TotalTimeAlgorithmHeuristic extends AlgorithmHeuristic {
 			stopwatch.stop();
 			long estimatedTime = estimateTotalTime();
 			if (estimatedTime > maxTime) {
-				throw new AlgorithmHeuristicException(String.format("Estimated process time exceeds {}. Estimated time is {}.", 
-						toISOPeriod(maxTime), toISOPeriod(estimatedTime)));
+				throw new AlgorithmHeuristicException(String.format("Estimated process time of %s exceeds limit of %s.", 
+						toISOPeriod(estimatedTime), toISOPeriod(maxTime)));
 			}
 		}
 	}

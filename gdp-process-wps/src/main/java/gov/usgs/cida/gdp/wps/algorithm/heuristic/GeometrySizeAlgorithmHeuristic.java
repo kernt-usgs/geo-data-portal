@@ -7,6 +7,7 @@ import org.opengis.feature.simple.SimpleFeatureType;
 
 import gov.usgs.cida.gdp.coreprocessing.analysis.grid.GridUtility;
 import gov.usgs.cida.gdp.wps.algorithm.heuristic.exception.AlgorithmHeuristicException;
+import org.apache.commons.io.FileUtils;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
 import org.slf4j.Logger;
@@ -72,7 +73,8 @@ public class GeometrySizeAlgorithmHeuristic extends AlgorithmHeuristic {
 		long totalMemoryEstimate = gridCellEdges + gridMemoryUsage + featureMemoryUsage;
 
 		if (totalMemoryEstimate >= maximumSizeConfigured) {
-			throw new AlgorithmHeuristicException("One or more of the polygons in the submitted set is too large for the gridded dataset's resolution.");
+			throw new AlgorithmHeuristicException(String.format("Estimated size of %s exceeds max memory usages of %s.",
+					FileUtils.byteCountToDisplaySize(totalMemoryEstimate), FileUtils.byteCountToDisplaySize(maximumSizeConfigured)));
 		}
 	}
 }
