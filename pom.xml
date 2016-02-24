@@ -18,10 +18,7 @@
 		<module>gdp-utility-wps</module>
 		<module>gdp-process-wps</module>
 		<module>geoserver</module>
-		<module>gdp-ui</module>
 		<module>gdp-derivative-ui</module>
-		<module>gdp-ui-landing</module>
-		<module>gdp-csw-client</module>
 	</modules>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
