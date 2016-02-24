@@ -80,11 +80,6 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.easymock</groupId>
-			<artifactId>easymock</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
 			<groupId>gov.usgs.cida</groupId>
 			<artifactId>proxy-utils</artifactId>
 		</dependency>

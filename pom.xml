@@ -11,13 +11,12 @@
 		<module>gdp-data-access</module>
 		<module>gdp-core-processing</module>
 		<module>gdp-liquibase-changelogs</module>
-		<!-- can't add in until netcdf-jna, netcdf-dsg and aparapi projects as added to jenkins/maven -->
-		<!--<module>gdp-derivative-processing</module>-->
-		<module>gdp-proxy</module>
 		<module>gdp-52n-wps-tests</module>
 		<module>gdp-utility-wps</module>
 		<module>gdp-process-wps</module>
 		<module>geoserver</module>
+		<!-- These two can be removed when derivative portal is reworked -->
+		<module>gdp-proxy</module>
 		<module>gdp-derivative-ui</module>
 	</modules>
 	<properties>
@@ -37,7 +36,7 @@
 	<organization>
 		<name>Center for Integrated Data Analytics</name>
 		<url>http://cida.usgs.gov</url>
-	</organization>    
+	</organization>
 	<developers>
 		<developer>
 			<name>Jordan Walker</name>
@@ -537,11 +536,6 @@
 				<groupId>org.jdom</groupId>
 				<artifactId>jdom</artifactId>
 				<version>2.0.2</version>
-			</dependency>
-			<dependency>
-				<groupId>org.easymock</groupId>
-				<artifactId>easymock</artifactId>
-				<version>3.0</version>
 			</dependency>
 			<dependency>
 				<groupId>net.java.dev.stax-utils</groupId>
