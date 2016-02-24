@@ -9,6 +9,7 @@ import gov.usgs.cida.gdp.wps.algorithm.heuristic.exception.AlgorithmHeuristicExc
 
 import java.util.Date;
 import java.util.List;
+import org.apache.commons.io.FileUtils;
 
 import org.geotools.feature.FeatureCollection;
 import org.opengis.referencing.FactoryException;
@@ -113,8 +114,8 @@ public class CoverageSizeAlgorithmHeuristic extends AlgorithmHeuristic {
 		if (totalSize >= maximumSizeConfigured) {
 			StringBuilder message = new StringBuilder();
 			message.append(String.format(
-					"Estimated Data Size [{} bytes] is greater than allowed maximum [{} bytes].",
-					totalSize, maximumSizeConfigured));
+					"Estimated data size %s is greater than allowed maximum %s.",
+					FileUtils.byteCountToDisplaySize(totalSize), FileUtils.byteCountToDisplaySize(maximumSizeConfigured)));
 			
 			/*
 			 * Retrieve the OPeNDAP URL for this request
@@ -126,7 +127,7 @@ public class CoverageSizeAlgorithmHeuristic extends AlgorithmHeuristic {
 					.append("documentation for more information: ")
 					.append(OPeNDAPurl);
 			} catch (OPeNDAPUtilException e) {
-				message.append(String.format("  Unable to generate OPeNDAP URI [{}]", e.getMessage()));
+				message.append(String.format("  Unable to generate OPeNDAP URI [%s]", e.getMessage()));
 			}
 			throw new AlgorithmHeuristicException(message.toString());
 		}

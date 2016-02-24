@@ -202,7 +202,6 @@ public class FeatureWeightedGridStatisticsAlgorithm extends AbstractAnnotatedAlg
 		 * Lets get the first variable and create a GridDatatype
 		 */
 		if (datasetId.isEmpty()) {
-			log.error("Error subsetting gridded data.  Grid variable list is empty! ");
 			addError("Error subsetting gridded data.  Grid variable list is empty! ");
 			return;
 		}

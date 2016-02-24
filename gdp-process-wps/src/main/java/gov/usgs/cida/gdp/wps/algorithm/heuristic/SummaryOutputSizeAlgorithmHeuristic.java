@@ -3,6 +3,7 @@ package gov.usgs.cida.gdp.wps.algorithm.heuristic;
 
 import gov.usgs.cida.gdp.constants.AppConstant;
 import gov.usgs.cida.gdp.wps.algorithm.heuristic.exception.AlgorithmHeuristicException;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.output.CountingOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +48,8 @@ public class SummaryOutputSizeAlgorithmHeuristic extends AlgorithmHeuristic {
 			long bytesSoFar = cos.getByteCount();
 			long estimatedTime = estimateTotalBytes(bytesSoFar);
 			if (estimatedTime > maximumSizeConfigured) {
-				throw new AlgorithmHeuristicException("Maximum Output Size Exception: Estimated process output exceeds preset limit.");
+				throw new AlgorithmHeuristicException(String.format("Estimated output size of %s exceeds limit of %s.",
+						FileUtils.byteCountToDisplaySize(estimatedTime), FileUtils.byteCountToDisplaySize(maximumSizeConfigured)));
 			}
 		}
 	}
