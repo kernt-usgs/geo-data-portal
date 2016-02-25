@@ -44,7 +44,7 @@ public abstract class BaseProcessServlet extends HttpServlet {
 	private static final String REQUESTS_QUERY = "select request_id, wps_algorithm_identifier, status, creation_time, start_time, end_time from response order by creation_time desc limit ? offset ?;";
 	private static final String REQUEST_ENTITY_QUERY = "SELECT request_xml FROM request WHERE REQUEST_ID = ?";
 	private static final long serialVersionUID = -149568144765889031L;
-	protected static Unmarshaller wpsUnmarshaller;
+	protected Unmarshaller wpsUnmarshaller;
 	private ConnectionHandler connectionHandler;
 
 	public BaseProcessServlet() {

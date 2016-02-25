@@ -110,8 +110,8 @@ public class FeatureCategoricalGridCoverageAlgorithm extends AbstractAnnotatedAl
         BufferedWriter writer = null;
 
         try {
-
-            output = File.createTempFile(getClass().getSimpleName(), delimiter.extension, new File(AppConstant.WORK_LOCATION.getValue()));
+            String extension = (delimiter == null) ? Delimiter.getDefault().extension : delimiter.extension;
+            output = File.createTempFile(getClass().getSimpleName(), extension, new File(AppConstant.WORK_LOCATION.getValue()));
             writer = new BufferedWriter(new FileWriter(output));
 
             for (String currentDatasetId : datasetId) {
