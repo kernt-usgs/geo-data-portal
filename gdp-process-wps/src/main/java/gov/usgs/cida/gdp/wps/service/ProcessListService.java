@@ -23,7 +23,10 @@ import javax.xml.bind.JAXBException;
 import javax.xml.transform.stream.StreamSource;
 import net.opengis.wps.v_1_0_0.ExecuteResponse;
 import net.opengis.wps.v_1_0_0.StatusType;
+import org.apache.commons.lang.ClassUtils;
 import org.apache.commons.lang.StringUtils;
+import org.n52.wps.ServerDocument;
+import org.n52.wps.commons.WPSConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,6 +40,23 @@ public class ProcessListService extends BaseProcessServlet {
 	private static final int DATA_QUERY_REQUEST_ID_PARAM_INDEX = 1;
 	private static final long serialVersionUID = 1L;
 	private static final int NO_OFFSET = 0;
+	
+	private static String BASE_URL;
+
+	@Override
+	public void init() throws ServletException {
+		super.init();
+		ServerDocument.Server server = WPSConfig.getInstance().getWPSConfig().getServer();
+		StringBuilder url = new StringBuilder();
+		url.append(server.getProtocol())
+				.append("://")
+				.append(server.getHostname())
+				.append(":")
+				.append(server.getHostport())
+				.append("/")
+				.append(server.getWebappPath());
+		BASE_URL = url.toString();
+	}
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -69,12 +89,10 @@ public class ProcessListService extends BaseProcessServlet {
 
 	private List<DashboardData> getDashboardData(int offset, HttpServletRequest req) throws SQLException {
 		List<DashboardData> dataset = new ArrayList<>();
-		String requestUrl = req.getRequestURL().toString();
-		String cleanedUrl = requestUrl.substring(0, requestUrl.indexOf("/list"));
 		for (String request : getRequestIds(DEFAULT_LIMIT, offset)) {
 			DashboardData dashboardData = buildDashboardData(request);
 			dashboardData.setRequestId(request);
-			dashboardData.setRequestLink(cleanedUrl + "/request?id=" + request);
+			dashboardData.setRequestLink(BASE_URL + "/request?id=" + request);
 			dataset.add(dashboardData);
 		}
 		return dataset;
@@ -102,7 +120,7 @@ public class ProcessListService extends BaseProcessServlet {
 						startTime = startDate.getTime();
 					}
 					data.setRequestId(requestId);
-					data.setIdentifier(wpsAlgorithmIdentifier);
+					data.setIdentifier(ClassUtils.getShortClassName(wpsAlgorithmIdentifier));
 					data.setErrorMessage(exceptionText);
 					data.setStatus(status);
 					data.setCreationTime(creationDate.getTime());

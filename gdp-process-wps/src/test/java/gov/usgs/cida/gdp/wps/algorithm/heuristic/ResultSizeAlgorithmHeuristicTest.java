@@ -4,8 +4,6 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import gov.usgs.cida.gdp.wps.algorithm.heuristic.exception.AlgorithmHeuristicException;
 
@@ -20,7 +18,6 @@ import java.util.List;
 import java.util.Locale;
 
 import org.geotools.data.FileDataStoreFinder;
-import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.feature.FeatureCollection;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;

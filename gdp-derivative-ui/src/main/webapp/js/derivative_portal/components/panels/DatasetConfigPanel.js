@@ -360,6 +360,22 @@ GDP.DatasetConfigPanel = Ext.extend(Ext.Panel, {
 
 
         this.gcmStore.removeAll();
+
+		// Need to add in the quicktip text from parentRecordStore to the leaf record.
+		var parentGcms = this.parentRecordStore.data.get(0).data.gcms;
+		var leafGcms = record.get('gcms');
+		var findQuicktip = function(leafGcm) {
+			Ext.each(parentGcms, function(parentGcm) {
+				if (parentGcm[0] === leafGcm[0]) {
+					leafGcm.push(parentGcm[1]);
+					return;
+				};
+			});
+		};
+		Ext.each(leafGcms, function(gcm) {
+			findQuicktip(gcm);
+		});
+
         this.gcmStore.loadData(record.get("gcms"), true);
 
 		this.controller.setOPeNDAPEndpoint(record.get("opendap"));

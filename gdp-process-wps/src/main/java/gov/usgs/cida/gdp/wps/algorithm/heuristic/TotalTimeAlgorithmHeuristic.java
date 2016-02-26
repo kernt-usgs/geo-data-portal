@@ -53,7 +53,8 @@ public class TotalTimeAlgorithmHeuristic extends AlgorithmHeuristic {
 			stopwatch.stop();
 			long estimatedTime = estimateTotalTime();
 			if (estimatedTime > maxTime) {
-				throw new AlgorithmHeuristicException("Max Time Exception : Estimated process time exceeds preset limit.");
+				throw new AlgorithmHeuristicException(String.format("Estimated process time of %s exceeds limit of %s.", 
+						toISOPeriod(estimatedTime), toISOPeriod(maxTime)));
 			}
 		}
 	}
@@ -78,9 +79,12 @@ public class TotalTimeAlgorithmHeuristic extends AlgorithmHeuristic {
 		}
 		double percentComplete = (double)stepsTimed / (double)(datasetCount * totalTimestepsPerDataset);
 		totalTime = Math.round(stopwatch.getTime() / percentComplete);
-		ReadablePeriod period = new MutablePeriod(totalTime);
-		log.debug("Total estimated time: {}", period);
+		log.debug("Total estimated time: {}", toISOPeriod(totalTime));
 		return totalTime;
 	}
 
+	private String toISOPeriod(long totalTime) {
+		ReadablePeriod period = new MutablePeriod(totalTime);
+		return period.toString();
+	}
 }

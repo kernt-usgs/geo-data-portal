@@ -8,7 +8,7 @@ import java.util.Calendar;
 */
 public class DashboardData {
 
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+    private static final String DATE_FORMAT = "yyyy-MM-dd HH:mm";
     private static final long MILLIS_PER_DAY = 1000 * 60 * 60 * 24;
     private static final long MILLIS_PER_HOUR = 1000 * 60 * 60;
     private static final long MILLIS_PER_MIN = 1000 * 60;
@@ -44,8 +44,9 @@ public class DashboardData {
 
     public void setCreationTime(long creationTime) {
         Calendar cal = Calendar.getInstance();
+        SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
         cal.setTimeInMillis(creationTime);
-        this.creationTime = DATE_FORMAT.format(cal.getTime());
+        this.creationTime = sdf.format(cal.getTime());
     }
 
     public String getElapsedTime() {

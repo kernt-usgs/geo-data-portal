@@ -1,5 +1,6 @@
 package gov.usgs.cida.gdp.wps.algorithm.heuristic;
 
+import gov.usgs.cida.gdp.wps.algorithm.heuristic.exception.AlgorithmHeuristicException;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import ucar.nc2.Dimension;
@@ -53,11 +54,17 @@ public class TimingHeuristicGridCellVisitorTest {
 		assertThat(result, is(equalTo(5000l)));
 	}
 	
-	@Test(expected = RuntimeException.class)
+	@Test
 	public void testExceedsTotalTime() throws InterruptedException {
 		TotalTimeAlgorithmHeuristic instance = new TotalTimeAlgorithmHeuristic(2, 1, 4999);
+		instance.traverseStart(datatype);
 		instance.tStart(1);
 		Thread.sleep(500);
-		instance.tEnd(1);
+		try {
+			instance.tEnd(1);
+			fail();
+		} catch (AlgorithmHeuristicException e) {
+			System.out.println(e.getMessage());
+		}
 	}
 }
