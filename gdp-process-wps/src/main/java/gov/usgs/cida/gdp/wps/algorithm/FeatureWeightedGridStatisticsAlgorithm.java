@@ -29,11 +29,10 @@ import gov.usgs.cida.gdp.coreprocessing.Delimiter;
 import gov.usgs.cida.gdp.coreprocessing.analysis.grid.FeatureCoverageWeightedGridStatistics;
 import gov.usgs.cida.gdp.coreprocessing.analysis.grid.GridCellVisitor;
 import gov.usgs.cida.gdp.coreprocessing.analysis.grid.Statistics1DWriter.GroupBy;
-import gov.usgs.cida.gdp.coreprocessing.analysis.grid.Statistics1DWriter.Statistic;
+import gov.usgs.cida.gdp.coreprocessing.analysis.grid.WeightedStatistic;
 import gov.usgs.cida.gdp.wps.algorithm.heuristic.GeometrySizeAlgorithmHeuristic;
 import gov.usgs.cida.gdp.wps.algorithm.heuristic.SummaryOutputSizeAlgorithmHeuristic;
 import gov.usgs.cida.gdp.wps.algorithm.heuristic.TotalTimeAlgorithmHeuristic;
-import gov.usgs.cida.gdp.wps.algorithm.heuristic.exception.AlgorithmHeuristicException;
 import gov.usgs.cida.gdp.wps.binding.CSVFileBinding;
 import gov.usgs.cida.gdp.wps.binding.GMLStreamingFeatureCollectionBinding;
 import java.io.FileOutputStream;
@@ -63,7 +62,7 @@ public class FeatureWeightedGridStatisticsAlgorithm extends AbstractAnnotatedAlg
 	private boolean requireFullCoverage = true;
 	private Date timeStart;
 	private Date timeEnd;
-	private List<Statistic> statistics;
+	private List<WeightedStatistic> statistics;
 	private GroupBy groupBy;
 	private Delimiter delimiter;
 	private boolean summarizeTimeStep = false;
@@ -137,7 +136,7 @@ public class FeatureWeightedGridStatisticsAlgorithm extends AbstractAnnotatedAlg
 			title = "Statistics",
 			abstrakt = "Statistics that will be returned for each feature in the processing output.",
 			maxOccurs = ENUM_COUNT)
-	public void setStatistics(List<Statistic> statistics) {
+	public void setStatistics(List<WeightedStatistic> statistics) {
 		this.statistics = statistics;
 	}
 
@@ -236,7 +235,7 @@ public class FeatureWeightedGridStatisticsAlgorithm extends AbstractAnnotatedAlg
 						featureAttributeName,
 						gridDatatype.makeSubset(null, null, timeRange, null, null, null),
 						setupHeuristics(cos),
-						statistics == null || statistics.isEmpty() ? Arrays.asList(Statistic.values()) : statistics,
+						statistics == null || statistics.isEmpty() ? Arrays.asList(WeightedStatistic.values()) : statistics,
 						writer,
 						groupBy == null ? GroupBy.STATISTIC : groupBy,
 						delimiter == null ? Delimiter.getDefault() : delimiter,

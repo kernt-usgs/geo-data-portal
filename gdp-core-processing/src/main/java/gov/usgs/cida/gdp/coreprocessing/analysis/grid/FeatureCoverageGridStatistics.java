@@ -5,7 +5,6 @@ import com.google.common.collect.Lists;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import gov.usgs.cida.gdp.coreprocessing.Delimiter;
-import gov.usgs.cida.gdp.coreprocessing.analysis.grid.Statistics1DWriter.Statistic;
 import gov.usgs.cida.gdp.coreprocessing.analysis.statistics.Statistics1D;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
@@ -62,7 +61,7 @@ public class FeatureCoverageGridStatistics {
 			String variableName,
 			Range timeRange,
 			List<GridCellVisitor> additionalVisitors,
-			List<Statistic> statisticList,
+			List<WeightedStatistic> statisticList,
 			Writer writer,
 			GroupBy groupBy,
 			Delimiter delimiter)
@@ -90,7 +89,7 @@ public class FeatureCoverageGridStatistics {
 			String attributeName,
 			GridDatatype gridDatatype,
 			List<GridCellVisitor> additionalVisitors,
-			List<Statistic> statisticList,
+			List<WeightedStatistic> statisticList,
 			Writer writer,
 			GroupBy groupBy,
 			Delimiter delimiter,
