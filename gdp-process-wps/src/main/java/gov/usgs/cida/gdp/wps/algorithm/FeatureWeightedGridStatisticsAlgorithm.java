@@ -1,13 +1,20 @@
 package gov.usgs.cida.gdp.wps.algorithm;
 
+import static org.n52.wps.algorithm.annotation.LiteralDataInput.*;
+
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
+
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.output.CountingOutputStream;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.SchemaException;
 import org.n52.wps.algorithm.annotation.Algorithm;
@@ -15,10 +22,9 @@ import org.n52.wps.algorithm.annotation.ComplexDataInput;
 import org.n52.wps.algorithm.annotation.ComplexDataOutput;
 import org.n52.wps.algorithm.annotation.Execute;
 import org.n52.wps.algorithm.annotation.LiteralDataInput;
-
-import static org.n52.wps.algorithm.annotation.LiteralDataInput.ENUM_COUNT;
-
 import org.n52.wps.server.AbstractAnnotatedAlgorithm;
+import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
 import org.slf4j.Logger;
@@ -35,10 +41,6 @@ import gov.usgs.cida.gdp.wps.algorithm.heuristic.SummaryOutputSizeAlgorithmHeuri
 import gov.usgs.cida.gdp.wps.algorithm.heuristic.TotalTimeAlgorithmHeuristic;
 import gov.usgs.cida.gdp.wps.binding.CSVFileBinding;
 import gov.usgs.cida.gdp.wps.binding.GMLStreamingFeatureCollectionBinding;
-import java.io.FileOutputStream;
-import java.io.OutputStreamWriter;
-import java.util.LinkedList;
-import org.apache.commons.io.output.CountingOutputStream;
 import ucar.ma2.InvalidRangeException;
 import ucar.ma2.Range;
 import ucar.nc2.dt.GridDatatype;
@@ -53,9 +55,9 @@ import ucar.nc2.dt.GridDatatype;
 		abstrakt = "This algorithm generates area weighted statistics of a gridded dataset for a set of vector polygon features. Using the bounding-box that encloses the feature data and the time range, if provided, a subset of the gridded dataset is requested from the remote gridded data server. Polygon representations are generated for cells in the retrieved grid. The polygon grid-cell representations are then projected to the feature data coordinate reference system. The grid-cells are used to calculate per grid-cell feature coverage fractions. Area-weighted statistics are then calculated for each feature using the grid values and fractions as weights. If the gridded dataset has a time range the last step is repeated for each time step within the time range or all time steps if a time range was not supplied.")
 public class FeatureWeightedGridStatisticsAlgorithm extends AbstractAnnotatedAlgorithm {
 
-	private static final Logger log = LoggerFactory.getLogger(FeatureCategoricalGridCoverageAlgorithm.class);
+	protected static final Logger log = LoggerFactory.getLogger(FeatureCategoricalGridCoverageAlgorithm.class);
 
-	private FeatureCollection featureCollection;
+	private FeatureCollection<SimpleFeatureType,SimpleFeature> featureCollection;
 	private String featureAttributeName;
 	private URI datasetURI;
 	private List<String> datasetId;
@@ -75,7 +77,7 @@ public class FeatureWeightedGridStatisticsAlgorithm extends AbstractAnnotatedAlg
 			title = GDPAlgorithmConstants.FEATURE_COLLECTION_TITLE,
 			abstrakt = GDPAlgorithmConstants.FEATURE_COLLECTION_ABSTRACT,
 			binding = GMLStreamingFeatureCollectionBinding.class)
-	public void setFeatureCollection(FeatureCollection featureCollection) {
+	public void setFeatureCollection(FeatureCollection<SimpleFeatureType,SimpleFeature> featureCollection) {
 		this.featureCollection = featureCollection;
 	}
 
