@@ -10,19 +10,6 @@ import org.joda.time.Period;
  */
 public class ObservationMetadata {
 	
-	public static final String CLEAR_METADATA_ELEMENT = "OM_Observation";
-
-	public static final String TIME_PERIOD_ELEMENT = "TimePeriod";
-	public static final String BEGIN_POSITION_ELEMENT = "beginPosition";
-	public static final String END_POSITION_ELEMENT = "endPosition";
-	
-	public static final String PROCEDURE_ELEMENT = "procedure";
-	public static final String OBSERVED_PROPERTY_ELEMENT = "observedProperty";
-	public static final String FEATURE_OF_INTEREST_ELEMENT = "featureOfInterest";
-	
-	public static final String UOM_ELEMENT = "uom";
-	public static final String CODE_ATTRIBUTE = "code";
-	
 	private Period timePeriod = null;
 	private String procedure = null;
 	private String observedProperty = null;

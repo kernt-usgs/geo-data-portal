@@ -113,7 +113,7 @@ public class SweCommonsParser extends XMLTimeseriesParser {
 					if (isElement(UOM_ELEMENT)) {
 						if (this.sharedMetadata != null) {
 							this.sharedMetadata.defaultUnits(
-									reader.getAttributeValue(null, ObservationMetadata.CODE_ATTRIBUTE));
+									reader.getAttributeValue(null, CODE_ATTRIBUTE));
 						}
 					}
 					if (isElement(TEXT_BLOCK_ELEMENT)) {

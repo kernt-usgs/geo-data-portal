@@ -11,10 +11,6 @@ public class Observation {
 	public ObservationMetadata getMetadata() {
 		return metadata;
 	}
-	
-	public static final String POINT_ELEMENT = "point";
-	public static final String TIME_ELEMENT = "time";
-	public static final String VALUE_ELEMENT = "value";
 
 	private boolean ready;
 	private ObservationMetadata metadata;
