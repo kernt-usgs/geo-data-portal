@@ -51,13 +51,13 @@ public class WaterML2Parser extends XMLTimeseriesParser {
 		}
 		try {
 			observation = gatherObservation();
-		} catch (EndOfXmlStreamException | XMLStreamException ex) {
-			log.trace("Done reading xml");
+		} catch (XMLStreamException ex) {
+			log.trace("Exception reading stream");
 		}
 		return observation;
 	}
 	
-	protected Observation gatherObservation() throws XMLStreamException, EndOfXmlStreamException {
+	protected Observation gatherObservation() throws XMLStreamException {
 		Observation ob = null;
 		
 		while (this.reader.hasNext() && (ob == null || !ob.isReady())) {
@@ -123,7 +123,7 @@ public class WaterML2Parser extends XMLTimeseriesParser {
 					}
 					break;
 				case XMLStreamConstants.END_DOCUMENT:
-					throw new EndOfXmlStreamException();
+					log.trace("Reached end of document");
 			}
 		}
 		return ob;

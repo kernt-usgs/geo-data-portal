@@ -65,8 +65,8 @@ public class SweCommonsParser extends XMLTimeseriesParser {
 				observation.setTime(new DateTime(time));
 				observation.setValue(value);
 			}
-		} catch (EndOfXmlStreamException | XMLStreamException ex) {
-			log.trace("Done reading xml");
+		} catch (XMLStreamException ex) {
+			log.trace("Exception reading xml stream");
 		}
 		return observation;
 	}
@@ -75,9 +75,8 @@ public class SweCommonsParser extends XMLTimeseriesParser {
 	 * Block contains multiple "observations" so this just gets to the data
 	 * 
 	 * @throws XMLStreamException
-	 * @throws EndOfXmlStreamException 
 	 */
-	protected void gatherEmptyObservation() throws XMLStreamException, EndOfXmlStreamException {
+	protected void gatherEmptyObservation() throws XMLStreamException {
 		Observation ob = null;
 		
 		while (this.reader.hasNext() && (ob == null || !ob.isReady())) {
@@ -145,7 +144,7 @@ public class SweCommonsParser extends XMLTimeseriesParser {
 					}
 					break;
 				case XMLStreamConstants.END_DOCUMENT:
-					throw new EndOfXmlStreamException();
+					log.trace("Reached end of XML document");
 			}
 		}
 	}
