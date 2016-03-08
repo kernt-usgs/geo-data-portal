@@ -22,4 +22,8 @@ public class TimeseriesTraverser {
 	public void traverse(List<StationTimeseriesVisitor> visitors) {
 		// do stuff
 	}
+	
+	private void readSeries(String station) {
+		
+	}
 }
