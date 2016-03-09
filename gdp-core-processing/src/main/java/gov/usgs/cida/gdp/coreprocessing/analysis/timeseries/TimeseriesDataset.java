@@ -3,10 +3,11 @@ package gov.usgs.cida.gdp.coreprocessing.analysis.timeseries;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.io.FileUtils;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,10 +30,11 @@ public class TimeseriesDataset implements AutoCloseable {
 	private String startDate;
 	private String endDate;
 	
-	private Map<String, File> cachedResults;
+	private List<File> tempFiles;
+	private Map<String, ObservationCollection> openCollections;
 	
 	private String units;
-	private List<String> timesteps;
+	private List<DateTime> timesteps;
 	
 	public TimeseriesDataset(String endpoint, String observedProperty, String startDate, String endDate) {
 		this.endpoint = endpoint;
@@ -40,7 +42,7 @@ public class TimeseriesDataset implements AutoCloseable {
 		this.startDate = startDate;
 		this.endDate = endDate;
 		
-		this.cachedResults = new HashMap<>();
+		this.openCollections = new ConcurrentHashMap<>();
 		this.units = null;
 		this.timesteps = null;
 	}
@@ -53,42 +55,69 @@ public class TimeseriesDataset implements AutoCloseable {
 		}
 	}
 	
-	public List<String> getTimesteps() {
+	public List<DateTime> getTimesteps() {
 		if (timesteps != null) {
 			return timesteps;
 		} else {
 			throw new IllegalStateException("Metadata not populated");
 		}
 	}
-	
-	public void getValue(String station, String timestep) {
-		
+
+	public String getValue(String station, DateTime timestep) {
+		String value = null;
+		ObservationCollection obs = parseData(station);
+		while (obs.hasNext() && value == null) {
+			Observation next = obs.next();
+			if (null != next && next.getTime().isEqual(timestep)) {
+				value = next.getValue();
+			}
+		}
+		return value;
 	}
 	
 	public void populateMetadata(String station) {
-		File fetchData = fetchData(station);
-	}
-	
-	private File fetchData(String station) {
-		return null;
-	}
-	
-	private ObservationCollection parseData(File file) {
-		try {
-			return new ObservationCollection(new FileInputStream(file), new SweCommonsParser());
-		} catch (FileNotFoundException ex) {
-			String message = "Could not read timeseries file";
-			log.error(message);
-			throw new RuntimeException(message, ex);
+		ObservationCollection obCol = parseData(station);
+		while (obCol.hasNext()) {
+			Observation next = obCol.next();
+			if (null == units) {
+				units = next.getMetadata().defaultUnits();
+			}
+			timesteps.add(next.getTime());
 		}
+	}
+	
+	private synchronized ObservationCollection parseData(String station) {
+		ObservationCollection obs = null;
+		if (openCollections.containsKey(station)) {
+			return openCollections.get(station);
+		} else {
+			SOSClient sosClient = new SOSClient(endpoint, new DateTime(startDate),
+					new DateTime(endDate), observedProperty, station);
+			// this is goofy, but I'm taking an asynchronous process and making it synchronous
+			sosClient.run();
+			File fetched = sosClient.getFile();
+			tempFiles.add(fetched);
+			try {
+				obs = new ObservationCollection(new FileInputStream(fetched), new SweCommonsParser());
+				openCollections.put(station, obs);
+			} catch (FileNotFoundException ex) {
+				String message = "Could not read timeseries file";
+				log.error(message);
+				throw new RuntimeException(message, ex);
+			}
+		}
+		return obs;
 	}
 
 	@Override
 	public void close() throws Exception {
-		for (File cacheFile : cachedResults.values()) {
-			boolean deleted = FileUtils.deleteQuietly(cacheFile);
+		for (ObservationCollection obs : openCollections.values()) {
+			obs.close();
+		}
+		for (File tempFile : tempFiles) {
+			boolean deleted = FileUtils.deleteQuietly(tempFile);
 			if (!deleted) {
-				cacheFile.deleteOnExit();
+				tempFile.deleteOnExit();
 			}
 		}
 	}

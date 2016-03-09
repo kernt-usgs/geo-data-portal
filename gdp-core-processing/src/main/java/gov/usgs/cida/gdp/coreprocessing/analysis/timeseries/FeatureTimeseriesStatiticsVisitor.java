@@ -1,8 +1,16 @@
 package gov.usgs.cida.gdp.coreprocessing.analysis.timeseries;
 
+import gov.usgs.cida.gdp.coreprocessing.analysis.grid.Statistics1DWriter;
+import gov.usgs.cida.gdp.coreprocessing.analysis.statistics.Statistics1D;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.LinkedHashMap;
 import java.util.List;
-import org.geotools.feature.FeatureCollection;
-import org.opengis.feature.Feature;
+import java.util.Map;
+import java.util.TimeZone;
+import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -10,32 +18,86 @@ import org.opengis.feature.Feature;
  */
 public class FeatureTimeseriesStatiticsVisitor extends StationTimeseriesVisitor {
 
+	private static final Logger log = LoggerFactory.getLogger(FeatureTimeseriesStatiticsVisitor.class);
+	
+	public final static String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+	public final static String TIMEZONE = "UTC";
+	
 	private List<Object> featureNames;
+	private Statistics1DWriter writer;
+	private SimpleDateFormat dateFormat;
 	
-	public FeatureTimeseriesStatiticsVisitor(List<Object> featureNames) {
+	private TimeseriesDataset dataset;
+	private DateTime currentTimestep;
+	private String tLabel;
+	private Map<String, Statistics1D> stationValueMap;
+	
+	public FeatureTimeseriesStatiticsVisitor(List<Object> featureNames, Statistics1DWriter writer) {
 		this.featureNames = featureNames;
+		this.writer = writer;
+		
+		dateFormat = new SimpleDateFormat(DATE_FORMAT);
+		dateFormat.setTimeZone(TimeZone.getTimeZone(TIMEZONE));
 	}
 	
 	@Override
-	public void processStation(Feature station) {
-		super.processStation(station); //To change body of generated methods, choose Tools | Templates.
+	public void traverseStart(TimeseriesDataset dataset) {
+		try {
+			writer.writeHeader(Statistics1DWriter.buildRowLabel(Statistics1DWriter.TIMESTEPS_LABEL, null));
+		} catch (IOException ex) {
+			log.trace("Couldn't write header",ex);
+		}
 	}
-
+	
 	@Override
-	public void stationStart() {
-		super.stationStart(); //To change body of generated methods, choose Tools | Templates.
+	public void traverseEnd() {
+		dataset = null;
+		currentTimestep = null;
+		tLabel = null;
+		stationValueMap = null;
 	}
-
+	
 	@Override
-	public void timeStart() {
-		super.timeStart(); //To change body of generated methods, choose Tools | Templates.
+	public void timeStart(DateTime timestep) {
+		super.timeStart(timestep);
+		tLabel = dateFormat.format(timestep);
 	}
-
-	@Override
-	public void traverseStart(TimeseriesDataset dataset, FeatureCollection stations) {
-		super.traverseStart(dataset, stations); //To change body of generated methods, choose Tools | Templates.
-	}
+	
 
 	
+	@Override
+	public void stationsStart() {
+		super.stationsStart();
+		stationValueMap = new LinkedHashMap<>();
+		for (Object station : featureNames) {
+			String stationName = station.toString();
+			stationValueMap.put(stationName, new Statistics1D());
+		}
+	}
 	
+	@Override
+	public void stationsEnd() {
+		try {
+			writer.writeRow(
+					Statistics1DWriter.buildRowLabel(tLabel, null),
+					stationValueMap.values(),
+					null);
+		} catch (IOException ex) {
+			log.trace("Couldn't write row");
+		}
+	}
+
+	@Override
+	public void processStations() {
+		super.processStations();
+		if (null == currentTimestep || null == dataset) {
+			throw new IllegalStateException("Visitor used in wrong sequence");
+		}
+		for (Object station : featureNames) {
+			String stationName = station.toString();
+			String value = dataset.getValue(stationName, currentTimestep);
+			stationValueMap.get(stationName).accumulate(Double.parseDouble(value));
+		}
+	}
+
 }

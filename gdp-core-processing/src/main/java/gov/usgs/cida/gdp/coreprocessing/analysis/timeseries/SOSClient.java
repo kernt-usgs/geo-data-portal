@@ -1,27 +1,24 @@
 package gov.usgs.cida.gdp.coreprocessing.analysis.timeseries;
 
-import gov.usgs.cida.nar.resultset.CachedResultSet;
-import gov.usgs.cida.nar.service.SosTableRowComparator;
-import gov.usgs.cida.nar.util.Profiler;
-import gov.usgs.cida.sos.WaterML2Parser;
-
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.sql.ResultSet;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.UUID;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.xml.stream.XMLStreamException;
-
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.client.ClientProperties;
+import org.apache.http.HttpHeaders;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 import org.joda.time.DateTime;
+import org.joda.time.Interval;
+import org.joda.time.ReadableInterval;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +31,8 @@ public class SOSClient extends Thread implements AutoCloseable {
 	private static final Logger log = LoggerFactory.getLogger(SOSClient.class);
 	
 	private static final int MAX_CONNECTIONS = 4;
+	private static final int CLIENT_CONNECTION_TIMEOUT = 10000;
+	private static final int CLIENT_SOCKET_TIMEOUT = 180000;
 	private static int numConnections = 0;
 	
 	private File file;
@@ -64,18 +63,26 @@ public class SOSClient extends Thread implements AutoCloseable {
 	public void close() {
 		// nothing to close anymore
 	}
+	
+	public File getFile() {
+		File doneFile = null;
+		if (fetched) {
+			doneFile = file;
+		}
+		return doneFile;
+	}
 
 	private synchronized void fetchData() {
 		if (fetched) {
 			return;
 		}
-		ClientConfig clientConfig = new ClientConfig();
-		clientConfig.property(ClientProperties.CONNECT_TIMEOUT, 10000);
-		clientConfig.property(ClientProperties.READ_TIMEOUT, 180000);
-		Client client = ClientBuilder.newClient(clientConfig);
 		
-		Response response = null;
-		InputStream returnStream = null;
+		HttpParams httpParams = new BasicHttpParams();
+		HttpConnectionParams.setSoTimeout(httpParams, CLIENT_SOCKET_TIMEOUT);
+		HttpConnectionParams.setConnectionTimeout(httpParams, CLIENT_CONNECTION_TIMEOUT);
+		DefaultHttpClient client = new DefaultHttpClient(httpParams);
+		
+		HttpResponse response = null;
 		try {
 			while (numConnections >= MAX_CONNECTIONS) {
 				try {
@@ -86,33 +93,32 @@ public class SOSClient extends Thread implements AutoCloseable {
 				}
 			}
 			numConnections++;
-			String getUrl = buildGetObservationRequest(startTime, endTime, observedProperty, offering);
-			response = client.target(getUrl)
-				.request(new MediaType[]{MediaType.APPLICATION_XML_TYPE})
-				.get();
-			returnStream = response.readEntity(InputStream.class);
-			WaterML2Parser parser = new WaterML2Parser(returnStream);
-			long sosTime = Profiler.stopTimer(timerId);
-			Profiler.log.debug("SOS GetObservations took {} milliseconds", sosTime);
-			
-			timerId = Profiler.startTimer();
-			ResultSet parse = parser.parse();
-			CachedResultSet.sortedSerialize(parse, new SosTableRowComparator(), this.file);
-			long parseTime = Profiler.stopTimer(timerId);
-			Profiler.log.debug("Parsing and sorting SOS took {} milliseconds", parseTime);
-		} catch (IOException | XMLStreamException ex) {
+			URI getURI = buildGetObservationRequest(startTime, endTime, observedProperty, offering);
+			HttpGet httpGet = new HttpGet(getURI);
+			httpGet.setHeader(HttpHeaders.ACCEPT, "application/xml");
+			response = client.execute(httpGet);
+			try (FileOutputStream fos = new FileOutputStream(file)) {
+				response.getEntity().writeTo(fos);
+			}
+		} catch (IOException ex) {
 			log.error("Unable to get data from service", ex);
 		} finally {
 			numConnections--;
-			IOUtils.closeQuietly(returnStream);
-			response.close();
-			client.close();
 			fetched = true;
 		}
 	}
 
-	public String buildGetObservationRequest(DateTime startTime, DateTime endTime, String observedProperty, String offering) {
-		return null;
+	public URI buildGetObservationRequest(DateTime startTime, DateTime endTime, String observedProperty, String offering) {
+		URI uri = null;
+		ReadableInterval interval = new Interval(startTime, endTime);
+		try {
+			uri = new URIBuilder(sosEndpoint).setParameter("service", "SOS").setParameter("request", "GetObservation")
+				.setParameter("version", "1.0.0").setParameter("observedProperty", observedProperty)
+				.addParameter("offering", offering).addParameter("eventTime", interval.toString()).build();
+		} catch (URISyntaxException ex) {
+			throw new RuntimeException("SOS endpoint is invalid", ex);
+		}
+		return uri;
 	}
 	
 }

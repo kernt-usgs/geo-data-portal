@@ -37,6 +37,10 @@ public class FeatureTimeseriesStatistics {
 			Delimiter delimiter) {
 
 		List<Object> featureNames = gatherFeatureAttributes(featureCollection, attributeName);
+		if (featureNames == null || featureNames.isEmpty()) {
+			throw new RuntimeException("No features specified");
+		}
+		timeseriesDataset.populateMetadata(featureNames.get(0).toString());
 		String units = timeseriesDataset.getUnits();
 		Statistics1DWriter statisticWriter = new Statistics1DWriter(featureNames,
 				variableName,
@@ -50,7 +54,7 @@ public class FeatureTimeseriesStatistics {
 				writer);
 		
 		List<StationTimeseriesVisitor> visitors = new LinkedList<>();
-		FeatureTimeseriesStatiticsVisitor ftsVisitor = new FeatureTimeseriesStatiticsVisitor(featureNames);
+		FeatureTimeseriesStatiticsVisitor ftsVisitor = new FeatureTimeseriesStatiticsVisitor(featureNames, statisticWriter);
 		visitors.add(ftsVisitor);
 		visitors.addAll(additionalVisitors);
 		TimeseriesTraverser traverser = new TimeseriesTraverser(timeseriesDataset);

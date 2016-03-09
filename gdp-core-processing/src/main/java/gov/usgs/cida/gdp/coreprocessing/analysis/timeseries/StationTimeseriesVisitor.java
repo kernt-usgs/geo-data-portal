@@ -1,7 +1,6 @@
 package gov.usgs.cida.gdp.coreprocessing.analysis.timeseries;
 
-import org.geotools.feature.FeatureCollection;
-import org.opengis.feature.Feature;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,17 +12,17 @@ public abstract class StationTimeseriesVisitor {
 
 	private static final Logger log = LoggerFactory.getLogger(StationTimeseriesVisitor.class);
 
-	public void traverseStart(TimeseriesDataset dataset, FeatureCollection stations) {}
-	public void traverseContinue() {}
+	public void traverseStart(TimeseriesDataset dataset) {}
+	public boolean traverseContinue() {return true;}
 	public void traverseEnd() {}
 	
-	public void timeStart() {}
-	public void timeContinue() {}
+	public void timeStart(DateTime timestep) {}
+	public boolean timeContinue() {return true;}
 	public void timeEnd() {}
 	
-	public void stationStart() {}
-	public void stationContinue() {}
-	public void stationEnd() {}
+	public void stationsStart() {}
+	public boolean stationsContinue() {return true;}
+	public void stationsEnd() {}
 	
-	public void processStation(Feature station) {}
+	public void processStations() {}
 }
