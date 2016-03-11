@@ -31,7 +31,6 @@ public class FeatureTimeseriesStatistics {
 			String attributeName,
 			TimeseriesDataset timeseriesDataset,
 			String variableName,
-			Range timeRange,
 			List<StationTimeseriesVisitor> additionalVisitors,
 			Writer writer,
 			Delimiter delimiter) {

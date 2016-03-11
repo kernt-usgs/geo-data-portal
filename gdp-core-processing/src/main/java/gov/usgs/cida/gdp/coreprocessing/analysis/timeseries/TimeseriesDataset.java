@@ -3,6 +3,7 @@ package gov.usgs.cida.gdp.coreprocessing.analysis.timeseries;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,7 +31,7 @@ public class TimeseriesDataset implements AutoCloseable {
 	private String startDate;
 	private String endDate;
 	
-	private List<File> tempFiles;
+	private Map<String, File> tempFiles;
 	private Map<String, ObservationCollection> openCollections;
 	
 	private String units;
@@ -43,6 +44,7 @@ public class TimeseriesDataset implements AutoCloseable {
 		this.endDate = endDate;
 		
 		this.openCollections = new ConcurrentHashMap<>();
+		this.tempFiles = new ConcurrentHashMap<>();
 		this.units = null;
 		this.timesteps = null;
 	}
@@ -76,27 +78,40 @@ public class TimeseriesDataset implements AutoCloseable {
 	}
 	
 	public void populateMetadata(String station) {
-		ObservationCollection obCol = parseData(station);
-		while (obCol.hasNext()) {
-			Observation next = obCol.next();
-			if (null == units) {
-				units = next.getMetadata().defaultUnits();
+		try (ObservationCollection obCol = parseData(station)) {
+			timesteps = new ArrayList<>();
+			while (obCol.hasNext()) {
+				Observation next = obCol.next();
+				if (null == units) {
+					units = next.getMetadata().defaultUnits();
+				}
+				timesteps.add(next.getTime());
 			}
-			timesteps.add(next.getTime());
+		} catch (Exception ex) {
+			log.error("Error populating metadata", ex);
+			throw new RuntimeException(ex);
+		} finally {
+			openCollections.remove(station);
 		}
 	}
 	
 	private synchronized ObservationCollection parseData(String station) {
 		ObservationCollection obs = null;
+		File fetched = null;
 		if (openCollections.containsKey(station)) {
-			return openCollections.get(station);
+			obs = openCollections.get(station);
 		} else {
-			SOSClient sosClient = new SOSClient(endpoint, new DateTime(startDate),
-					new DateTime(endDate), observedProperty, station);
-			// this is goofy, but I'm taking an asynchronous process and making it synchronous
-			sosClient.run();
-			File fetched = sosClient.getFile();
-			tempFiles.add(fetched);
+			if (tempFiles.containsKey(station)) {
+				fetched = tempFiles.get(station);
+			} else {
+				SOSClient sosClient = new SOSClient(endpoint, new DateTime(startDate),
+						new DateTime(endDate), observedProperty, station);
+				// this is goofy, but I'm taking an asynchronous process and making it synchronous
+				sosClient.run();
+				fetched = sosClient.getFile();
+				tempFiles.put(station, fetched);
+			}
+			
 			try {
 				obs = new ObservationCollection(new FileInputStream(fetched), new SweCommonsParser());
 				openCollections.put(station, obs);
@@ -114,7 +129,7 @@ public class TimeseriesDataset implements AutoCloseable {
 		for (ObservationCollection obs : openCollections.values()) {
 			obs.close();
 		}
-		for (File tempFile : tempFiles) {
+		for (File tempFile : tempFiles.values()) {
 			boolean deleted = FileUtils.deleteQuietly(tempFile);
 			if (!deleted) {
 				tempFile.deleteOnExit();

@@ -43,6 +43,7 @@ public class FeatureTimeseriesStatiticsVisitor extends StationTimeseriesVisitor 
 	@Override
 	public void traverseStart(TimeseriesDataset dataset) {
 		try {
+			this.dataset = dataset;
 			writer.writeHeader(Statistics1DWriter.buildRowLabel(Statistics1DWriter.TIMESTEPS_LABEL, null));
 		} catch (IOException ex) {
 			log.trace("Couldn't write header",ex);
@@ -60,7 +61,8 @@ public class FeatureTimeseriesStatiticsVisitor extends StationTimeseriesVisitor 
 	@Override
 	public void timeStart(DateTime timestep) {
 		super.timeStart(timestep);
-		tLabel = dateFormat.format(timestep);
+		currentTimestep = timestep;
+		tLabel = dateFormat.format(timestep.toDate());
 	}
 	
 
@@ -96,7 +98,9 @@ public class FeatureTimeseriesStatiticsVisitor extends StationTimeseriesVisitor 
 		for (Object station : featureNames) {
 			String stationName = station.toString();
 			String value = dataset.getValue(stationName, currentTimestep);
-			stationValueMap.get(stationName).accumulate(Double.parseDouble(value));
+			if (value != null) {
+				stationValueMap.get(stationName).accumulate(Double.parseDouble(value));
+			}
 		}
 	}
 

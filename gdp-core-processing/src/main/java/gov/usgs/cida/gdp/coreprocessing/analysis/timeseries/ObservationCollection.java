@@ -21,6 +21,7 @@ public class ObservationCollection implements Iterator, AutoCloseable {
 	private InputStream stream;
 	private TimeseriesParser parser;
 	protected Observation currentObservation;
+	private boolean observationRead = false;
 	
 	public ObservationCollection(InputStream stream, TimeseriesParser parser) {
 		this.stream = stream;
@@ -31,10 +32,11 @@ public class ObservationCollection implements Iterator, AutoCloseable {
 	@Override
 	public boolean hasNext() {
 		boolean hasNext = false;
-		if (currentObservation != null && currentObservation.isReady()) {
+		if (currentObservation != null && !observationRead) {
 			hasNext = true;
 		} else {
 			currentObservation = parser.parseNextObservation();
+			observationRead = false;
 			hasNext = (currentObservation != null);
 		}
 		
@@ -45,8 +47,7 @@ public class ObservationCollection implements Iterator, AutoCloseable {
 	public Observation next() {
 		
 		if (hasNext()) {
-			// About to return this, don't use again
-			currentObservation.setReady(false);
+			observationRead = true;
 			return currentObservation;
 		} else {
 			throw new IllegalStateException("There is no next value, you should have called hasNext() first");

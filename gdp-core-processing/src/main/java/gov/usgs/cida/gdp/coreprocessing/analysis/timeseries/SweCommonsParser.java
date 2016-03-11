@@ -5,6 +5,7 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
+import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,6 +65,8 @@ public class SweCommonsParser extends XMLTimeseriesParser {
 				String value = block[1];
 				observation.setTime(new DateTime(time));
 				observation.setValue(value);
+			} else {
+				observation = null;
 			}
 		} catch (XMLStreamException ex) {
 			log.trace("Exception reading xml stream");
@@ -131,10 +134,6 @@ public class SweCommonsParser extends XMLTimeseriesParser {
 					}
 					break;
 				case XMLStreamConstants.END_ELEMENT:
-					if (isElement(CLEAR_METADATA_ELEMENT)) {
-						this.sharedMetadata = null;
-						this.blockParser = null;
-					}
 					
 					if (isElement(VALUES_ELEMENT)) {
 						// IMPORTANT: this is what triggers the return
@@ -202,7 +201,7 @@ public class SweCommonsParser extends XMLTimeseriesParser {
 			String[] tokens = null;
 			blockPos++;
 			if (null != blocks && blockPos < blocks.length) {
-				String block = blocks[blockPos];
+				String block = StringUtils.trim(blocks[blockPos]);
 				tokens = block.split(tokenSeparator);
 			}
 			return tokens;
