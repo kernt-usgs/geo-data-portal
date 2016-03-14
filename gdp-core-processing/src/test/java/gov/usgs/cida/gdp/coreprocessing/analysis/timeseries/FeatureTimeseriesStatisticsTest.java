@@ -51,7 +51,7 @@ public class FeatureTimeseriesStatisticsTest {
 	 */
 	@Test
 	@Ignore
-	public void testExecute() throws IOException {
+	public void testExecute() throws IOException, Exception {
 		
 		String attributeName = "huc8";
 		String variableName = "et";
@@ -61,6 +61,7 @@ public class FeatureTimeseriesStatisticsTest {
 		Delimiter delimiter = Delimiter.COMMA;
 		FeatureTimeseriesStatistics.execute(featureCollection, attributeName, dataset, variableName, additionalVisitors, writer, delimiter);
 		String output = writer.toString();
+		dataset.close();
 		assertThat(output.contains("04150405"), is(true));
 	}
 

@@ -41,7 +41,8 @@ public class FeatureTimeseriesStatistics {
 		}
 		timeseriesDataset.populateMetadata(featureNames.get(0).toString());
 		String units = timeseriesDataset.getUnits();
-		Statistics1DWriter statisticWriter = new Statistics1DWriter(featureNames,
+		Statistics1DWriter statisticWriter = new Statistics1DWriter(
+				featureNames,
 				variableName,
 				units,
 				Lists.newArrayList(VALUE),
