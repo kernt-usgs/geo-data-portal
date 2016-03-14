@@ -4,7 +4,6 @@ import ucar.nc2.dataset.CoordinateAxis1D;
 import org.slf4j.Logger;
 import gov.usgs.cida.gdp.coreprocessing.Delimiter;
 import gov.usgs.cida.gdp.coreprocessing.analysis.grid.Statistics1DWriter.GroupBy;
-import gov.usgs.cida.gdp.coreprocessing.analysis.grid.Statistics1DWriter.Statistic;
 import gov.usgs.cida.gdp.coreprocessing.analysis.statistics.WeightedStatistics1D;
 import gov.usgs.cida.gdp.coreprocessing.analysis.grid.GridCellCoverageFactory.GridCellCoverageByIndex;
 import gov.usgs.cida.gdp.coreprocessing.analysis.grid.GridCellCoverageFactory.GridCellIndexCoverage;
@@ -46,7 +45,7 @@ public class FeatureCoverageWeightedGridStatistics {
             String variableName,
             Range timeRange,
             List<GridCellVisitor> additionalVisitors,
-            List<Statistic> statisticList,
+            List<WeightedStatistic> statisticList,
             Writer writer,
             GroupBy groupBy,
             Delimiter delimiter)
@@ -75,7 +74,7 @@ public class FeatureCoverageWeightedGridStatistics {
             String attributeName,
             GridDatatype gridDatatype,
             List<GridCellVisitor> additionalVisitors,
-            List<Statistic> statisticList,
+            List<WeightedStatistic> statisticList,
             Writer writer,
             GroupBy groupBy,
             Delimiter delimiter,
