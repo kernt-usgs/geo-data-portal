@@ -133,29 +133,17 @@ public class FeatureTimeSeriesAlgorithm extends AbstractAnnotatedAlgorithm {
 	@Execute
 	public void process() {
 
-		try {
-			
-/*
-It will be about the same as for feature weighted grid statistics
-but the dataset_uri will be sos instead of opendap
-and the dataset_id should probably be renamed to observedProperty
-as that is a passthrough
-I think a couple of the params may be removed, but I'm not sure yet
-requireFullCoverage for sure
- */
-			
-			
-			
 			// sends a writer so need to wrap the zip file entry in writer
 			
 			try( FileOutputStream fos = new FileOutputStream(output);
 				  ZipOutputStream zip = new ZipOutputStream(fos);) {
-				
-				if (includeShapefile) {
-					zip.putNextEntry(new ZipEntry("shapefile.shp"));
-					renderShapeFile(featureCollection, zip);
-					zip.closeEntry();
-				}
+
+				// TODO saved for a later date
+//				if (includeShapefile) {
+//					zip.putNextEntry(new ZipEntry("shapefile.shp"));
+//					renderShapeFile(featureCollection, zip);
+//					zip.closeEntry();
+//				}
 				
 				zip.putNextEntry(new ZipEntry("sos."+delimiter));
 				
@@ -170,43 +158,16 @@ requireFullCoverage for sure
 						writer,
 						delimiter);
 				zip.closeEntry();
-
-			}
 			
-			
-//		} catch (InvalidRangeException e) {
-//			log.error("Error subsetting gridded data: ", e);
-//			addError("Error subsetting gridded data: " + e.getMessage());
-//		} catch (IOException e) {
-//			log.error("IO Error :", e);
-//			addError("IO Error :" + e.getMessage());
-//		} catch (FactoryException e) {
-//			log.error("Error initializing CRS factory: ", e);
-//			addError("Error initializing CRS factory: " + e.getMessage());
-//		} catch (TransformException e) {
-//			log.error("Error attempting CRS transform: ", e);
-//			addError("Error attempting CRS transform: " + e.getMessage());
-//		} catch (AlgorithmHeuristicException e) {
-//			log.error("Heuristic Error: ", e);
-//			addError("Heuristic Error: " + e.getMessage());
-//		} catch (GeoTiffUtilException e) {
-//			log.error("GeoTiff Generation Error: ", e);
-//			addError("GeoTiff Generation Error: " + e.getMessage());
-		} catch (Exception e) {
+		} catch (Exception e) { 
+			// TODO other specific exception handling?
 			log.error("General Error: ", e);
 			addError("General Error: " + e.getMessage());
-		} finally {
-//			if (gridDataSet != null) {
-//				try {
-//					gridDataSet.close();
-//				} catch (IOException e) {
-//				}
-//			}
 		}	
 	}
 
 	
-	private void renderShapeFile(FeatureCollection<SimpleFeatureType, SimpleFeature> featureCollection, OutputStream output) throws Exception {
+	protected void renderShapeFile(FeatureCollection<SimpleFeatureType, SimpleFeature> featureCollection, OutputStream output) throws Exception {
 
 	    /*
          * We use the DataUtilities class to create a FeatureType that will describe the data in our
