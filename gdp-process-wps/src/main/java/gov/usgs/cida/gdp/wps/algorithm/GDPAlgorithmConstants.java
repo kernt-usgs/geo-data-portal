@@ -16,6 +16,22 @@ public class GDPAlgorithmConstants {
     public final static String FEATURE_ATTRIBUTE_NAME_TITLE = "Feature Attribute Name";
     public final static String FEATURE_ATTRIBUTE_NAME_ABSTRACT = "The attribute that will be used to label column headers in processing output.";
     
+    public final static String TIME_SERIES_DATASET_IDENTIFIER = "TIME_SERIES_DATASET";
+    public final static String TIME_SERIES_DATASET_TITLE = "Time Series Data Set";
+    public final static String TIME_SERIES_DATASET_ABSTRACT = "The attribute use to determine the data set.";
+    
+    public final static String TIME_SERIES_VARIABLE_NAME_IDENTIFIER = "TIME_SERIES_VARIABLE";
+    public final static String TIME_SERIES_VARIABLE_NAME_TITLE = "Time Series Variable Name";
+    public final static String TIME_SERIES_VARIABLE_NAME_ABSTRACT = "The variable to use in time series data set.";
+
+    public final static String ADDITIONAL_VISITORS_IDENTIFIER = "ADDITIONAL_VISITORS";
+    public final static String ADDITIONAL_VISITORS_TITLE = "Additional Visitors";
+    public final static String ADDITIONAL_VISITORS_ABSTRACT = "The list of additional action to take for each time series entry.";
+    
+    public final static String INCLUDE_SHAPEFILE_IDENTIFIER = "INCLUDE_SHAPEFILE";
+    public final static String INCLUDE_SHAPEFILE_TITLE = "Include ShapeFile";
+    public final static String INCLUDE_SHAPEFILE_ABSTRACT = "Indicates to include the feature collection shapefile or not.";
+    
     public final static String DATASET_URI_IDENTIFIER = "DATASET_URI";
     public final static String DATASET_URI_TITLE = "Dataset URI";
     public final static String DATASET_URI_ABSTRACT = "The base data web service URI for the dataset of interest.";
