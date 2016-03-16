@@ -3,10 +3,12 @@ package gov.usgs.cida.gdp.coreprocessing.analysis.timeseries;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
 import org.apache.commons.io.FileUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -26,10 +28,10 @@ public class TimeseriesDataset implements AutoCloseable {
 
 	private static final Logger log = LoggerFactory.getLogger(TimeseriesDataset.class);
 	
-	private String endpoint;
+	private URI endpoint;
 	private String observedProperty;
-	private String startDate;
-	private String endDate;
+	private DateTime startDate;
+	private DateTime endDate;
 	
 	private Map<String, File> tempFiles;
 	private Map<String, ObservationCollection> openCollections;
@@ -37,7 +39,7 @@ public class TimeseriesDataset implements AutoCloseable {
 	private String units;
 	private List<DateTime> timesteps;
 	
-	public TimeseriesDataset(String endpoint, String observedProperty, String startDate, String endDate) {
+	public TimeseriesDataset(URI endpoint, String observedProperty, DateTime startDate, DateTime endDate) {
 		this.endpoint = endpoint;
 		this.observedProperty = observedProperty;
 		this.startDate = startDate;
@@ -104,12 +106,12 @@ public class TimeseriesDataset implements AutoCloseable {
 			if (tempFiles.containsKey(station)) {
 				fetched = tempFiles.get(station);
 			} else {
-				SOSClient sosClient = new SOSClient(endpoint, new DateTime(startDate),
-						new DateTime(endDate), observedProperty, station);
-				// this is goofy, but I'm taking an asynchronous process and making it synchronous
-				sosClient.run();
-				fetched = sosClient.getFile();
-				tempFiles.put(station, fetched);
+				try (SOSClient sosClient = new SOSClient(endpoint, startDate, endDate, observedProperty, station)) {
+					// this is goofy, but I'm taking an asynchronous process and making it synchronous
+					sosClient.run();
+					fetched = sosClient.getFile();
+					tempFiles.put(station, fetched);
+				}
 			}
 			
 			try {

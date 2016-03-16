@@ -16,9 +16,9 @@ public class GDPAlgorithmConstants {
     public final static String FEATURE_ATTRIBUTE_NAME_TITLE = "Feature Attribute Name";
     public final static String FEATURE_ATTRIBUTE_NAME_ABSTRACT = "The attribute that will be used to label column headers in processing output.";
     
-    public final static String TIME_SERIES_DATASET_IDENTIFIER = "TIME_SERIES_DATASET";
-    public final static String TIME_SERIES_DATASET_TITLE = "Time Series Data Set";
-    public final static String TIME_SERIES_DATASET_ABSTRACT = "The attribute use to determine the data set.";
+    public final static String OBSERVED_PROPERTY_IDENTIFIER = "OBSERVED_PROPERTY";
+    public final static String OBSERVED_PROPERTY_TITLE = "Time Series Observed Property";
+    public final static String OBSERVED_PROPERTY_ABSTRACT = "The attribute use to determine the data set.";
     
     public final static String TIME_SERIES_VARIABLE_NAME_IDENTIFIER = "TIME_SERIES_VARIABLE";
     public final static String TIME_SERIES_VARIABLE_NAME_TITLE = "Time Series Variable Name";
