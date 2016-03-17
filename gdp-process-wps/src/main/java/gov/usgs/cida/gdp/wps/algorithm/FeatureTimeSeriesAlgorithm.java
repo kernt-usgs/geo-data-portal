@@ -60,11 +60,7 @@ public class FeatureTimeSeriesAlgorithm extends AbstractAnnotatedAlgorithm {
     
 	private File output;
 
-	private String timeSeriesVariableName;
-
-
 	private boolean includeShapefile;
-
 	
 	@LiteralDataInput(
 			identifier = GDPAlgorithmConstants.DATASET_URI_IDENTIFIER,
@@ -114,13 +110,6 @@ public class FeatureTimeSeriesAlgorithm extends AbstractAnnotatedAlgorithm {
             abstrakt=GDPAlgorithmConstants.FEATURE_ATTRIBUTE_NAME_ABSTRACT)
     public void setFeatureAttributeName(String featureAttributeName) {
         this.featureAttributeName = featureAttributeName;
-    }
-    @LiteralDataInput(
-            identifier=GDPAlgorithmConstants.TIME_SERIES_VARIABLE_NAME_IDENTIFIER,
-            title=GDPAlgorithmConstants.TIME_SERIES_VARIABLE_NAME_TITLE,
-            abstrakt=GDPAlgorithmConstants.TIME_SERIES_VARIABLE_NAME_ABSTRACT)
-    public void setTimeSeriesVariableName(String variableName) {
-        this.timeSeriesVariableName = variableName;
     }
 
     @LiteralDataInput(
@@ -197,7 +186,7 @@ public class FeatureTimeSeriesAlgorithm extends AbstractAnnotatedAlgorithm {
 						featureCollection,
 						featureAttributeName,
 						timeseriesDataset,
-						timeSeriesVariableName,
+						observedProperty,
 						additionalVisitors,
 						writer,
 						delimiter);

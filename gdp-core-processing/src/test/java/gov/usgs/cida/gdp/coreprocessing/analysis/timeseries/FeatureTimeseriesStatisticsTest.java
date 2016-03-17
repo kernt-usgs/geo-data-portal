@@ -64,7 +64,7 @@ public class FeatureTimeseriesStatisticsTest {
 		List<StationTimeseriesVisitor> additionalVisitors = new LinkedList<>();
 		Writer writer = new StringWriter();
 		Delimiter delimiter = Delimiter.COMMA;
-		FeatureTimeseriesStatistics.execute(featureCollection, attributeName, dataset, variableName, additionalVisitors, writer, delimiter);
+		FeatureTimeseriesStatistics.execute(featureCollection, attributeName, dataset, additionalVisitors, writer, delimiter);
 		String output = writer.toString();
 		dataset.close();
 		assertThat(output.contains("04150405"), is(true));

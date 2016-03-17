@@ -20,10 +20,6 @@ public class GDPAlgorithmConstants {
     public final static String OBSERVED_PROPERTY_TITLE = "Time Series Observed Property";
     public final static String OBSERVED_PROPERTY_ABSTRACT = "The attribute use to determine the data set.";
     
-    public final static String TIME_SERIES_VARIABLE_NAME_IDENTIFIER = "TIME_SERIES_VARIABLE";
-    public final static String TIME_SERIES_VARIABLE_NAME_TITLE = "Time Series Variable Name";
-    public final static String TIME_SERIES_VARIABLE_NAME_ABSTRACT = "The variable to use in time series data set.";
-
     public final static String ADDITIONAL_VISITORS_IDENTIFIER = "ADDITIONAL_VISITORS";
     public final static String ADDITIONAL_VISITORS_TITLE = "Additional Visitors";
     public final static String ADDITIONAL_VISITORS_ABSTRACT = "The list of additional action to take for each time series entry.";

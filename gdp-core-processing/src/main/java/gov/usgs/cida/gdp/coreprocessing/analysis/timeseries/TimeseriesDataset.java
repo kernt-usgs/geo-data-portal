@@ -138,5 +138,9 @@ public class TimeseriesDataset implements AutoCloseable {
 			}
 		}
 	}
+	
+	public String getObservedProperty() {
+		return observedProperty;
+	}
 
 }
