@@ -5,12 +5,12 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Serializable;
 import java.net.URI;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipEntry;
@@ -122,13 +122,6 @@ public class FeatureTimeSeriesAlgorithm extends AbstractAnnotatedAlgorithm {
     public void setTimeSeriesVariableName(String variableName) {
         this.timeSeriesVariableName = variableName;
     }
-    @LiteralDataInput(
-            identifier=GDPAlgorithmConstants.ADDITIONAL_VISITORS_IDENTIFIER,
-            title=GDPAlgorithmConstants.ADDITIONAL_VISITORS_TITLE,
-            abstrakt=GDPAlgorithmConstants.ADDITIONAL_VISITORS_ABSTRACT)
-    public void setAdditionalVisitors(List<StationTimeseriesVisitor> additionalVisitors) {
-        this.additionalVisitors = additionalVisitors;
-    }
 
     @LiteralDataInput(
         identifier=GDPAlgorithmConstants.DELIMITER_IDENTIFIER,
@@ -156,6 +149,11 @@ public class FeatureTimeSeriesAlgorithm extends AbstractAnnotatedAlgorithm {
 //      this.includeShapefile = includeShapefile;
 //  }
 
+    public void setAdditionalVisitors(List<StationTimeseriesVisitor> additionalVisitors) {
+        this.additionalVisitors = additionalVisitors;
+    }
+
+    
 	@Execute
 	public void process() {
 		
@@ -167,6 +165,10 @@ public class FeatureTimeSeriesAlgorithm extends AbstractAnnotatedAlgorithm {
 		}
 		if (null==timeEnd) {
 			new IllegalArgumentException("The timeseries dataset end date or date/time is required.");
+		}
+		
+		if (null==additionalVisitors) {
+			additionalVisitors = new LinkedList<StationTimeseriesVisitor>();
 		}
 		
         String extension = (delimiter == null) ? Delimiter.getDefault().extension : delimiter.extension;
@@ -182,9 +184,7 @@ public class FeatureTimeSeriesAlgorithm extends AbstractAnnotatedAlgorithm {
 				// TODO saved for a later date
 				includeShapefile = false;
 				if (includeShapefile) {
-					zip.putNextEntry(new ZipEntry("shapefile.shp"));
 					renderShapeFile(featureCollection, zip);
-					zip.closeEntry();
 				}
 				
 				TimeseriesDataset timeseriesDataset = new TimeseriesDataset(
@@ -215,8 +215,9 @@ public class FeatureTimeSeriesAlgorithm extends AbstractAnnotatedAlgorithm {
 		}	
 	}
 
-	
-	protected void renderShapeFile(FeatureCollection<SimpleFeatureType, SimpleFeature> featureCollection, OutputStream output) throws Exception {
+
+	// TODO this is more of a place holder and a possible rough implementation found 
+	protected void renderShapeFile(FeatureCollection<SimpleFeatureType, SimpleFeature> featureCollection, ZipOutputStream zip) throws Exception {
 
 	    /*
          * We use the DataUtilities class to create a FeatureType that will describe the data in our
@@ -230,6 +231,8 @@ public class FeatureTimeSeriesAlgorithm extends AbstractAnnotatedAlgorithm {
                         "number:Integer" // a number attribute
         );
         
+        
+        // TODO create a temp dir to hold all rendered files
 		File newFile = File.createTempFile("shapefile", "shp");
 		/*
          * Get an output file name and create the new shapefile
@@ -272,7 +275,10 @@ public class FeatureTimeSeriesAlgorithm extends AbstractAnnotatedAlgorithm {
             }
         }
         
-        IOUtils.copyLarge(new FileInputStream(newFile), output);
+        // TODO for each shape file make an appropriate file entry and stream
+		zip.putNextEntry(new ZipEntry("shape/shapefile.shp"));
+        IOUtils.copyLarge(new FileInputStream(newFile), zip);
+        zip.closeEntry();
     }      
 	
     
