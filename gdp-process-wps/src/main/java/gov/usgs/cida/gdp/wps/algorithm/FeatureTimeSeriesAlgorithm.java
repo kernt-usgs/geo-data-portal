@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 
 import gov.usgs.cida.gdp.constants.AppConstant;
 import gov.usgs.cida.gdp.coreprocessing.Delimiter;
+import gov.usgs.cida.gdp.coreprocessing.analysis.timeseries.FeatureTimeseriesStatistics;
 import gov.usgs.cida.gdp.coreprocessing.analysis.timeseries.StationTimeseriesVisitor;
 import gov.usgs.cida.gdp.coreprocessing.analysis.timeseries.TimeseriesDataset;
 import gov.usgs.cida.gdp.wps.binding.GMLStreamingFeatureCollectionBinding;
@@ -182,11 +183,10 @@ public class FeatureTimeSeriesAlgorithm extends AbstractAnnotatedAlgorithm {
 				
 				zip.putNextEntry(new ZipEntry("sos."+delimiter));
 				
-				gov.usgs.cida.gdp.coreprocessing.analysis.timeseries.FeatureTimeseriesStatistics.execute(
+				FeatureTimeseriesStatistics.execute(
 						featureCollection,
 						featureAttributeName,
 						timeseriesDataset,
-						observedProperty,
 						additionalVisitors,
 						writer,
 						delimiter);
