@@ -1,27 +1,31 @@
 package gov.usgs.cida.gdp.coreprocessing.analysis.timeseries;
 
-import gov.usgs.cida.gdp.coreprocessing.Delimiter;
-import gov.usgs.cida.gdp.coreprocessing.analysis.grid.FeatureCoverageWeightedGridStatisticsTest;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
+
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
 import org.geotools.data.DataStore;
 import org.geotools.data.DataStoreFinder;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureSource;
 import org.geotools.filter.text.cql2.CQLException;
+import org.joda.time.DateTime;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
+import gov.usgs.cida.gdp.coreprocessing.Delimiter;
+import gov.usgs.cida.gdp.coreprocessing.analysis.grid.FeatureCoverageWeightedGridStatisticsTest;
 
 
 /**
@@ -55,7 +59,8 @@ public class FeatureTimeseriesStatisticsTest {
 		
 		String attributeName = "huc8";
 		String variableName = "et";
-		TimeseriesDataset dataset = new TimeseriesDataset("http://cida-eros-wsdev.er.usgs.gov:8080/nwc/proxythredds/HUC08_data/HUC08_eta.nc", variableName, "2004-01-01", "2007-01-01");
+		URI uri = new URI("http://cida-eros-wsdev.er.usgs.gov:8080/nwc/proxythredds/HUC08_data/HUC08_eta.nc");
+		TimeseriesDataset dataset = new TimeseriesDataset(uri, variableName, new DateTime("2004-01-01"), new DateTime("2007-01-01"));
 		List<StationTimeseriesVisitor> additionalVisitors = new LinkedList<>();
 		Writer writer = new StringWriter();
 		Delimiter delimiter = Delimiter.COMMA;
