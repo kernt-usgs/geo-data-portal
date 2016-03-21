@@ -27,6 +27,7 @@ import org.geotools.data.simple.SimpleFeatureStore;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.joda.time.DateTime;
+import org.n52.wps.algorithm.annotation.Algorithm;
 import org.n52.wps.algorithm.annotation.ComplexDataInput;
 import org.n52.wps.algorithm.annotation.ComplexDataOutput;
 import org.n52.wps.algorithm.annotation.Execute;
@@ -45,6 +46,10 @@ import gov.usgs.cida.gdp.coreprocessing.analysis.timeseries.TimeseriesDataset;
 import gov.usgs.cida.gdp.wps.binding.GMLStreamingFeatureCollectionBinding;
 import gov.usgs.cida.gdp.wps.binding.ZipFileBinding;
 
+@Algorithm(
+		version = "1.1.0",
+		title = "OPeNDAP Subset",
+		abstrakt = "This service returns the Time Series SOS data.")
 public class FeatureTimeSeriesAlgorithm extends AbstractAnnotatedAlgorithm {
 	
 	private static final Logger log = LoggerFactory.getLogger(FeatureTimeSeriesAlgorithm.class);
@@ -62,6 +67,9 @@ public class FeatureTimeSeriesAlgorithm extends AbstractAnnotatedAlgorithm {
 	private File output;
 
 	private boolean includeShapefile;
+
+
+	private String workPath;
 	
 	@LiteralDataInput(
 			identifier = GDPAlgorithmConstants.DATASET_URI_IDENTIFIER,
@@ -146,24 +154,30 @@ public class FeatureTimeSeriesAlgorithm extends AbstractAnnotatedAlgorithm {
     
 	@Execute
 	public void process() {
-		
+		if (featureCollection.getSchema().getDescriptor(featureAttributeName) == null) {
+			addError("Attribute " + featureAttributeName + " not found in feature collection");
+			return;
+		}
 		if (null==datasetURI) {
-			new IllegalArgumentException("The timeseries dataset URI is required.");
+			addError("Attribute timeseries DATASET_URI is required.");
+			return;
 		}
 		if (null==timeStart) {
-			new IllegalArgumentException("The timeseries dataset start date or date/time is required.");
+			addError("Attribute timeseries TIME_START is required.");
+			return;
 		}
 		if (null==timeEnd) {
-			new IllegalArgumentException("The timeseries dataset end date or date/time is required.");
+			addError("Attribute timeseries TIME_END is required.");
+			return;
 		}
-		
+		  
 		if (null==additionalVisitors) {
 			additionalVisitors = new LinkedList<StationTimeseriesVisitor>();
 		}
 		
         String extension = (delimiter == null) ? Delimiter.getDefault().extension : delimiter.extension;
         try {
-        	output = File.createTempFile(getClass().getSimpleName(), extension, new File(AppConstant.WORK_LOCATION.getValue()));
+        	output = File.createTempFile(getClass().getSimpleName(), ".zip", new File(getWorkPath()));
         	
 			try( FileOutputStream   fos    = new FileOutputStream(output);
 				 ZipOutputStream    zip    = new ZipOutputStream(fos);
@@ -181,7 +195,7 @@ public class FeatureTimeSeriesAlgorithm extends AbstractAnnotatedAlgorithm {
 						datasetURI, observedProperty, new DateTime(timeStart), new DateTime(timeEnd));
 				
 				
-				zip.putNextEntry(new ZipEntry("sos."+delimiter));
+				zip.putNextEntry(new ZipEntry("sos."+extension));
 				
 				FeatureTimeseriesStatistics.execute(
 						featureCollection,
@@ -190,7 +204,7 @@ public class FeatureTimeSeriesAlgorithm extends AbstractAnnotatedAlgorithm {
 						additionalVisitors,
 						writer,
 						delimiter);
-				zip.closeEntry();
+				//zip.closeEntry();
 			
 			} catch (Exception e) { 
 				// TODO other specific exception handling?
@@ -268,7 +282,19 @@ public class FeatureTimeSeriesAlgorithm extends AbstractAnnotatedAlgorithm {
 		zip.putNextEntry(new ZipEntry("shape/shapefile.shp"));
         IOUtils.copyLarge(new FileInputStream(newFile), zip);
         zip.closeEntry();
-    }      
+    }
+
+	public void setWorkPath(String workPath) {
+		this.workPath = workPath;
+	}      
+	public String getWorkPath() {
+		if (workPath == null) {
+			workPath = AppConstant.WORK_LOCATION.getValue(); 
+		}
+		
+		return workPath;
+	}
+
 	
     
 }
