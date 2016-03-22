@@ -1,0 +1,118 @@
+<?xml version="1.0"?>
+<wfs:GetFeature xmlns:wfs="http://www.opengis.net/wfs" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" service="WFS" version="1.1.0" xsi:schemaLocation="http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.1.0/wfs.xsd">
+	<wfs:Query xmlns:feature="http://gov.usgs.cida/WBD" typeName="feature:huc12agg" srsName="EPSG:4326">
+		<ogc:Filter xmlns:ogc="http://www.opengis.net/ogc">
+			<ogc:Or>
+				<ogc:PropertyIsEqualTo matchCase="true">
+					<ogc:PropertyName>huc12</ogc:PropertyName>
+					<ogc:Literal>031602010401</ogc:Literal>
+				</ogc:PropertyIsEqualTo>
+				<ogc:PropertyIsEqualTo matchCase="true">
+					<ogc:PropertyName>huc12</ogc:PropertyName>
+					<ogc:Literal>031002010203</ogc:Literal>
+				</ogc:PropertyIsEqualTo>
+				<ogc:PropertyIsEqualTo matchCase="true">
+					<ogc:PropertyName>huc12</ogc:PropertyName>
+					<ogc:Literal>031002020105</ogc:Literal>
+				</ogc:PropertyIsEqualTo>
+				<ogc:PropertyIsEqualTo matchCase="true">
+					<ogc:PropertyName>huc12</ogc:PropertyName>
+					<ogc:Literal>031002020107</ogc:Literal>
+				</ogc:PropertyIsEqualTo>
+				<ogc:PropertyIsEqualTo matchCase="true">
+					<ogc:PropertyName>huc12</ogc:PropertyName>
+					<ogc:Literal>030801010302</ogc:Literal>
+				</ogc:PropertyIsEqualTo>
+			</ogc:Or>
+		</ogc:Filter>
+	</wfs:Query>
+</wfs:GetFeature>
+<!--
+
+		String attributeName = "huc8";
+		String variableName = "et";http://cida-eros-wsdev.er.usgs.gov:8081/thredds/sos/watersmart/HUC12_data/HUC12_daymet.nc
+		URI uri = new URI("http://cida-eros-wsdev.er.usgs.gov:8080/nwc/proxythredds/HUC08_data/HUC08_eta.nc");
+		TimeseriesDataset dataset = new TimeseriesDataset(uri, variableName, new DateTime("2004-01-01"), new DateTime("2007-01-01"));
+		List<StationTimeseriesVisitor> additionalVisitors = new LinkedList<>();
+		Writer writer = new StringWriter();
+		Delimiter delimiter = Delimiter.COMMA;
+		FeatureTimeseriesStatistics.execute(featureCollection, attributeName, dataset, additionalVisitors, writer, delimiter);
+-->
+
+<wps:Execute service="WPS" version="1.0.0" xsi:schemaLocation="http://www.opengis.net/wps/1.0.0 http://schemas.opengis.net/wps/1.0.0/wpsExecute_request.xsd" xmlns:ogc="http://www.opengis.net/ogc" xmlns:ows="http://www.opengis.net/ows/1.1" xmlns:wps="http://www.opengis.net/wps/1.0.0" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <ows:Identifier>gov.usgs.cida.gdp.wps.algorithm.FeatureTimeSeriesAlgorithm</ows:Identifier>
+  <wps:DataInputs>
+    <wps:Input>
+      <ows:Identifier>TIME_START</ows:Identifier>
+      <wps:Data>
+        <wps:LiteralData>2004-01-01T00:00:00.000Z</wps:LiteralData>
+      </wps:Data>
+    </wps:Input>
+    <wps:Input>
+      <ows:Identifier>TIME_END</ows:Identifier>
+      <wps:Data>
+        <wps:LiteralData>2007-01-01T00:00:00.000Z</wps:LiteralData>
+      </wps:Data>
+    </wps:Input>
+    <wps:Input>
+      <ows:Identifier>DATASET_URI</ows:Identifier>
+      <wps:Data>
+        <wps:LiteralData>http://cida-eros-wsdev.er.usgs.gov:8080/nwc/proxythredds/HUC08_data/HUC08_eta.nc</wps:LiteralData>
+      </wps:Data>
+    </wps:Input>
+    <wps:Input>
+      <ows:Identifier>OBSERVED_PROPERTY</ows:Identifier>
+      <wps:Data>
+        <wps:LiteralData>et</wps:LiteralData>
+      </wps:Data>
+    </wps:Input>
+    <wps:Input>
+      <ows:Identifier>FEATURE_ATTRIBUTE_NAME</ows:Identifier>
+      <wps:Data>
+        <wps:LiteralData>huc8</wps:LiteralData>
+      </wps:Data>
+    </wps:Input>
+    <wps:Input>
+      <ows:Identifier>DELIMITER</ows:Identifier>
+      <wps:Data>
+        <wps:LiteralData>COMMA</wps:LiteralData>
+      </wps:Data>
+    </wps:Input>
+    <wps:Input>
+      <ows:Identifier>FEATURE_COLLECTION</ows:Identifier>
+      <wps:Reference xlink:href="http://cida.usgs.gov/gdp/geoserver/wfs">
+        <wps:Body>
+<wfs:GetFeature xmlns:wfs="http://www.opengis.net/wfs" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" service="WFS" version="1.1.0" xsi:schemaLocation="http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.1.0/wfs.xsd">
+	<wfs:Query xmlns:feature="http://gov.usgs.cida/WBD" typeName="feature:huc12agg" srsName="EPSG:4326">
+		<ogc:Filter xmlns:ogc="http://www.opengis.net/ogc">
+			<ogc:Or>
+				<ogc:PropertyIsEqualTo matchCase="true">
+					<ogc:PropertyName>huc8</ogc:PropertyName>
+					<ogc:Literal>03160201</ogc:Literal>
+				</ogc:PropertyIsEqualTo>
+				<ogc:PropertyIsEqualTo matchCase="true">
+					<ogc:PropertyName>huc8</ogc:PropertyName>
+					<ogc:Literal>03100202</ogc:Literal>
+				</ogc:PropertyIsEqualTo>
+				<ogc:PropertyIsEqualTo matchCase="true">
+					<ogc:PropertyName>huc8</ogc:PropertyName>
+					<ogc:Literal>03080101</ogc:Literal>
+				</ogc:PropertyIsEqualTo>
+			</ogc:Or>
+		</ogc:Filter>
+	</wfs:Query>
+</wfs:GetFeature>
+        </wps:Body>
+      </wps:Reference>
+    </wps:Input>
+  </wps:DataInputs>
+  <wps:ResponseForm>
+    <wps:ResponseDocument status="true" storeExecuteResponse="true">
+      <wps:Output asReference="true">
+        <ows:Identifier>OUTPUT</ows:Identifier>
+      </wps:Output>
+    </wps:ResponseDocument>
+  </wps:ResponseForm>
+</wps:Execute>
+
+

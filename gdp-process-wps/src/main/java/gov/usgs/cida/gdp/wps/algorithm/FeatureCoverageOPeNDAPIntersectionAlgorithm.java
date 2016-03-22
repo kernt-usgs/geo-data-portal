@@ -1,16 +1,10 @@
 package gov.usgs.cida.gdp.wps.algorithm;
 
-import gov.usgs.cida.gdp.constants.AppConstant;
-import gov.usgs.cida.gdp.utilities.GeoTiffUtils;
-import gov.usgs.cida.gdp.utilities.exception.GeoTiffUtilException;
-import gov.usgs.cida.gdp.wps.algorithm.heuristic.exception.AlgorithmHeuristicException;
-import gov.usgs.cida.gdp.wps.binding.CoverageFileBinding;
-import gov.usgs.cida.gdp.wps.binding.GMLStreamingFeatureCollectionBinding;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.geotools.feature.FeatureCollection;
@@ -20,15 +14,21 @@ import org.n52.wps.algorithm.annotation.ComplexDataOutput;
 import org.n52.wps.algorithm.annotation.Execute;
 import org.n52.wps.algorithm.annotation.LiteralDataInput;
 import org.n52.wps.server.AbstractAnnotatedAlgorithm;
+import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import gov.usgs.cida.gdp.constants.AppConstant;
 import gov.usgs.cida.gdp.coreprocessing.analysis.grid.GridCellVisitor;
+import gov.usgs.cida.gdp.utilities.GeoTiffUtils;
+import gov.usgs.cida.gdp.utilities.exception.GeoTiffUtilException;
 import gov.usgs.cida.gdp.wps.algorithm.heuristic.CoverageSizeAlgorithmHeuristic;
-import java.util.LinkedList;
-
+import gov.usgs.cida.gdp.wps.algorithm.heuristic.exception.AlgorithmHeuristicException;
+import gov.usgs.cida.gdp.wps.binding.CoverageFileBinding;
+import gov.usgs.cida.gdp.wps.binding.GMLStreamingFeatureCollectionBinding;
 import ucar.ma2.InvalidRangeException;
 import ucar.nc2.dt.GridDataset;
 
@@ -50,7 +50,7 @@ public class FeatureCoverageOPeNDAPIntersectionAlgorithm extends AbstractAnnotat
 		geotiff;
 	}
 
-	private FeatureCollection<?, ?> featureCollection;
+	private FeatureCollection<SimpleFeatureType,SimpleFeature> featureCollection;
 	private URI datasetURI;
 	private List<String> datasetId;
 	private boolean requireFullCoverage;
@@ -65,7 +65,7 @@ public class FeatureCoverageOPeNDAPIntersectionAlgorithm extends AbstractAnnotat
 			title = GDPAlgorithmConstants.FEATURE_COLLECTION_TITLE,
 			abstrakt = GDPAlgorithmConstants.FEATURE_COLLECTION_ABSTRACT,
 			binding = GMLStreamingFeatureCollectionBinding.class)
-	public void setFeatureCollection(FeatureCollection<?, ?> featureCollection) {
+	public void setFeatureCollection(FeatureCollection<SimpleFeatureType,SimpleFeature> featureCollection) {
 		this.featureCollection = featureCollection;
 	}
 

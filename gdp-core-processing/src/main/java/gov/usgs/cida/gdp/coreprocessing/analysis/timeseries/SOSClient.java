@@ -36,14 +36,14 @@ public class SOSClient extends Thread implements AutoCloseable {
 	private static int numConnections = 0;
 	
 	private File file;
-	private String sosEndpoint;
+	private URI sosEndpoint;
 	private DateTime startTime;
 	private DateTime endTime;
 	private String observedProperty;
 	private String offering;
 	private boolean fetched = false;
 
-	public SOSClient(String sosEndpoint, DateTime startTime, DateTime endTime, String observedProperty,
+	public SOSClient(URI sosEndpoint, DateTime startTime, DateTime endTime, String observedProperty,
 			String offering) {
 		UUID randomUUID = UUID.randomUUID();
 		this.file = new File(FileUtils.getTempDirectory(), randomUUID.toString() + ".xml");

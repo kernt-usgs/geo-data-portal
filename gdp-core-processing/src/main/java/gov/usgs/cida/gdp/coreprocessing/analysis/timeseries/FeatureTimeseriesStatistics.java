@@ -1,22 +1,24 @@
 package gov.usgs.cida.gdp.coreprocessing.analysis.timeseries;
 
-import com.google.common.collect.Lists;
-import gov.usgs.cida.gdp.coreprocessing.Delimiter;
-import gov.usgs.cida.gdp.coreprocessing.analysis.grid.Statistics1DWriter;
+import static gov.usgs.cida.gdp.coreprocessing.analysis.timeseries.TimeseriesStatistic.*;
+
 import java.io.Writer;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureIterator;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ucar.ma2.Range;
 
-import static gov.usgs.cida.gdp.coreprocessing.analysis.timeseries.TimeseriesStatistic.VALUE;
+import com.google.common.collect.Lists;
+
+import gov.usgs.cida.gdp.coreprocessing.Delimiter;
+import gov.usgs.cida.gdp.coreprocessing.analysis.grid.Statistics1DWriter;
 
 /**
  *
@@ -30,7 +32,6 @@ public class FeatureTimeseriesStatistics {
 			FeatureCollection<SimpleFeatureType, SimpleFeature> featureCollection,
 			String attributeName,
 			TimeseriesDataset timeseriesDataset,
-			String variableName,
 			List<StationTimeseriesVisitor> additionalVisitors,
 			Writer writer,
 			Delimiter delimiter) {
@@ -43,7 +44,7 @@ public class FeatureTimeseriesStatistics {
 		String units = timeseriesDataset.getUnits();
 		Statistics1DWriter statisticWriter = new Statistics1DWriter(
 				featureNames,
-				variableName,
+				timeseriesDataset.getObservedProperty(),
 				units,
 				Lists.newArrayList(VALUE),
 				false,
