@@ -5,6 +5,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Serializable;
 import java.net.URI;
@@ -47,7 +48,7 @@ import gov.usgs.cida.gdp.wps.binding.GMLStreamingFeatureCollectionBinding;
 import gov.usgs.cida.gdp.wps.binding.ZipFileBinding;
 
 @Algorithm(
-		version = "1.1.0",
+		version = "1.0.0",
 		title = "OPeNDAP Subset",
 		abstrakt = "This service returns the Time Series SOS data.")
 public class FeatureTimeSeriesAlgorithm extends AbstractAnnotatedAlgorithm {
@@ -204,7 +205,13 @@ public class FeatureTimeSeriesAlgorithm extends AbstractAnnotatedAlgorithm {
 						additionalVisitors,
 						writer,
 						delimiter);
-				//zip.closeEntry();
+				try {
+					// make sure tje entry is closed
+					zip.closeEntry();
+				} catch (IOException e) {
+					// however, if the entry was closed by the execute then
+					// this exception is unimportant
+				}
 			
 			} catch (Exception e) { 
 				// TODO other specific exception handling?
