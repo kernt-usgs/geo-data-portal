@@ -214,7 +214,7 @@ public class FeatureGridStatisticsAlgorithm extends AbstractAnnotatedAlgorithm {
 						featureCollection,
 						featureAttributeName,
 						gridDatatype.makeSubset(null, null, timeRange, null, null, null),
-						setupHeuristics(null),
+						setupHeuristics(cos),
 						statistics == null || statistics.isEmpty() ? Arrays.asList(WeightedStatistic.values()) : statistics,
 						writer,
 						groupBy == null ? GroupBy.STATISTIC : groupBy,
