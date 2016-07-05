@@ -11,11 +11,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
-import opendap.dap.BaseType;
 import opendap.dap.DAP2Exception;
-import opendap.dap.DAS;
-import opendap.dap.DConnect2;
-import opendap.dap.DDS;
 import opendap.dap.parsers.ParseException;
 import org.junit.Test;
 import thredds.catalog.InvAccess;
@@ -146,6 +142,7 @@ public class NetCDFUtilityTest {
 		assertEquals(result.get(1), "2011-12-01T00:00:00Z");
 	}
 	
+        // this test case was using both the CalendarDateUnit and the DateUnit (it executes both try blocks in getTimeDim) 
 	@Test
 	public void testDateRangeWithoutCalendarMonthsUnitsAttribute() throws MalformedURLException, URISyntaxException, FileNotFoundException, IOException, ParseException, DAP2Exception {
 		// Attained from http://cida-eros-thredds1.er.usgs.gov:8081/qa/thredds/dodsC/temp/monthlyETa/modis_monthly_ET_3.ncml.html
@@ -154,6 +151,20 @@ public class NetCDFUtilityTest {
 		assertNotNull(result);
 		assertEquals(2, result.size());
 		assertEquals(result.get(0), "2000-01-01T00:00:00Z");
-		assertEquals(result.get(1), "2011-12-01T11:16:07Z");
+		assertEquals(result.get(1), "2011-12-01T11:16:07.865Z"); //added the .865 after eliminating the DateUnit use
 	}
+        
+        // created to resolve Jira bug GDP-1027
+        @Test
+	public void testDateRangeWithMonthNoLeap() throws MalformedURLException, URISyntaxException, FileNotFoundException, IOException, ParseException, DAP2Exception {
+                String dataSet = "http://cida-eros-netcdfdev.er.usgs.gov:8080/thredds/dodsC/thredds/temp/haj/wrfc36km_d01_T2_monthly_2000-09_2050-12_NOHALO.nc";
+		String gridSelection = "T2MAX";
+
+                List<String> result = OpendapServerHelper.getOPeNDAPTimeRange(dataSet, gridSelection);
+		assertNotNull(result); 
+		assertEquals(2, result.size());
+                assertEquals(result.get(0), "2000-10-01T00:00:00Z");
+                assertEquals(result.get(1), "2051-01-01T00:00:00Z"); // correct according to the toolsui tool; java -Xmx1g -jar toolsUI.jar
+	}
+        
 }
