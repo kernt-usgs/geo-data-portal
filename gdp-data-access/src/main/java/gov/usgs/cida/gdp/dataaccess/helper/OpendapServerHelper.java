@@ -33,7 +33,6 @@ import opendap.dap.PrimitiveVector;
 import org.slf4j.LoggerFactory;
 import ucar.nc2.time.Calendar;
 import ucar.nc2.time.CalendarDateUnit;
-import ucar.nc2.units.DateUnit;
 
 public class OpendapServerHelper {
 
@@ -103,7 +102,7 @@ public class OpendapServerHelper {
         }
         return Collections.EMPTY_LIST;  // Could not get time, fall through
     }
-
+    
     private static List<String> getDatesFromTimeVariable(DArray variable, AttributeTable attributeTable) throws NoSuchAttributeException {
         // TODO make utility to cast this stuff for me
         List<String> dateList = new ArrayList<String>();
@@ -139,20 +138,17 @@ public class OpendapServerHelper {
             throw new UnsupportedOperationException("This primitive type for time is not yet supported");
         }
 
-        Attribute units = attributeTable.getAttribute("units");
+        return makeDates(attributeTable, first, last);
+    }
+
+    private static List<String> makeDates(AttributeTable attributeTable, double first, double last) throws NoSuchAttributeException {
+        Attribute units = attributeTable.getAttribute("units");        
+        List<String> dateList = new ArrayList<>();
+        
         if (null == units) {
             units = attributeTable.getAttribute("_CoordinateAxisType");
-        }
-        String dateValue = units.getValueAt(0);
-
-        try {
-            DateUnit unit = new DateUnit(dateValue);
-            dateList.add(unit.makeStandardDateString(first));
-            dateList.add(unit.makeStandardDateString(last));
-            return dateList;
-        } catch (Exception e) {
-            log.warn("Unit is not a date unit", e);
-        }
+        }       
+        String dateValue = units.getValueAt(0);    
 
         try {
             CalendarDateUnit unit = CalendarDateUnit.withCalendar(getCalendarFromAttributeTable(attributeTable), dateValue);
@@ -160,22 +156,24 @@ public class OpendapServerHelper {
             dateList.add(unit.makeCalendarDate(last).toString());
             return dateList;
         } catch (IllegalArgumentException iae) {
-            log.warn("Unit is not a calendar date unit", iae);
+            log.warn("Unit is not a CalendarDateUnit.", iae);
         }
-
+ 
         return dateList;
     }
 
     public static Calendar getCalendarFromAttributeTable(AttributeTable at) {
         Attribute calendarType = at.getAttribute("calendar");
         Calendar calendar = Calendar.getDefault();
+        log.debug("Default calendar is:" + calendar.name());
         if (calendarType != null) {
             try {
-                Calendar.get(calendarType.getValueAt(0));
+                calendar = Calendar.get(calendarType.getValueAt(0));
             } catch (NoSuchAttributeException ex) {
                 log.warn("No calendar attribute, default calendar will be returned", ex);
             }
         }
+        log.debug("Calendar type ACTUALLY in use: " + calendar);
         return calendar;
     }
 
@@ -294,31 +292,29 @@ public class OpendapServerHelper {
             DArrayDimension nextDim = dimensions.nextElement();
             String name = nextDim.getEncodedName();  // or getClearName(), NetCDF-Java 4.3.x
             try {
-                AttributeTable attributeTable = das.getAttributeTable(name);
+                AttributeTable attributeTable = das.getAttributeTable(name); //element [2] has the calendar type ie noleap
                 if (null != attributeTable) {
                     Attribute units = attributeTable.getAttribute("units");
                     if (units != null) {
+                        String unitValue = units.getValueAt(0); //units will have days since ...
                         Object unit = null;
-                        try {
-                            unit = new DateUnit(units.getValueAt(0));
-                        } catch (Exception e) {
-                            log.warn("Unit is not a date unit", e);
-                        }
 
                         try {
-                            unit = CalendarDateUnit.withCalendar(getCalendarFromAttributeTable(attributeTable), units.getValueAt(0));
+                            unit = CalendarDateUnit.withCalendar(getCalendarFromAttributeTable(attributeTable), unitValue);
+                            log.debug("Using CalendarDateUnit.");
                         } catch (IllegalArgumentException iae) {
                             log.warn("Unit is not a calendar date unit", iae);
                         }
 
                         if (null != unit) {
-                            timeVarName = name;
+                            timeVarName = name; // example: this returns a string "Time" or "time"
                         }
                     } else {
                         units = attributeTable.getAttribute("_CoordinateAxisType");
+                        log.debug("CoordinateAxisType used to get units.");
                         if (null != units) {
                             if (null != units.getValueAt(0)) {
-                                timeVarName = name;
+                                timeVarName = name; 
                             }
                         }
                     }
