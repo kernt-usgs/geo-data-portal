@@ -158,7 +158,7 @@ public class NetCDFUtilityTest {
         @Test
 	public void testDateRangeWithMonthNoLeap() throws MalformedURLException, URISyntaxException, FileNotFoundException, IOException, ParseException, DAP2Exception {
                 // String dataSet = "http://cida-eros-netcdfdev.er.usgs.gov:8080/thredds/dodsC/thredds/temp/haj/wrfc36km_d01_T2_monthly_2000-09_2050-12_NOHALO.nc";
-		URI dataSetURI = this.getClass().getResource("modis_monthly_ET_3.ncml").toURI();
+		URI dataSetURI = this.getClass().getResource("d01_T2_monthly_NOHALO.ncml").toURI();
                 String gridSelection = "T2MAX";
 
                 List<String> result = OpendapServerHelper.getOPeNDAPTimeRange(dataSetURI.toASCIIString(), gridSelection);
