@@ -66,8 +66,9 @@ public class FeatureCategoricalGridCoverageAlgorithm extends AbstractAnnotatedAl
             minOccurs= 1,
             maxOccurs= 1)
     public void setFeatureAttributeName(String featureAttributeName) {
-        if (null == featureAttributeName)
+        if (null == featureAttributeName) {
             log.debug("WPS request process error: Feature Attribute Name was null. Can not process without the output column name.");
+        }
         this.featureAttributeName = featureAttributeName;
     }
 
