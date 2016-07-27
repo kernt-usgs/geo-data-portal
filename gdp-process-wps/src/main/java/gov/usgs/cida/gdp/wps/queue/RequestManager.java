@@ -1,8 +1,5 @@
 package gov.usgs.cida.gdp.wps.queue;
 
-import java.util.HashMap;
-import java.util.HashSet;
-
 /**
  *  Holds onto the requestMap and the dataSets that are in use.
  * @author smlarson

@@ -1,5 +1,6 @@
 package gov.usgs.cida.gdp.wps.queue;
 
+import org.n52.wps.server.ExceptionReport;
 import org.n52.wps.server.request.ExecuteRequest;
 
 
@@ -13,8 +14,8 @@ import org.n52.wps.server.request.ExecuteRequest;
  */
 public interface ThrottleQueue  {
  
-    public void putRequest(ExecuteRequest req);
+    public void putRequest(ExecuteRequest req) throws ExceptionReport;
     
-    public ExecuteRequest takeRequest();
+    public ExecuteRequest takeRequest() throws ExceptionReport;
       
 }
