@@ -77,7 +77,7 @@ public class ThrottleQueueImpl implements ThrottleQueue {
                 addRequest(req);
             }
 
-            /// record status in DB (sep status from the wps status)  ACCEPTED
+            /// record status in DB (separate status from the wps status)  ACCEPTED
         } catch (InterruptedException e) {
             LOGGER.info("Attempt to acquire lock to add request to the throttle timed out: " + e.getMessage());
 
@@ -91,7 +91,7 @@ public class ThrottleQueueImpl implements ThrottleQueue {
      * status and giving the worker thread the doc to execute upon
      * 'requestQueue'. 1) Removes all the previous completed requests data
      * resources from the set, updates status from STARTED to PROCESSED for all
-     * the requests that have 'wps' completed. {transaction boundary} 2) Finds
+     * the requests that have 'wps' completed.  2) Finds
      * the next request with data resources that are available, updates that
      * request to STARTED, removes it from the Hashmap, Adds the data resources
      * to the set
@@ -121,13 +121,14 @@ public class ThrottleQueueImpl implements ThrottleQueue {
             result = (ExecuteRequest) this.requestQueue.get(requestId);
 
             //update the throttle_queue table status from ACCEPTED to STARTED
-            updateStatusToStarted(requestId);
+            updateQueueStatus(requestId, ThrottleStatus.STARTED);
 
             //add the dataresources needed to process this request to the inUse set
             addDataResources(requestId);
 
             //remove the request from the Hashmap
             this.requestQueue.remove(requestId);
+            LOGGER.info("Removed request from queue:" + requestId);
 
         } catch (InterruptedException e) {
             LOGGER.info("Attempt to acquire lock to remove the request from the throttle timed out: " + e.getMessage());
@@ -141,7 +142,6 @@ public class ThrottleQueueImpl implements ThrottleQueue {
 
     private void addRequest(ExecuteRequest req) throws ExceptionReport {
         String requestId = req.getUniqueId().toString();
-        //addDataResources(req); // this is done before the postgres process has placed the resources in the input table...will need to parse
 
         this.requestQueue.put(requestId, req); //adds it to the internal hashmap for easy retrieval
         LOGGER.info("Added request:" + requestId + "to queue map.");
@@ -161,18 +161,8 @@ public class ThrottleQueueImpl implements ThrottleQueue {
         this.dataSetInUse.addAll(resources);
 
         for (String resource : resources) {
-            LOGGER.debug("Added resources to inUse hashset:" + resource);
+            LOGGER.info("Added resources to inUse hashset:" + resource);
         }
-    }
-
-    private void updateStatusToStarted(String requestId) throws ExceptionReport {
-        //update the status from ACCEPTED to STARTED... 
-        updateQueueStatus(requestId, ThrottleStatus.STARTED);
-
-        //remove the request from the queue
-        this.requestQueue.remove(requestId);
-        LOGGER.info("Removed request from queue:" + requestId);
-
     }
 
     // looks at the status of the previous requests to see if they have completed and removes the dataset from inuse set
@@ -342,21 +332,26 @@ public class ThrottleQueueImpl implements ThrottleQueue {
         //get the datasets associated with the request from the input table
         List<String> datasets = getDataSources(requestId);
         for (String dataResource : datasets) {
-            LOGGER.debug("In use data resource: " + dataResource);
+            LOGGER.info("In use data resource: " + dataResource);
             if (!inUse(dataResource)) {
                 //found the next request with an available data resource
                 return true;
+            }
+            else
+            {
+                LOGGER.info("Data resource in use. Skipping this request for now:" + requestId);
             }
         }
         return isAvailable;
     }
 
-    private boolean inUse(String requestId) {
+    private boolean inUse(String dataResource) {
         boolean inUse = false;
 
-        if (this.dataSetInUse.contains(requestId)) {
+        if (this.dataSetInUse.contains(dataResource)) {
             // dataset in use currently and this request will have to wait until it frees up- skip it for now
             inUse = true;
+            LOGGER.info("Dataset needed to process this request is current IN USE:" + dataResource + ". Will check availability again later.");
         }
 
         return inUse;
