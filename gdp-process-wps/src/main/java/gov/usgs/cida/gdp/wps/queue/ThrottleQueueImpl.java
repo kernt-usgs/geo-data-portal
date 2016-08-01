@@ -40,8 +40,8 @@ import org.n52.wps.server.database.connection.ConnectionHandler;
 public class ThrottleQueueImpl implements ThrottleQueue {
 
     final Lock lock = new ReentrantLock();
-    private final HashMap requestQueue = new HashMap();  // requestID is the key, ExecuteRequest is the value
-    private final HashSet dataSetInUse = new HashSet();
+    private final HashMap<String, ExecuteRequest> requestQueue = new HashMap();  // requestID is the key, ExecuteRequest is the value
+    private final HashSet<String> dataSetInUse = new HashSet();
     private static final Logger LOGGER = LoggerFactory.getLogger(ThrottleQueueImpl.class);
     private static final ConnectionHandler CONNECTION_HANDLER = DatabaseUtil.getJNDIConnectionHandler();
     private static final int TIME_OUT_SECONDS = 20;
@@ -91,10 +91,9 @@ public class ThrottleQueueImpl implements ThrottleQueue {
      * status and giving the worker thread the doc to execute upon
      * 'requestQueue'. 1) Removes all the previous completed requests data
      * resources from the set, updates status from STARTED to PROCESSED for all
-     * the requests that have 'wps' completed.  2) Finds
-     * the next request with data resources that are available, updates that
-     * request to STARTED, removes it from the Hashmap, Adds the data resources
-     * to the set
+     * the requests that have 'wps' completed. 2) Finds the next request with
+     * data resources that are available, updates that request to STARTED,
+     * removes it from the Hashmap, Adds the data resources to the set
      *
      * @return nulls allowed
      * @throws org.n52.wps.server.ExceptionReport
@@ -114,21 +113,22 @@ public class ThrottleQueueImpl implements ThrottleQueue {
 
             if (null == requestId) {
                 LOGGER.info("There are no requests that are available for processing at this time....");
-                return result;
+                result = null;
+                
+            } else {
+                //get the request from the map to return to the worker thread for processing
+                result = this.requestQueue.get(requestId);
+
+                //update the throttle_queue table status from ACCEPTED to STARTED
+                updateQueueStatus(requestId, ThrottleStatus.STARTED);
+
+                //add the dataresources needed to process this request to the inUse set
+                addDataResources(requestId);
+
+                //remove the request from the Hashmap
+                this.requestQueue.remove(requestId);
+                LOGGER.info("Removed request from queue:" + requestId);
             }
-
-            //get the request from the map to return to the worker thread for processing
-            result = (ExecuteRequest) this.requestQueue.get(requestId);
-
-            //update the throttle_queue table status from ACCEPTED to STARTED
-            updateQueueStatus(requestId, ThrottleStatus.STARTED);
-
-            //add the dataresources needed to process this request to the inUse set
-            addDataResources(requestId);
-
-            //remove the request from the Hashmap
-            this.requestQueue.remove(requestId);
-            LOGGER.info("Removed request from queue:" + requestId);
 
         } catch (InterruptedException e) {
             LOGGER.info("Attempt to acquire lock to remove the request from the throttle timed out: " + e.getMessage());
@@ -208,14 +208,13 @@ public class ThrottleQueueImpl implements ThrottleQueue {
         // "TBD: impl later";
         Document currentRequestDoc = req.getDocument();
         boolean result = false;
-        
+
         // if hasRan or isRunning - result = true
         // determine this by comparing a checksum (MD5) on the doc (request_xml) found in the request (table).request_xml and this requests doc
         // String thisRequest = MD5(currentRequestDoc);
         // get the one from the DB that matches the DB size 
         // String compareTo = MD5(dbRequestDoc);
         // compare the two strings to see if they .equal, possibly looping thru them if more than one with a matched size are returned from the db
-        
         LOGGER.info("Pre-check before placing on queue -hasRanBefore:" + result);
         return result; // update later after impl
     }
@@ -336,9 +335,7 @@ public class ThrottleQueueImpl implements ThrottleQueue {
             if (!inUse(dataResource)) {
                 //found the next request with an available data resource
                 return true;
-            }
-            else
-            {
+            } else {
                 LOGGER.info("Data resource in use. Skipping this request for now:" + requestId);
             }
         }
