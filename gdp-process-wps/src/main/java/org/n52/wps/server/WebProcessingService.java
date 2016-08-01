@@ -55,8 +55,8 @@ import org.n52.wps.commons.WPSConfig;
 import org.n52.wps.io.GeneratorFactory;
 import org.n52.wps.io.ParserFactory;
 import org.n52.wps.server.database.DatabaseFactory;
+import org.n52.wps.server.handler.GdpRequestHandler;
 import org.n52.wps.server.handler.RequestHandler;
-import org.n52.wps.server.handler.RequestHandlerWrapper;
 import org.n52.wps.util.XMLBeansHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -252,6 +252,7 @@ public class WebProcessingService extends HttpServlet {
     public final static String SPECIAL_XML_POST_VARIABLE = "request";
     private static final String XML_CONTENT_TYPE = "text/xml";
 
+    @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
         BufferedReader reader = null;
 
@@ -311,13 +312,12 @@ public class WebProcessingService extends HttpServlet {
                 LOGGER.debug("Decoded of POST:\n" + documentString + "\n");
             }
 
-            RequestHandler handler = new RequestHandler(new ByteArrayInputStream(documentString.getBytes("UTF-8")),
-                                                        res.getOutputStream());
+            GdpRequestHandler handler = new GdpRequestHandler(new ByteArrayInputStream(documentString.getBytes("UTF-8")),
+                                                        res.getOutputStream());  //USGS override code - done to intro the throttle queue
             String mimeType = handler.getResponseMimeType();
             res.setContentType(mimeType);
-            RequestHandlerWrapper wrapper = new RequestHandlerWrapper(handler);
-            wrapper.setUserAgent(req.getHeader(HttpHeaders.USER_AGENT));
-            wrapper.handle();
+            handler.setUserAgent(req.getHeader(HttpHeaders.USER_AGENT));
+            handler.handle();
 
             res.setStatus(HttpServletResponse.SC_OK);
         }
