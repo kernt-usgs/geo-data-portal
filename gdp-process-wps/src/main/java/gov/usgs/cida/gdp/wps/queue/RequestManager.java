@@ -5,13 +5,16 @@ package gov.usgs.cida.gdp.wps.queue;
  *
  * @author smlarson
  */
+// #TODO# rename to ExecuteRequestManager ...
 public class RequestManager {
     
     private final ThrottleQueue queue;
+    private final ExecuteRequestQueue executeQueue;
     
     // private constructor prevents instantiation from external classes
     private RequestManager() {
         this.queue = new ThrottleQueueImpl();
+        this.executeQueue = new ExecuteRequestQueue();
     }
     
     /**
@@ -29,9 +32,12 @@ public class RequestManager {
     public static RequestManager getInstance() {
         return SingletonHolder.INSTANCE;
     }
-
+    
     public ThrottleQueue getThrottleQueue() {
         return this.queue;
     }
-
+   
+    public ExecuteRequestQueue getExecuteRequestQueue() {
+        return this.executeQueue;
+    }
 }

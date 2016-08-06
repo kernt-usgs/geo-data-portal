@@ -7,23 +7,30 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.logging.Level;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.n52.wps.server.ExceptionReport;
+import org.n52.wps.server.WebProcessingService;
 import org.n52.wps.server.database.connection.ConnectionHandler;
-import static org.n52.wps.server.handler.RequestHandler.pool;
+import org.n52.wps.server.request.CapabilitiesRequest;
+import org.n52.wps.server.request.DescribeProcessRequest;
 import org.n52.wps.server.request.ExecuteRequest;
+import org.n52.wps.server.request.ExecuteRequestWrapper;
+import org.n52.wps.server.request.Request;
 import org.n52.wps.server.response.ExecuteResponse;
 import org.n52.wps.server.response.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.xml.sax.SAXException;
 
 /**
  *
@@ -31,9 +38,114 @@ import org.slf4j.LoggerFactory;
  */
 public class GdpRequestHandler extends RequestHandler {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(GdpRequestHandler.class);
+    private static ConnectionHandler connectionHandler = DatabaseUtil.getJNDIConnectionHandler();
+    private String userAgent;
+
+    /**
+     * Handles requests of type HTTP_POST (currently executeProcess). A Document
+     * is used to represent the client input. This Document must first be parsed
+     * from an InputStream.
+     *
+     * @param is The client input
+     * @param os The OutputStream to write the response to.
+     * @throws ExceptionReport
+     */
     public GdpRequestHandler(InputStream is, OutputStream os)
             throws ExceptionReport {
-        super(is, os);
+        String nodeName, localName, nodeURI, version = null;
+        Document doc;
+        this.os = os;
+
+        boolean isCapabilitiesNode = false;
+
+        try {
+            System.setProperty("javax.xml.parsers.DocumentBuilderFactory", "org.apache.xerces.jaxp.DocumentBuilderFactoryImpl");
+
+            DocumentBuilderFactory fac = DocumentBuilderFactory.newInstance();
+            fac.setNamespaceAware(true);
+
+            // parse the InputStream to create a Document
+            doc = fac.newDocumentBuilder().parse(is);
+
+            // Get the first non-comment child.
+            Node child = doc.getFirstChild();
+            while (child.getNodeName().compareTo("#comment") == 0) {
+                child = child.getNextSibling();
+            }
+            nodeName = child.getNodeName();
+            localName = child.getLocalName();
+            nodeURI = child.getNamespaceURI();
+            Node versionNode = child.getAttributes().getNamedItem("version");
+
+            /*
+			 * check for service parameter. this has to be present for all requests
+             */
+            Node serviceNode = child.getAttributes().getNamedItem("service");
+
+            if (serviceNode == null) {
+                throw new ExceptionReport("Parameter <service> not specified.", ExceptionReport.MISSING_PARAMETER_VALUE, "service");
+            } else if (!serviceNode.getNodeValue().equalsIgnoreCase("WPS")) {
+                throw new ExceptionReport("Parameter <service> not specified.", ExceptionReport.INVALID_PARAMETER_VALUE, "service");
+            }
+
+            isCapabilitiesNode = nodeName.toLowerCase().contains("capabilities");
+            if (versionNode == null && !isCapabilitiesNode) {
+                throw new ExceptionReport("Parameter <version> not specified.", ExceptionReport.MISSING_PARAMETER_VALUE, "version");
+            }
+            //TODO: I think this can be removed, as capabilities requests do not have a version parameter (BenjaminPross)
+            if (!isCapabilitiesNode) {
+//				version = child.getFirstChild().getTextContent();//.getNextSibling().getFirstChild().getNextSibling().getFirstChild().getNodeValue();
+                version = child.getAttributes().getNamedItem("version").getNodeValue();
+            }
+            /*
+			 * check language, if not supported, return ExceptionReport
+			 * Fix for https://bugzilla.52north.org/show_bug.cgi?id=905
+             */
+            Node languageNode = child.getAttributes().getNamedItem("language");
+            if (languageNode != null) {
+                String language = languageNode.getNodeValue();
+                Request.checkLanguageSupported(language);
+            }
+        } catch (SAXException e) {
+            throw new ExceptionReport(
+                    "There went something wrong with parsing the POST data: "
+                    + e.getMessage(),
+                    ExceptionReport.NO_APPLICABLE_CODE, e);
+        } catch (IOException e) {
+            throw new ExceptionReport(
+                    "There went something wrong with the network connection.",
+                    ExceptionReport.NO_APPLICABLE_CODE, e);
+        } catch (ParserConfigurationException e) {
+            throw new ExceptionReport(
+                    "There is a internal parser configuration error",
+                    ExceptionReport.NO_APPLICABLE_CODE, e);
+        }
+        //Fix for Bug 904 https://bugzilla.52north.org/show_bug.cgi?id=904
+        if (!isCapabilitiesNode && version == null) {
+            throw new ExceptionReport("Parameter <version> not specified.", ExceptionReport.MISSING_PARAMETER_VALUE, "version");
+        }
+        if (!isCapabilitiesNode && !version.equals(Request.SUPPORTED_VERSION)) {
+            throw new ExceptionReport("Version not supported.", ExceptionReport.INVALID_PARAMETER_VALUE, "version");
+        }
+        // get the request type
+        if (nodeURI.equals(WebProcessingService.WPS_NAMESPACE) && localName.equals("Execute")) {
+            req = new ExecuteRequestWrapper(doc); //#USGS override -added wrapper
+            setResponseMimeType((ExecuteRequest) req);
+        } else if (nodeURI.equals(WebProcessingService.WPS_NAMESPACE) && localName.equals("GetCapabilities")) {
+            req = new CapabilitiesRequest(doc);
+            this.responseMimeType = "text/xml";
+        } else if (nodeURI.equals(WebProcessingService.WPS_NAMESPACE) && localName.equals("DescribeProcess")) {
+            req = new DescribeProcessRequest(doc);
+            this.responseMimeType = "text/xml";
+
+        } else if (!localName.equals("Execute")) {
+            throw new ExceptionReport("The requested Operation not supported or not applicable to the specification: "
+                    + nodeName, ExceptionReport.OPERATION_NOT_SUPPORTED, localName);
+        } else if (nodeURI.equals(WebProcessingService.WPS_NAMESPACE)) {
+            throw new ExceptionReport("specified namespace is not supported: "
+                    + nodeURI, ExceptionReport.INVALID_PARAMETER_VALUE);
+        }
     }
 
     public GdpRequestHandler(Map<String, String[]> params, OutputStream os)
@@ -41,14 +153,6 @@ public class GdpRequestHandler extends RequestHandler {
         super(params, os);
     }
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(GdpRequestHandler.class);
-    private static ConnectionHandler connectionHandler = DatabaseUtil.getJNDIConnectionHandler();
-    //private RequestHandler parent;
-    private String userAgent;
-
-    //public GdpRequestHandler(RequestHandler wrapThis) {
-//		parent = wrapThis;
-    //}
     public String getUserAgent() {
         return userAgent;
     }
@@ -68,7 +172,6 @@ public class GdpRequestHandler extends RequestHandler {
      * from processing (ran or running) 2 - avoid taxing the same data source
      * the request requires for processing
      *
-     * @param req The request of the client.
      * @throws ExceptionReport
      */
     @Override
@@ -79,99 +182,24 @@ public class GdpRequestHandler extends RequestHandler {
         }
         handleAgentLogging();  //USGS override logic: inserts the user_agent into the meta-data table. Required the requestId for the insert.
 
-        if (req instanceof ExecuteRequest) {
-            // cast the request to an executerequest
-            ExecuteRequest execReq = (ExecuteRequest) req;
-
-            if (isThrottleQueueEnabled()) {
-                RequestManager.getInstance().getThrottleQueue().putRequest(execReq); //USGS override logic: add all requests to the throttle queue
-                // above will allow us to block until the input data source is free from all requests (FIFO) in the pipeline
-            }
+        //if (req instanceof ExecuteRequest) {
+        // cast the request to an executerequest
+        //    ExecuteRequest execReq = (ExecuteRequest) req;
+        if (req instanceof ExecuteRequestWrapper) {
+            LOGGER.info("USING wrapper functionality");
+            ExecuteRequestWrapper execReq = (ExecuteRequestWrapper) req; //#USGS override code
 
             execReq.updateStatusAccepted();
-
-            ExceptionReport exceptionReport = null;
-            try {
-                if (execReq.isStoreResponse()) {
-                    resp = new ExecuteResponse(execReq);
-                    InputStream is = resp.getAsStream();
-                    IOUtils.copy(is, os);
-                    is.close();
-                    // the takeRequest can return a null if there are no requests that can currently be processed. #TODO# Do we block until the data resource is available? how long? 
-                    if (isThrottleQueueEnabled()) {
-                        ExecuteRequest throttledReq = RequestManager.getInstance().getThrottleQueue().takeRequest();
-                        if (null != throttledReq)
-                           pool.submit(throttledReq);//USGS override logic: this will block until a request with a dataset that has no contention with other running requests is available
-                    } else {
-                        pool.submit(execReq);
-                        return;
-                    }
-                }
-                try {
-                    // retrieve status with timeout enabled
-                    try {
-                        resp = pool.submit(execReq).get();
-                    } catch (ExecutionException ee) {
-                        LOGGER.warn("exception while handling ExecuteRequest.");
-                        // the computation threw an error
-                        // probably the client input is not valid
-                        if (ee.getCause() instanceof ExceptionReport) {
-                            exceptionReport = (ExceptionReport) ee
-                                    .getCause();
-                        } else {
-                            exceptionReport = new ExceptionReport(
-                                    "An error occurred in the computation: "
-                                    + ee.getMessage(),
-                                    ExceptionReport.NO_APPLICABLE_CODE);
-                        }
-                    } catch (InterruptedException ie) {
-                        LOGGER.warn("interrupted while handling ExecuteRequest.");
-                        // interrupted while waiting in the queue
-                        exceptionReport = new ExceptionReport(
-                                "The computation in the process was interrupted.",
-                                ExceptionReport.NO_APPLICABLE_CODE);
-                    }
-                } finally {
-                    if (exceptionReport != null) {
-                        LOGGER.debug("ExceptionReport not null: " + exceptionReport.getMessage());
-                        // NOT SURE, if this exceptionReport is also written to the DB, if required... test please!
-                        throw exceptionReport;
-                    } // send the result to the outputstream of the client.
-                    /*	if(((ExecuteRequest) req).isQuickStatus()) {
-						resp = new ExecuteResponse(execReq);
-					}*/ else if (resp == null) {
-                        LOGGER.warn("null response handling ExecuteRequest.");
-                        throw new ExceptionReport("Problem with handling threads in RequestHandler", ExceptionReport.NO_APPLICABLE_CODE);
-                    }
-                    if (!execReq.isStoreResponse()) {
-                        InputStream is = resp.getAsStream();
-                        IOUtils.copy(is, os);
-                        is.close();
-                        LOGGER.info("Served ExecuteRequest.");
-                    }
-                }
-            } catch (RejectedExecutionException ree) {
-                LOGGER.warn("exception handling ExecuteRequest.", ree);
-                // server too busy?
-                throw new ExceptionReport(
-                        "The requested process was rejected. Maybe the server is flooded with requests.",
-                        ExceptionReport.SERVER_BUSY);
-            } catch (Exception e) {
-                LOGGER.error("exception handling ExecuteRequest.", e);
-                if (e instanceof ExceptionReport) {
-                    throw (ExceptionReport) e;
-                }
-                throw new ExceptionReport("Could not read from response stream.", ExceptionReport.NO_APPLICABLE_CODE);
-            } finally { //USGS override logic: check to see if there are any remaining requests to work on in the throttle queue
-                if (isThrottleQueueEnabled()) {
-                    LOGGER.info("Checking for remaining tasks in throttle queue.");
-                    ExecuteRequest throttleRequest = RequestManager.getInstance().getThrottleQueue().takeRequest();
-                    if (null != throttleRequest)
-                       pool.submit(throttleRequest);
-                }
-
+            RequestManager.getInstance().getThrottleQueue().putRequest(execReq); //inserts with ACCEPTED
+            // ---------------------------------
+            if (execReq.isStoreResponse()) {
+                addToQueue(execReq, resp);
+            } else {
+                synchAddToQueue(execReq, resp);
             }
-        } else {
+            // ---------------------------------
+
+        } else {  // if ExecuteRequest
             // for GetCapabilities and DescribeProcess:
             resp = req.call();
             try {
@@ -181,7 +209,60 @@ public class GdpRequestHandler extends RequestHandler {
             } catch (IOException e) {
                 throw new ExceptionReport("Could not read from response stream.", ExceptionReport.NO_APPLICABLE_CODE);
             }
+        }
+    }
 
+    private void addToQueue(ExecuteRequestWrapper execReq, Response resp) throws ExceptionReport {
+        try {
+            resp = new ExecuteResponse(execReq);
+            InputStream is = resp.getAsStream();
+            IOUtils.copy(is, os);
+            is.close();
+            RequestManager.getInstance().getExecuteRequestQueue().put(execReq);  //pool.submit
+
+            // retrieve status with timeout enabled
+        } catch (RejectedExecutionException ree) {
+            LOGGER.warn("exception handling ExecuteRequest.", ree);
+            // server too busy?
+            throw new ExceptionReport(
+                    "The requested process was rejected. Maybe the server is flooded with requests.",
+                    ExceptionReport.SERVER_BUSY);
+        } catch (ExceptionReport | IOException e) {
+            LOGGER.error("exception handling ExecuteRequest.", e);
+            if (e instanceof ExceptionReport) {
+                throw (ExceptionReport) e;
+            }
+            throw new ExceptionReport("Could not read from response stream.", ExceptionReport.NO_APPLICABLE_CODE);
+        }
+    }
+
+    private void synchAddToQueue(ExecuteRequestWrapper execReq, Response resp) throws ExceptionReport {
+        // ExceptionReport exceptionReport = null;
+        try {
+            // #todo - add to queue even though the user is waiting ie synchronous
+            resp = RequestManager.getInstance().getExecuteRequestQueue().put(execReq);
+        } catch (RejectedExecutionException ree) {
+            LOGGER.warn("exception handling ExecuteRequest.", ree);
+            // server too busy?
+            throw new ExceptionReport(
+                    "The requested process was rejected. Maybe the server is flooded with requests.",
+                    ExceptionReport.SERVER_BUSY);
+        } finally {
+            if (resp == null) {
+                LOGGER.warn("null response handling ExecuteRequest.");
+                throw new ExceptionReport("Problem with handling threads in GDPRequestHandler", ExceptionReport.NO_APPLICABLE_CODE);
+            }
+            if (!execReq.isStoreResponse()) {//how would this get here
+                InputStream is = resp.getAsStream();
+                try {
+                    IOUtils.copy(is, os);
+                    is.close();
+                } catch (IOException ex) {
+                    java.util.logging.Logger.getLogger(GdpRequestHandler.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+                LOGGER.info("Served ExecuteRequest.");
+            }
         }
     }
 
@@ -203,49 +284,6 @@ public class GdpRequestHandler extends RequestHandler {
                 // don't rethrow, just keep going
             }
         }
-        // parent.handle();
-    }
-
-    //Via the db, a toggle switch for the throttle_queue can be set to true to enable the throttle and false to disable the throttle.
-    //This is an immediate disablement meaning if there is work remaining in the queue, it won't get processed.
-    private boolean isThrottleQueueEnabled() throws ExceptionReport {
-        boolean result = true;
-        try (Connection connection = connectionHandler.getConnection()) {
-            // UUID pkey = UUID.randomUUID();
-            String sql = "SELECT enabled FROM throttle_queue_toggle  WHERE toggle_type = 'THROTTLE'";
-            Statement statement = connection.createStatement();
-            ResultSet rs = statement.executeQuery(sql);
-            while (rs.next()) {
-                String boolString = rs.getString("ENABLED");
-                if (boolString.equalsIgnoreCase("t") || boolString.equalsIgnoreCase("true"))  // #TODO# is there a postgres setting to make this come back as true and not t?
-                    result = true;
-            //    result = Boolean.valueOf(boolString);
-            }
-        } catch (SQLException ex) {
-            LOGGER.error("Problem selecting throttle_queue enabled from the db.", ex);
-            LOGGER.info("Throttle_queue enabled: " + result);
-            throw new ExceptionReport("Problem selecting throttle_queue enabled from the db. Throttle 'enabled' is currently:" + result, ExceptionReport.NO_APPLICABLE_CODE);
-        }
-        return result;
-    }
-
-    @Override
-    protected void setResponseMimeType(ExecuteRequest req) {
-        super.setResponseMimeType(req);
-//		if(req.isRawData()){
-//			responseMimeType = req.getExecuteResponseBuilder().getMimeType();
-//		}else{
-//			responseMimeType = "text/xml";
-//		}	
-    }
-
-    @Override
-    public String getResponseMimeType() {
-        return super.getResponseMimeType();
-//		if(responseMimeType == null){
-//			return "text/xml";
-//		}
-//		return responseMimeType.toLowerCase();
     }
 
 }

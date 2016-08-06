@@ -1,6 +1,8 @@
 package gov.usgs.cida.gdp.wps.queue;
 
 import gov.usgs.cida.gdp.wps.util.DatabaseUtil;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.sql.Connection;
@@ -18,12 +20,16 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import org.n52.wps.server.ExceptionReport;
 import org.n52.wps.server.request.ExecuteRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.n52.wps.server.database.connection.ConnectionHandler;
+import org.n52.wps.server.request.ExecuteRequestWrapper;
+import org.xml.sax.SAXException;
 
 /**
  * Implements the pre and post logic required for the processing threads
@@ -39,7 +45,7 @@ import org.n52.wps.server.database.connection.ConnectionHandler;
  */
 public class ThrottleQueueImpl implements ThrottleQueue {
 
-    final Lock lock = new ReentrantLock();
+    private final Lock lock = new ReentrantLock();
     private final HashMap<String, ExecuteRequest> requestQueue = new HashMap();  // requestID is the key, ExecuteRequest is the value
     private final HashSet<String> dataSetInUse = new HashSet();
     private static final Logger LOGGER = LoggerFactory.getLogger(ThrottleQueueImpl.class);
@@ -65,21 +71,21 @@ public class ThrottleQueueImpl implements ThrottleQueue {
 
             if (isRedundantRequestEnabled()) {  //can toggle this logic on and off with the setting in the DB - throttle_queue_toggle table
                 if (hasRan(req)) {
-                    LOGGER.info("Current request has ran previously. Getting file response URI...");
+                    LOGGER.debug("Current request has ran previously. Getting file response URI...");
                     String responseId = getPreviousResponseId(requestId);
-                    LOGGER.info("Response ID, " + responseId + " found for request with ID..." + requestId.toString());
+                    LOGGER.debug("Response ID, " + responseId + " found for request with ID..." + requestId.toString());
                 } else {
                     addRequest(req);
                 }
-            } else {
+            } else {  // called from within the thread - post STARTED
                 // move this to a an add request to easily manage the put of the datasets too
-                LOGGER.info("Adding request to Throttle Queue with ID:" + requestId.toString());
+                LOGGER.debug("Adding request to Throttle Queue with ID:" + requestId.toString());
                 addRequest(req);
             }
 
             /// record status in DB (separate status from the wps status)  ACCEPTED
         } catch (InterruptedException e) {
-            LOGGER.info("Attempt to acquire lock to add request to the throttle timed out: " + e.getMessage());
+            LOGGER.debug("Attempt to acquire lock to add request to the throttle timed out: " + e.getMessage());
 
         } finally {
             lock.unlock();
@@ -95,58 +101,56 @@ public class ThrottleQueueImpl implements ThrottleQueue {
      * data resources that are available, updates that request to STARTED,
      * removes it from the Hashmap, Adds the data resources to the set
      *
+     * @param requestId
      * @return nulls allowed
      * @throws org.n52.wps.server.ExceptionReport
      */
     @Override
-    public ExecuteRequest takeRequest() throws ExceptionReport {
-        ExecuteRequest result = null;
+    public void removeRequest(String requestId) throws ExceptionReport {
 
         try {
             lock.tryLock(TIME_OUT_SECONDS, TimeUnit.SECONDS);   //#TODO# review timeout duration 
-            // update the inUse datasets based upon any completed wps requests (complete the work of the previous requests)
-            updateInUse();
-            updateStatusToProcessed(); //for previously completed requests
 
-            // get the next request that has a status of accepted...FIFO
-            String requestId = getNextAvailable();
-
+            // get the next request that has a status of accepted...FIFO processing used
+            // String requestId = getNextAvailable();
             if (null == requestId) {
-                LOGGER.info("There are no requests that are available for processing at this time....");
-                result = null;
-                
+                LOGGER.debug("There are no requests that are available for processing at this time....");
+                //result = null;
+
             } else {
-                //get the request from the map to return to the worker thread for processing
-                result = this.requestQueue.get(requestId);
 
-                //update the throttle_queue table status from ACCEPTED to STARTED
-                updateQueueStatus(requestId, ThrottleStatus.STARTED);
+                updateQueueStatusProcessed(requestId);
 
-                //add the dataresources needed to process this request to the inUse set
-                addDataResources(requestId);
+                //remove the inuse data sources
+                this.dataSetInUse.removeAll(this.getDataSources(requestId));
 
                 //remove the request from the Hashmap
                 this.requestQueue.remove(requestId);
-                LOGGER.info("Removed request from queue:" + requestId);
+                LOGGER.debug("Removed request from queue:" + requestId);
             }
 
         } catch (InterruptedException e) {
-            LOGGER.info("Attempt to acquire lock to remove the request from the throttle timed out: " + e.getMessage());
+            LOGGER.debug("Attempt to acquire lock to remove the request from the throttle timed out: " + e.getMessage());
 
         } finally {
             lock.unlock();
         }
 
-        return result; //this could be null 
     }
 
     private void addRequest(ExecuteRequest req) throws ExceptionReport {
         String requestId = req.getUniqueId().toString();
+        // insertQueueRequest(requestId);
 
         this.requestQueue.put(requestId, req); //adds it to the internal hashmap for easy retrieval
-        LOGGER.info("Added request:" + requestId + "to queue map.");
+        LOGGER.debug("Added request:" + requestId + "to queue hashmap.");
 
-        insertQueueRequest(requestId);
+        //add the dataresources needed to process this request to the inUse set
+        addDataResources(requestId);
+
+        // updateQueueStatus(requestId, ThrottleStatus.STARTED);
+        insertQueueRequest(requestId);//ACCEPTED
+
     }
 
     /**
@@ -161,8 +165,48 @@ public class ThrottleQueueImpl implements ThrottleQueue {
         this.dataSetInUse.addAll(resources);
 
         for (String resource : resources) {
-            LOGGER.info("Added resources to inUse hashset:" + resource);
+            LOGGER.debug("Added resources to inUse hashset:" + resource);
         }
+    }
+
+    // marks the request as having been queued in the throttle_queue db
+    public void updateStatus(ExecuteRequest exec, ThrottleStatus status) throws ExceptionReport {
+        if (status == ThrottleStatus.ENQUEUE) {
+            LOGGER.debug("Status recieved as ENQUEUE.");
+            updateQueueEnqueue(exec.getUniqueId().toString());
+            // insertQueueRequest(exec.getUniqueId().toString());
+        } else if (status == ThrottleStatus.WAITING) {
+            LOGGER.debug("Status recieved as WAITING.");
+            updateStatusWaiting(exec.getUniqueId().toString());
+        } else if (status == ThrottleStatus.STARTED) {
+            LOGGER.debug("Status recieved as STARTED.");
+            updateStatusStarted(exec.getUniqueId().toString());
+        }
+    }
+
+    @Override
+    public boolean isEnqueue(ExecuteRequest req) throws ExceptionReport {
+        boolean result = false;
+        try (Connection connection = CONNECTION_HANDLER.getConnection()) {
+
+            String sql = "SELECT request_id FROM throttle_queue  WHERE status = '" + ThrottleStatus.ENQUEUE.toString() + "'AND request_id = ?";
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setString(1, req.getUniqueId().toString());
+
+            ResultSet rs = statement.executeQuery();
+            while (rs.next()) {
+                String id = rs.getString("request_id");
+                if (null != id) {
+                    result = true;
+                }
+            }
+        } catch (SQLException ex) {
+            String msg = "Problem selecting throttle_queue enqueue status for reqId:" + req.getUniqueId().toString();
+            LOGGER.error(msg, ex);
+            LOGGER.debug(msg);
+            throw new ExceptionReport(msg, ExceptionReport.NO_APPLICABLE_CODE);
+        }
+        return result;
     }
 
     // looks at the status of the previous requests to see if they have completed and removes the dataset from inuse set
@@ -178,7 +222,7 @@ public class ThrottleQueueImpl implements ThrottleQueue {
             ResultSet rs = statement.executeQuery(sql);
             while (rs.next()) {
                 String dataResource = rs.getString("INPUT_VALUE");
-                LOGGER.info("Removing resource from in-use set: " + dataResource);
+                LOGGER.debug("Removing resource from in-use set: " + dataResource);
 
                 this.dataSetInUse.remove(dataResource);  // removes this from the internal set
             }
@@ -189,13 +233,49 @@ public class ThrottleQueueImpl implements ThrottleQueue {
         }
     }
 
+    private void updateStatusStarted(String requestId) throws ExceptionReport {
+        ThrottleStatus status = ThrottleStatus.STARTED;
+
+        try (Connection connection = CONNECTION_HANDLER.getConnection()) {
+            PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_STATUS_STARTED_STATEMENT);
+
+            preparedStatement.setString(1, status.toString());
+            preparedStatement.setString(2, requestId);
+
+            preparedStatement.executeUpdate();
+            LOGGER.debug("Updated status in throttle_queue table of request:" + requestId + " to status of :" + status.toString());
+        } catch (Exception e) {
+            String msg = "Failed to update status to STARTED on throttle_queue table. :" + UPDATE_STATUS_STARTED_STATEMENT;
+            LOGGER.error(msg, e);
+            throw new ExceptionReport(msg, ExceptionReport.NO_APPLICABLE_CODE);
+        }
+    }
+
+    private void updateStatusWaiting(String requestId) throws ExceptionReport {
+        ThrottleStatus status = ThrottleStatus.WAITING;
+
+        try (Connection connection = CONNECTION_HANDLER.getConnection()) {
+            PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_STATUS_WAITING_STATEMENT);
+
+            preparedStatement.setString(1, status.toString());
+            preparedStatement.setString(2, requestId);
+
+            preparedStatement.executeUpdate();
+            LOGGER.debug("Updated status in throttle_queue table of request:" + requestId + " to status of :" + status.toString());
+        } catch (Exception e) {
+            String msg = "Failed to update status to STARTED on throttle_queue table. :" + UPDATE_STATUS_WAITING_STATEMENT;
+            LOGGER.error(msg, e);
+            throw new ExceptionReport(msg, ExceptionReport.NO_APPLICABLE_CODE);
+        }
+    }
+
     // looks at the wps status to determine if the request has completed (FAILED or SUCCEEDED) and updates the queue status from started to procesed
-    private void updateStatusToProcessed() throws ExceptionReport {
+    private void updateStatusToProcessed_old() throws ExceptionReport {
         try (Connection connection = CONNECTION_HANDLER.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_TO_PROCESSED_STATUS);
 
             preparedStatement.executeUpdate();
-            LOGGER.info("Updated status from STARTED to PROCESSED on the throttle_queue table for wps requests that recently completed.");
+            LOGGER.debug("Updated status from STARTED to PROCESSED on the throttle_queue table for wps requests that recently completed.");
         } catch (Exception e) {
             String msg = "Failed to update status on throttle_queue for completed requests (STARTED -> PROCESSED).";
             LOGGER.error(msg, e);
@@ -215,7 +295,7 @@ public class ThrottleQueueImpl implements ThrottleQueue {
         // get the one from the DB that matches the DB size 
         // String compareTo = MD5(dbRequestDoc);
         // compare the two strings to see if they .equal, possibly looping thru them if more than one with a matched size are returned from the db
-        LOGGER.info("Pre-check before placing on queue -hasRanBefore:" + result);
+        LOGGER.debug("Pre-check before placing on queue -hasRanBefore:" + result);
         return result; // update later after impl
     }
 
@@ -232,7 +312,7 @@ public class ThrottleQueueImpl implements ThrottleQueue {
             return sb.toString();
         } catch (java.security.NoSuchAlgorithmException e) {
             String msg = "Can not verify if request has been processed previously. MD5 not available.";
-            LOGGER.info("MD5 algo not available.");
+            LOGGER.debug("MD5 algo not available.");
             throw new ExceptionReport(msg, ExceptionReport.NO_APPLICABLE_CODE);
         }
     }
@@ -250,7 +330,7 @@ public class ThrottleQueueImpl implements ThrottleQueue {
 
             if (rs != null && rs.next()) {
                 resultURL = rs.getString(1);
-                LOGGER.info("Got previous responsId for request:" + currentRequestId.toString());
+                LOGGER.debug("Got previous responsId for request:" + currentRequestId.toString());
             }
         } catch (Exception e) {
             String msg = "Failed to find previously ran response URL from database.";
@@ -274,7 +354,7 @@ public class ThrottleQueueImpl implements ThrottleQueue {
             }
         } catch (SQLException ex) {
             LOGGER.error("Problem selecting throttle_queue_toggle for pre-check redundant request enabled from the db.", ex);
-            LOGGER.info("Throttle_queue reundant request enabled: " + result);
+            LOGGER.debug("Throttle_queue reundant request enabled: " + result);
             throw new ExceptionReport("Problem selecting throttle_queue_toggle enabled from the db. Redundant request 'enabled' is currently:" + result, ExceptionReport.NO_APPLICABLE_CODE);
         }
         return result;
@@ -294,7 +374,7 @@ public class ThrottleQueueImpl implements ThrottleQueue {
             if (rs != null) {
                 while (rs.next()) {
                     result.add(rs.getString(1));
-                    LOGGER.info("Fetched datasources from input for requestId:" + requestId + " datasource: " + rs.getString(1));
+                    LOGGER.debug("Fetched datasources from input for requestId:" + requestId + " datasource: " + rs.getString(1));
                 }
             }
         } catch (Exception e) {
@@ -307,15 +387,15 @@ public class ThrottleQueueImpl implements ThrottleQueue {
 
     private String getNextAvailable() throws ExceptionReport {
         String result = null;
-        List ids = getNextFew();
+        List<String> ids = getNextFew();
 
         if ((null == ids) || (ids.size() < 1)) {
-            LOGGER.info("No requests are currently available for processing.");
+            LOGGER.debug("No requests are currently available for processing.");
             return null; //went through all the active requests and not a one (or there are no reamining requests) qualified to run
         }
 
         // the ids are the request ids of the the candidate work requests
-        for (Object id : ids) {
+        for (String id : ids) {
             String requestId = (String) id;
 
             if (isAvailable(requestId)) {
@@ -331,12 +411,12 @@ public class ThrottleQueueImpl implements ThrottleQueue {
         //get the datasets associated with the request from the input table
         List<String> datasets = getDataSources(requestId);
         for (String dataResource : datasets) {
-            LOGGER.info("In use data resource: " + dataResource);
+            LOGGER.debug("In use data resource: " + dataResource);
             if (!inUse(dataResource)) {
                 //found the next request with an available data resource
                 return true;
             } else {
-                LOGGER.info("Data resource in use. Skipping this request for now:" + requestId);
+                LOGGER.debug("Data resource in use. Skipping this request for now:" + requestId);
             }
         }
         return isAvailable;
@@ -348,7 +428,7 @@ public class ThrottleQueueImpl implements ThrottleQueue {
         if (this.dataSetInUse.contains(dataResource)) {
             // dataset in use currently and this request will have to wait until it frees up- skip it for now
             inUse = true;
-            LOGGER.info("Dataset needed to process this request is current IN USE:" + dataResource + ". Will check availability again later.");
+            LOGGER.debug("Dataset needed to process this request is current IN USE:" + dataResource + ". Will check availability again later.");
         }
 
         return inUse;
@@ -367,7 +447,7 @@ public class ThrottleQueueImpl implements ThrottleQueue {
                 while (rs.next()) {
                     requestIds.add(rs.getString("request_id"));
 
-                    LOGGER.info("Getting candidates for worker thread:" + rs.getString(1) + " with enqueue time of: " + rs.getDate(2).getTime());  //number of millis since Jan 1 1970
+                    LOGGER.debug("Getting candidates for worker thread:" + rs.getString(1) + " with enqueue time of: " + rs.getDate(2).getTime());  //number of millis since Jan 1 1970
                 }
             }
 
@@ -392,7 +472,7 @@ public class ThrottleQueueImpl implements ThrottleQueue {
             preparedStatement.setTimestamp(4, null); //dont want to set the dequeue time now
 
             preparedStatement.execute();
-            LOGGER.info("Inserted request in throttle_queue table with ID:" + requestId);
+            LOGGER.debug("Inserted request in throttle_queue table with ID:" + requestId + " with status of ENQUEUE.");
         } catch (Exception e) {
             String msg = "Failed to insert request and status into throttle_queue table.";
             LOGGER.error(msg, e);
@@ -401,21 +481,44 @@ public class ThrottleQueueImpl implements ThrottleQueue {
     }
 
     //update the requests status on the throttle_queue table for the dequeuing process
-    private void updateQueueStatus(String requestId, ThrottleStatus status) throws ExceptionReport {
-        //ACCEPTED -> STARTED -> PROCESSED 
+    private void updateQueueStatusProcessed(String requestId) throws ExceptionReport {
+        //ENQUEUE -> STARTED -> PROCESSED 
         Timestamp now = new Timestamp(Calendar.getInstance().getTimeInMillis());
+        ThrottleStatus status = ThrottleStatus.PROCESSED;
 
         try (Connection connection = CONNECTION_HANDLER.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_STATUS_DEQUEUE_STATEMENT);
+
+            preparedStatement.setString(1, status.toString());
+            preparedStatement.setTimestamp(2, now);  //dequeue time
+            preparedStatement.setString(3, requestId);
+
+            preparedStatement.executeUpdate();
+            LOGGER.debug("Updated status in throttle_queue table of request:" + requestId + " to status of :" + status.toString());
+        } catch (Exception e) {
+            String msg = "Failed to update status to STARTED on throttle_queue table. :" + UPDATE_STATUS_DEQUEUE_STATEMENT;
+            LOGGER.error(msg, e);
+            throw new ExceptionReport(msg, ExceptionReport.NO_APPLICABLE_CODE);
+        }
+    }
+
+    //update the requests status on the throttle_queue table for the queuing process from the thread after its started
+    private void updateQueueEnqueue(String requestId) throws ExceptionReport {
+        //ENQUEUE -> STARTED -> PROCESSED
+        ThrottleStatus status = ThrottleStatus.ENQUEUE;
+        Timestamp now = new Timestamp(Calendar.getInstance().getTimeInMillis());
+
+        try (Connection connection = CONNECTION_HANDLER.getConnection()) {
+            PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_STATUS_ENQUEUE_STATEMENT);
 
             preparedStatement.setString(1, status.toString());
             preparedStatement.setTimestamp(2, now);
             preparedStatement.setString(3, requestId);
 
             preparedStatement.executeUpdate();
-            LOGGER.info("Updated status in throttle_queue table of request:" + requestId + " to status of :" + status.toString());
+            LOGGER.debug("Updated status in throttle_queue table of request:" + requestId + " to status of :" + status.toString());
         } catch (Exception e) {
-            String msg = "Failed to update status to STARTED on throttle_queue table. :" + UPDATE_STATUS_DEQUEUE_STATEMENT;
+            String msg = "Failed to update status to ENQUEUE on throttle_queue table. :" + UPDATE_STATUS_ENQUEUE_STATEMENT;
             LOGGER.error(msg, e);
             throw new ExceptionReport(msg, ExceptionReport.NO_APPLICABLE_CODE);
         }
@@ -431,11 +534,16 @@ public class ThrottleQueueImpl implements ThrottleQueue {
     private static final String SELECT_STATUS_REQUEST_STATEMENT = "SELECT STATUS FROM " + THROTTLE_QUEUE_TABLE + " WHERE REQUEST_ID = ?";
     private static final String INSERT_STATUS_REQUEST_STATEMENT = "INSERT INTO " + THROTTLE_QUEUE_TABLE + "(REQUEST_ID, STATUS, ENQUEUED, DEQUEUED) VALUES (?, ?, ?, ?)";
     private static final String UPDATE_STATUS_DEQUEUE_STATEMENT = "UPDATE " + THROTTLE_QUEUE_TABLE + " SET (STATUS, DEQUEUED) = (?, ?) WHERE REQUEST_ID = ?";
+    private static final String UPDATE_STATUS_ENQUEUE_STATEMENT = "UPDATE " + THROTTLE_QUEUE_TABLE + " SET (STATUS, ENQUEUED) = (?, ?) WHERE REQUEST_ID = ?";
+    private static final String UPDATE_STATUS_WAITING_STATEMENT = "UPDATE " + THROTTLE_QUEUE_TABLE + " SET (STATUS) = (?) WHERE REQUEST_ID = ?";
+    private static final String UPDATE_STATUS_STARTED_STATEMENT = "UPDATE " + THROTTLE_QUEUE_TABLE + " SET (STATUS) = (?) WHERE REQUEST_ID = ?";
     private static final String SELECT_NEXT_AVAILABLE = "SELECT request_id, enqueued from " + THROTTLE_QUEUE_TABLE + " where status = 'ACCEPTED' ORDER BY enqueued";
     private static final String SELECT_DATA_SOURCES_STATEMENT = "SELECT INPUT_VALUE FROM INPUT WHERE INPUT_IDENTIFIER = 'DATASET_URI' AND REQUEST_ID = ?";
     private static final String UPDATE_TO_PROCESSED_STATUS = "UPDATE " + THROTTLE_QUEUE_TABLE + " SET status = 'PROCESSED' WHERE request_id in (SELECT resp.request_id from response resp, throttle_queue queue where resp.request_id = queue.request_id and queue.status = 'STARTED' and resp.status in ('SUCCEEDED', 'FAILED'))";
     private static final String SELECT_DATASETS_COMPLETED = "SELECT DISTINCT(INPUT_VALUE) FROM INPUT WHERE INPUT_IDENTIFIER = 'DATASET_URI' AND REQUEST_ID in (SELECT resp.request_id from response resp, throttle_queue queue where resp.request_id = queue.request_id and queue.status = 'STARTED' and resp.status in ('SUCCEEDED','FAILED'))";
-// --- for restart after hard down below : To Be Implmented ---
+    private static final String SELECT_REMAINING_WORK = "SELECT REQUEST_ID FROM RESPONSE WHERE STATUS = 'ACCEPTED'";
+    private static final String SELECT_REQUEST_XML = "SELECT request_xml FROM request WHERE request_id = ?";
+// --- for restart after hard down below : To Be Implmented ---   
 
     private ThrottleStatus getStatus(String requestId) throws ExceptionReport {
 
@@ -448,7 +556,7 @@ public class ThrottleQueueImpl implements ThrottleQueue {
 
             if (rs != null && rs.next()) {
                 String status = rs.getString(1);
-                LOGGER.info("Got status in throttle_queue table for request:" + requestId + " status: " + status);
+                LOGGER.debug("Got status in throttle_queue table for request:" + requestId + " status: " + status);
                 return (ThrottleStatus.valueOf(status));
             }
 
@@ -459,5 +567,123 @@ public class ThrottleQueueImpl implements ThrottleQueue {
         }
 
         return ThrottleStatus.UNKNOWN;
+    }
+// --------
+// epoc for a hard restart below
+
+    /**
+     *
+     * @throws org.n52.wps.server.ExceptionReport
+     */
+    @Override
+    public void enqueueRemainingWork() throws ExceptionReport {
+        try {
+            lock.tryLock(TIME_OUT_SECONDS, TimeUnit.SECONDS);
+            //triggers the RM to return the resources and see if there is more work to be done
+
+            LOGGER.debug("Enqueing remaining work...");
+            // getRemainingWork and add it to the queue
+            List<String> requestIds = getRemainingWork();
+
+            if (null != requestIds) {
+                addWorkToQueue(requestIds);
+            } else {
+                LOGGER.debug("No additional work has been found for the queue.");
+            }
+
+        } catch (InterruptedException e) {
+            LOGGER.debug("Attempt to acquire lock to add request to the throttle timed out: " + e.getMessage());
+
+        } finally {
+            lock.unlock();
+        }
+
+    }
+
+    private void addWorkToQueue(List<String> requestIds) throws ExceptionReport { //, ParserConfigurationException, SAXException, IOException {
+        final long WAIT = 1000;  //1000 milliseconds is one second. 100,000 is 100 seconds
+        LOGGER.debug("About to WAIT for " + WAIT / 1000 + " seconds");
+
+        for (String id : requestIds) {
+            if (this.requestQueue.containsKey(id)) {
+                LOGGER.debug("Work has already been submitted on queue for request:" + id);
+            } else {
+
+                try {
+                    //need to get the ExecuteRequest from the db and re-create the wrapped request
+                    LOGGER.debug("Creating doc to create exec request with: " + id);
+                    String xml = getDoc(id);  //SELECT_REQUEST_XML
+                    Document doc = null;
+                    DocumentBuilderFactory fac = DocumentBuilderFactory.newInstance();
+                    fac.setNamespaceAware(true);
+
+                    // parse the InputStream to create a Document
+                    doc = fac.newDocumentBuilder().parse(new ByteArrayInputStream(xml.getBytes("UTF-8")));
+                    // add to the pool ie RequestHandler
+                    ExecuteRequestWrapper req = new ExecuteRequestWrapper(doc);
+                    //wait for one minute before placing back on the queue in hopes that the data resource frees up.  
+                    //req.wait(WAIT);
+                    LOGGER.debug("Done waiting...will add to queue now...");
+                    RequestManager.getInstance().getExecuteRequestQueue().put(req); //adds the request ot the queue
+
+                } catch (ParserConfigurationException | SAXException | IOException ex) {
+                    String msg = "Error in parsing doc for setting up remaining work on queue.";
+                    LOGGER.debug(msg);
+                    throw new ExceptionReport(msg, ExceptionReport.NO_APPLICABLE_CODE);
+                }
+
+            }
+
+        }
+
+    }
+
+    private String getDoc(String id) throws ExceptionReport {
+        String result = null;
+        // check the throttle_queue table for any requests that are in 'ACCEPTED' status
+        // may also want to get all that are marked as STARTED with a dequeued time of older than 24 hours as it is most likely in a bad state #TODO# verify
+        try (Connection connection = CONNECTION_HANDLER.getConnection();
+                PreparedStatement selectRequestStatement = connection.prepareStatement(SELECT_REQUEST_XML)) {
+            selectRequestStatement.setString(1, id);
+
+            ResultSet rs = selectRequestStatement.executeQuery();
+
+            if (rs != null) {
+                while (rs.next()) {
+                    result = rs.getString("request_xml");
+                    LOGGER.debug("Fetched doc from request with request id:" + id);// + " XML doc= " + result);
+                }
+            }
+        } catch (Exception e) {
+            String msg = "Failed to execute query to find remaining work from throttle_queue.";
+            LOGGER.error(msg, e);
+            throw new ExceptionReport(msg, ExceptionReport.NO_APPLICABLE_CODE);
+        }
+
+        return result;
+    }
+
+    private List<String> getRemainingWork() throws ExceptionReport {
+        List<String> result = new ArrayList(10);
+        // check the throttle_queue table for any requests that are in 'ACCEPTED' status
+        // may also want to get all that are marked as STARTED with a dequeued time of older than 24 hours as it is most likely in a bad state #TODO# verify
+        try (Connection connection = CONNECTION_HANDLER.getConnection();
+                PreparedStatement selectRequestStatement = connection.prepareStatement(SELECT_REMAINING_WORK)) {
+
+            ResultSet rs = selectRequestStatement.executeQuery();
+
+            if (rs != null) {
+                while (rs.next()) {
+                    result.add(rs.getString("request_id"));
+                    LOGGER.debug("Fetched remaining work from throttle_queue with request id:" + rs.getString(1));
+                }
+            }
+        } catch (Exception e) {
+            String msg = "Failed to execute query to find remaining work from throttle_queue.";
+            LOGGER.error(msg, e);
+            throw new ExceptionReport(msg, ExceptionReport.NO_APPLICABLE_CODE);
+        }
+
+        return result;
     }
 }

@@ -16,6 +16,12 @@ public interface ThrottleQueue  {
  
     public void putRequest(ExecuteRequest req) throws ExceptionReport;
     
-    public ExecuteRequest takeRequest() throws ExceptionReport;
+    public void removeRequest(String requestId) throws ExceptionReport;
+    
+    public void enqueueRemainingWork() throws ExceptionReport;
+    
+    public void updateStatus(ExecuteRequest req, ThrottleStatus status) throws ExceptionReport;
+    
+    public boolean isEnqueue(ExecuteRequest req) throws ExceptionReport;
       
 }
