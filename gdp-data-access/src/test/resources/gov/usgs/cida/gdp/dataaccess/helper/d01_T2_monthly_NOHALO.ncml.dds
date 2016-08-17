@@ -1,0 +1,10 @@
+Dataset {
+    Float32 T2MAX[Time = 604][south_north = 115][west_east = 159];
+    Float32 T2MEAN[Time = 604][south_north = 115][west_east = 159];
+    Float32 T2MIN[Time = 604][south_north = 115][west_east = 159];
+    Float64 Time[Time = 604];
+    String Times[Time = 604];
+    Float32 XLAT[south_north = 115][west_east = 159];
+    Float32 XLONG[south_north = 115][west_east = 159];
+    Float64 time_bnds[Time = 604][tbnd = 2];
+} thredds/temp/haj/wrfc36km_d01_T2_monthly_2000-09_2050-12_NOHALO.nc;
