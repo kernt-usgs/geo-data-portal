@@ -46,6 +46,8 @@ import gov.usgs.cida.gdp.coreprocessing.analysis.timeseries.StationTimeseriesVis
 import gov.usgs.cida.gdp.coreprocessing.analysis.timeseries.TimeseriesDataset;
 import gov.usgs.cida.gdp.wps.binding.GMLStreamingFeatureCollectionBinding;
 import gov.usgs.cida.gdp.wps.binding.ZipFileBinding;
+import java.io.BufferedOutputStream;
+import java.util.zip.ZipException;
 
 @Algorithm(
 		version = "1.0.0",
@@ -179,12 +181,10 @@ public class FeatureTimeSeriesAlgorithm extends AbstractAnnotatedAlgorithm {
         String extension = (delimiter == null) ? Delimiter.getDefault().extension : delimiter.extension;
         try {
         	output = File.createTempFile(getClass().getSimpleName(), ".zip", new File(getWorkPath()));
-        	
-			try( FileOutputStream   fos    = new FileOutputStream(output);
-				 ZipOutputStream    zip    = new ZipOutputStream(fos);
-				 OutputStreamWriter buffer = new OutputStreamWriter(zip);
-				 BufferedWriter     writer = new BufferedWriter(buffer);
-				) {
+			try(FileOutputStream fos = new FileOutputStream(output);
+				BufferedOutputStream buffer = new BufferedOutputStream(fos);
+				ZipOutputStream zip = new ZipOutputStream(buffer);
+				OutputStreamWriter writer = new OutputStreamWriter(zip)) {
 				
 				// TODO saved for a later date
 				includeShapefile = false;
@@ -196,7 +196,7 @@ public class FeatureTimeSeriesAlgorithm extends AbstractAnnotatedAlgorithm {
 						datasetURI, observedProperty, new DateTime(timeStart), new DateTime(timeEnd));
 				
 				
-				zip.putNextEntry(new ZipEntry("sos."+extension));
+				zip.putNextEntry(new ZipEntry("sos" + extension));
 				
 				FeatureTimeseriesStatistics.execute(
 						featureCollection,
@@ -206,13 +206,16 @@ public class FeatureTimeSeriesAlgorithm extends AbstractAnnotatedAlgorithm {
 						writer,
 						delimiter);
 				try {
-					// make sure tje entry is closed
+					// make sure the entry is closed
 					zip.closeEntry();
 				} catch (IOException e) {
 					// however, if the entry was closed by the execute then
 					// this exception is unimportant
 				}
 			
+			} catch (ZipException e) {
+				// ignore zip errors here as they are just from closing too many
+				// times (wrapping zip in writer is iffy)
 			} catch (Exception e) { 
 				// TODO other specific exception handling?
 				log.error("General Error: ", e);
