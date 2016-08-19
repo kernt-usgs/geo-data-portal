@@ -1,5 +1,8 @@
 package gov.usgs.cida.gdp.wps.queue;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 /**
  * Holds onto the requestMap and the dataSets that are in use.
  *
@@ -39,5 +42,14 @@ public class RequestManager {
    
     public ExecuteRequestQueue getExecuteRequestQueue() {
         return this.executeQueue;
+    }
+    
+    private void init() { 
+        
+    	TimerTask task = new ThrottleQueueExecuter();
+
+    	Timer timer = new Timer();
+    	timer.schedule(task, 1000, 6000);  //milliseconds so a 1 second delay with check every 6 seconds is 1000, 6000
+
     }
 }

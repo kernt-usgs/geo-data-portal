@@ -11,7 +11,6 @@ import java.sql.SQLException;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.logging.Level;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import org.apache.commons.io.IOUtils;
@@ -182,22 +181,18 @@ public class GdpRequestHandler extends RequestHandler {
         }
         handleAgentLogging();  //USGS override logic: inserts the user_agent into the meta-data table. Required the requestId for the insert.
 
-        //if (req instanceof ExecuteRequest) {
-        // cast the request to an executerequest
-        //    ExecuteRequest execReq = (ExecuteRequest) req;
         if (req instanceof ExecuteRequestWrapper) {
             LOGGER.info("USING wrapper functionality");
             ExecuteRequestWrapper execReq = (ExecuteRequestWrapper) req; //#USGS override code
 
             execReq.updateStatusAccepted();
-            RequestManager.getInstance().getThrottleQueue().putRequest(execReq); //inserts with ACCEPTED
-            // ---------------------------------
+            RequestManager.getInstance().getThrottleQueue().putRequest(execReq); //inserts with ACCEPTED into the ThrottleQueue table. Does not actually add the request to the RequestQueue.
+
             if (execReq.isStoreResponse()) {
                 addToQueue(execReq, resp);
             } else {
                 synchAddToQueue(execReq, resp);
             }
-            // ---------------------------------
 
         } else {  // if ExecuteRequest
             // for GetCapabilities and DescribeProcess:
@@ -239,7 +234,7 @@ public class GdpRequestHandler extends RequestHandler {
     private void synchAddToQueue(ExecuteRequestWrapper execReq, Response resp) throws ExceptionReport {
         // ExceptionReport exceptionReport = null;
         try {
-            // #todo - add to queue even though the user is waiting ie synchronous
+            // add to queue even though the user is waiting ie synchronous <test> this may block the asynch requests
             resp = RequestManager.getInstance().getExecuteRequestQueue().put(execReq);
         } catch (RejectedExecutionException ree) {
             LOGGER.warn("exception handling ExecuteRequest.", ree);
@@ -252,13 +247,14 @@ public class GdpRequestHandler extends RequestHandler {
                 LOGGER.warn("null response handling ExecuteRequest.");
                 throw new ExceptionReport("Problem with handling threads in GDPRequestHandler", ExceptionReport.NO_APPLICABLE_CODE);
             }
-            if (!execReq.isStoreResponse()) {//how would this get here
+            if (!execReq.isStoreResponse()) {
                 InputStream is = resp.getAsStream();
                 try {
                     IOUtils.copy(is, os);
                     is.close();
                 } catch (IOException ex) {
-                    java.util.logging.Logger.getLogger(GdpRequestHandler.class.getName()).log(Level.SEVERE, null, ex);
+                    //java.util.logging.Logger.getLogger(GdpRequestHandler.class.getName()).log(Level.SEVERE, null, ex);
+                    LOGGER.error("Error getting stream from response in synchronous add to queue: " , ex);
                 }
 
                 LOGGER.info("Served ExecuteRequest.");

@@ -4,6 +4,7 @@ import java.util.concurrent.ExecutionException;
 import org.n52.wps.server.ExceptionReport;
 import org.n52.wps.server.handler.RequestExecutor;
 import org.n52.wps.server.request.ExecuteRequest;
+import org.n52.wps.server.request.ExecuteRequestWrapper;
 import org.n52.wps.server.response.Response;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +23,7 @@ public class ExecuteRequestQueue {
      * @return
      * @throws ExceptionReport
      */
-    public Response put(ExecuteRequest execReq) throws ExceptionReport {
+    public Response put(ExecuteRequestWrapper execReq) throws ExceptionReport {
         Response response = null;
         ExceptionReport exceptionReport = null;
         LOGGER.info("There are currently: " + this.POOL.getActiveCount() + " active requests in the queue.");

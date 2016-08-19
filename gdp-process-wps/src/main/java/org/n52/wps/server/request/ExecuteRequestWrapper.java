@@ -39,7 +39,7 @@ public class ExecuteRequestWrapper extends ExecuteRequest {
 
     private static Logger LOGGER_WRAPPER = LoggerFactory.getLogger(ExecuteRequestWrapper.class);
     private ExecuteDocument execDom;
-    private Map<String, IData> returnResults;
+    // Map<String, IData> returnResults;
     private static final long SLEEPTIME = 10000; //milli seconds
     private static final ConnectionHandler CONNECTION_HANDLER = DatabaseUtil.getJNDIConnectionHandler();
     private static final String SELECT_IF_RESOURCE_INUSE = "Select DISTINCT(INPUT_VALUE) FROM input WHERE input.INPUT_IDENTIFIER = 'DATASET_URI' AND input.request_id = ? AND INPUT_VALUE IN (Select DISTINCT(INPUT_VALUE) FROM input input, response resp WHERE resp.request_id = input.request_id AND input.INPUT_IDENTIFIER = 'DATASET_URI' AND resp.status = 'STARTED')";
@@ -124,13 +124,14 @@ public class ExecuteRequestWrapper extends ExecuteRequest {
                     RequestManager.getInstance().getThrottleQueue().removeRequest(this.getUniqueId().toString());
                 } else {
                     updateStatusSuccess();
-                
+                    LOGGER_WRAPPER.info("Update was successful" );
                     // #USGS# remove the request from the hashmap / DB throttle_queue with status of processed
                     RequestManager.getInstance().getThrottleQueue().removeRequest(this.getUniqueId().toString());
                 }
             }  //close if isInUse()  //#USGS override code
             else {
                 wasInUse = true;
+                LOGGER_WRAPPER.info("Dataset was in use. Request will wait:" + this.getUniqueId().toString());
                 //update the status to WAITING
                 //place in waiting status
                 RequestManager.getInstance().getThrottleQueue().updateStatus(this, ThrottleStatus.WAITING);
@@ -183,6 +184,7 @@ public class ExecuteRequestWrapper extends ExecuteRequest {
             // #USGS:override code
             //places this request on the queue if the datasource was inUse to try again later, will need to sleep for a bit to allow the data source to release
             if (wasInUse) { 
+                LOGGER_WRAPPER.info("Dataset was in use. Request will be placed back on the queue:" + this.getUniqueId().toString());
                 RequestManager.getInstance().getExecuteRequestQueue().put(this);
             }
         }

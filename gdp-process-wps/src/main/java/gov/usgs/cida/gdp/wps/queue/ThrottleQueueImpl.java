@@ -77,7 +77,7 @@ public class ThrottleQueueImpl implements ThrottleQueue {
                 } else {
                     addRequest(req);
                 }
-            } else {  // called from within the thread - post STARTED
+            } else {
                 // move this to a an add request to easily manage the put of the datasets too
                 LOGGER.debug("Adding request to Throttle Queue with ID:" + requestId.toString());
                 addRequest(req);
@@ -95,14 +95,10 @@ public class ThrottleQueueImpl implements ThrottleQueue {
     /**
      * Ensures the same dataset is currently not in use before updating the
      * status and giving the worker thread the doc to execute upon
-     * 'requestQueue'. 1) Removes all the previous completed requests data
-     * resources from the set, updates status from STARTED to PROCESSED for all
-     * the requests that have 'wps' completed. 2) Finds the next request with
-     * data resources that are available, updates that request to STARTED,
-     * removes it from the Hashmap, Adds the data resources to the set
+     * 'requestQueue'. 1) updates DB status to PROCESSED 2) removes the data
+     * resource from the set 3) removes the request from the internal hashmap
      *
      * @param requestId
-     * @return nulls allowed
      * @throws org.n52.wps.server.ExceptionReport
      */
     @Override
@@ -111,8 +107,6 @@ public class ThrottleQueueImpl implements ThrottleQueue {
         try {
             lock.tryLock(TIME_OUT_SECONDS, TimeUnit.SECONDS);   //#TODO# review timeout duration 
 
-            // get the next request that has a status of accepted...FIFO processing used
-            // String requestId = getNextAvailable();
             if (null == requestId) {
                 LOGGER.debug("There are no requests that are available for processing at this time....");
                 //result = null;
@@ -138,9 +132,9 @@ public class ThrottleQueueImpl implements ThrottleQueue {
 
     }
 
+    // this affects the DB (status ACCEPTED) and internal maps/sets, it does not place the work on the 'queue'
     private void addRequest(ExecuteRequest req) throws ExceptionReport {
         String requestId = req.getUniqueId().toString();
-        // insertQueueRequest(requestId);
 
         this.requestQueue.put(requestId, req); //adds it to the internal hashmap for easy retrieval
         LOGGER.debug("Added request:" + requestId + "to queue hashmap.");
@@ -148,7 +142,6 @@ public class ThrottleQueueImpl implements ThrottleQueue {
         //add the dataresources needed to process this request to the inUse set
         addDataResources(requestId);
 
-        // updateQueueStatus(requestId, ThrottleStatus.STARTED);
         insertQueueRequest(requestId);//ACCEPTED
 
     }
@@ -170,11 +163,20 @@ public class ThrottleQueueImpl implements ThrottleQueue {
     }
 
     // marks the request as having been queued in the throttle_queue db
+    /**
+     * Updates the throttle_queue table with the status given. Note that enqueue
+     * and dequeue utilize timestamps. Enqueue may go to waiting and back to
+     * enqueue more than once.
+     *
+     * @param exec ExecuteRequest
+     * @param status throttle status (not wps status)
+     * @throws ExceptionReport
+     */
+    @Override
     public void updateStatus(ExecuteRequest exec, ThrottleStatus status) throws ExceptionReport {
         if (status == ThrottleStatus.ENQUEUE) {
             LOGGER.debug("Status recieved as ENQUEUE.");
             updateQueueEnqueue(exec.getUniqueId().toString());
-            // insertQueueRequest(exec.getUniqueId().toString());
         } else if (status == ThrottleStatus.WAITING) {
             LOGGER.debug("Status recieved as WAITING.");
             updateStatusWaiting(exec.getUniqueId().toString());
@@ -523,7 +525,7 @@ public class ThrottleQueueImpl implements ThrottleQueue {
             throw new ExceptionReport(msg, ExceptionReport.NO_APPLICABLE_CODE);
         }
     }
-
+    // status life cycle: ACCEPTED<insert>—> ENQUEUED <update>with time—>STARTED<update> or WAITING<update> —>PROCESSED<update>
     // throttle queue table 
     private static final String THROTTLE_QUEUE_TABLE = "throttle_queue";
 
@@ -541,37 +543,16 @@ public class ThrottleQueueImpl implements ThrottleQueue {
     private static final String SELECT_DATA_SOURCES_STATEMENT = "SELECT INPUT_VALUE FROM INPUT WHERE INPUT_IDENTIFIER = 'DATASET_URI' AND REQUEST_ID = ?";
     private static final String UPDATE_TO_PROCESSED_STATUS = "UPDATE " + THROTTLE_QUEUE_TABLE + " SET status = 'PROCESSED' WHERE request_id in (SELECT resp.request_id from response resp, throttle_queue queue where resp.request_id = queue.request_id and queue.status = 'STARTED' and resp.status in ('SUCCEEDED', 'FAILED'))";
     private static final String SELECT_DATASETS_COMPLETED = "SELECT DISTINCT(INPUT_VALUE) FROM INPUT WHERE INPUT_IDENTIFIER = 'DATASET_URI' AND REQUEST_ID in (SELECT resp.request_id from response resp, throttle_queue queue where resp.request_id = queue.request_id and queue.status = 'STARTED' and resp.status in ('SUCCEEDED','FAILED'))";
-    private static final String SELECT_REMAINING_WORK = "SELECT REQUEST_ID FROM RESPONSE WHERE STATUS = 'ACCEPTED'";
+    private static final String SELECT_REMAINING_WORK = "SELECT REQUEST_ID FROM RESPONSE WHERE STATUS IN ('ACCEPTED' , 'STARTED' , 'PAUSED')";
     private static final String SELECT_REQUEST_XML = "SELECT request_xml FROM request WHERE request_id = ?";
-// --- for restart after hard down below : To Be Implmented ---   
 
-    private ThrottleStatus getStatus(String requestId) throws ExceptionReport {
-
-        //get the throttle_queue status for the restart logic upon system failure
-        try (Connection connection = CONNECTION_HANDLER.getConnection()) {
-            PreparedStatement preparedStatement = connection.prepareStatement(SELECT_STATUS_REQUEST_STATEMENT);
-            preparedStatement.setString(1, requestId);
-
-            ResultSet rs = preparedStatement.executeQuery();
-
-            if (rs != null && rs.next()) {
-                String status = rs.getString(1);
-                LOGGER.debug("Got status in throttle_queue table for request:" + requestId + " status: " + status);
-                return (ThrottleStatus.valueOf(status));
-            }
-
-        } catch (Exception e) {
-            String msg = "Faild to select the next available for processing from the throttleQueue";
-            LOGGER.error(msg, e);
-            throw new ExceptionReport(msg, ExceptionReport.NO_APPLICABLE_CODE);
-        }
-
-        return ThrottleStatus.UNKNOWN;
-    }
 // --------
 // epoc for a hard restart below
-
     /**
+     * If the server goes down hard and there was work that was in process, this
+     * will add all the work that is not in a completed status (FAILED ||
+     * SUCCEEDED) back onto the queue after the server is bounced. This assumes
+     * all the 'remaining work' is placed on one node/server.
      *
      * @throws org.n52.wps.server.ExceptionReport
      */
@@ -586,6 +567,7 @@ public class ThrottleQueueImpl implements ThrottleQueue {
             List<String> requestIds = getRemainingWork();
 
             if (null != requestIds) {
+                LOGGER.debug("Quantity of work to be addeded:" + requestIds.size());
                 addWorkToQueue(requestIds);
             } else {
                 LOGGER.debug("No additional work has been found for the queue.");
@@ -605,33 +587,28 @@ public class ThrottleQueueImpl implements ThrottleQueue {
         LOGGER.debug("About to WAIT for " + WAIT / 1000 + " seconds");
 
         for (String id : requestIds) {
-            if (this.requestQueue.containsKey(id)) {
-                LOGGER.debug("Work has already been submitted on queue for request:" + id);
-            } else {
 
-                try {
-                    //need to get the ExecuteRequest from the db and re-create the wrapped request
-                    LOGGER.debug("Creating doc to create exec request with: " + id);
-                    String xml = getDoc(id);  //SELECT_REQUEST_XML
-                    Document doc = null;
-                    DocumentBuilderFactory fac = DocumentBuilderFactory.newInstance();
-                    fac.setNamespaceAware(true);
+            try {
+                //need to get the ExecuteRequest from the db and re-create the wrapped request
+                LOGGER.debug("Creating doc and request so that work can be added to throttle queue: " + id);
+                String xml = getDoc(id);  //SELECT_REQUEST_XML
+                Document doc = null;
+                DocumentBuilderFactory fac = DocumentBuilderFactory.newInstance();
+                fac.setNamespaceAware(true);
 
-                    // parse the InputStream to create a Document
-                    doc = fac.newDocumentBuilder().parse(new ByteArrayInputStream(xml.getBytes("UTF-8")));
-                    // add to the pool ie RequestHandler
-                    ExecuteRequestWrapper req = new ExecuteRequestWrapper(doc);
-                    //wait for one minute before placing back on the queue in hopes that the data resource frees up.  
-                    //req.wait(WAIT);
-                    LOGGER.debug("Done waiting...will add to queue now...");
-                    RequestManager.getInstance().getExecuteRequestQueue().put(req); //adds the request ot the queue
+                // parse the InputStream to create a Document
+                doc = fac.newDocumentBuilder().parse(new ByteArrayInputStream(xml.getBytes("UTF-8")));
+                // add to the pool ie RequestHandler
+                ExecuteRequestWrapper req = new ExecuteRequestWrapper(doc);
+                //wait for one minute before placing back on the queue in hopes that the data resource frees up.  
+                //req.wait(WAIT);
+                LOGGER.debug("Done waiting...will add to queue now...");
+                RequestManager.getInstance().getExecuteRequestQueue().put(req); //adds the request ot the queue
 
-                } catch (ParserConfigurationException | SAXException | IOException ex) {
-                    String msg = "Error in parsing doc for setting up remaining work on queue.";
-                    LOGGER.debug(msg);
-                    throw new ExceptionReport(msg, ExceptionReport.NO_APPLICABLE_CODE);
-                }
-
+            } catch (ParserConfigurationException | SAXException | IOException ex) {
+                String msg = "Error in parsing doc for setting up remaining work on queue.";
+                LOGGER.debug(msg);
+                throw new ExceptionReport(msg, ExceptionReport.NO_APPLICABLE_CODE);
             }
 
         }
