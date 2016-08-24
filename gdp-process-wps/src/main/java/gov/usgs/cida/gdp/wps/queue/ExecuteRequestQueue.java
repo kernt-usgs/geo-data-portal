@@ -1,6 +1,7 @@
 package gov.usgs.cida.gdp.wps.queue;
 
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import org.n52.wps.server.ExceptionReport;
 import org.n52.wps.server.handler.RequestExecutor;
 import org.n52.wps.server.request.ExecuteRequest;
@@ -27,17 +28,18 @@ public class ExecuteRequestQueue {
         Response response = null;
         ExceptionReport exceptionReport = null;
         LOGGER.info("There are currently: " + this.POOL.getActiveCount() + " active requests in the queue.");
-        LOGGER.info("There are: " + this.POOL.getQueue().size() + " queued requests in the queue.");
+        LOGGER.debug("Queue status: " + getStatus());
+      
 
         if (!isRequestInQueue(execReq)) {
             if (execReq.isStoreResponse()) {
                 try {
                     LOGGER.info("Putting request on queue: " + execReq.getUniqueId());
                     POOL.submit(execReq);
-                    RequestManager.getInstance().getThrottleQueue().updateStatus(execReq, ThrottleStatus.ENQUEUE); //updates to ENQUEUED
+                    ExecuteRequestManager.getInstance().getThrottleQueue().updateStatus(execReq, ThrottleStatus.ENQUEUE); //updates to ENQUEUED
                 } finally {
-                    LOGGER.info("Completed add to queue. Queue size is " + this.POOL.getQueue().size());
-                    LOGGER.info("and active queue count is " + this.POOL.getActiveCount());
+                    LOGGER.debug("Queue status: " + getStatus());
+              //      LOGGER.info("and active queue count is " + this.POOL.getActiveCount());
                 }
 
             } else {
@@ -76,11 +78,54 @@ public class ExecuteRequestQueue {
 
     }
 
+    public String getStatus() {
+        StringBuilder sb = new StringBuilder();
+        String sep = System.lineSeparator();
+        
+        sb.append(sep);
+        sb.append("_____________________________________________");        
+        sb.append("Pool size: ");
+        sb.append(POOL.getPoolSize());
+        sb.append(sep);
+        sb.append("_____________________________________________");
+               
+        sb.append("Active Count: ");
+        sb.append(POOL.getActiveCount());
+        sb.append(sep);
+        sb.append("_____________________________________________");
+        
+        sb.append("Task count: ");
+        sb.append(POOL.getTaskCount());
+        sb.append(sep);
+        sb.append("_____________________________________________");
+        
+        sb.append("Completed task count: ");
+        sb.append(POOL.getCompletedTaskCount());
+        sb.append(sep);
+        sb.append("_____________________________________________");
+        
+        sb.append("Keep alive (seconds): ");
+        sb.append(POOL.getKeepAliveTime(TimeUnit.SECONDS));
+        sb.append(sep);
+        sb.append("_____________________________________________");
+        
+        sb.append("Max pool size: ");
+        sb.append(POOL.getMaximumPoolSize());
+        sb.append(sep);
+        sb.append("_____________________________________________");
+        
+        sb.append("Largest pool size: ");
+        sb.append(POOL.getLargestPoolSize());
+        sb.append(sep);
+        
+        return sb.toString();
+    }
+    
     private boolean isRequestInQueue(ExecuteRequest execRequest) throws ExceptionReport {
 
         boolean result = false;
         // run query that selects all the requests that are in ENQUEUE status on the throttle_queue table
-         result = RequestManager.getInstance().getThrottleQueue().isEnqueue(execRequest);
+         result = ExecuteRequestManager.getInstance().getThrottleQueue().isEnqueue(execRequest);
         return result;
     }
 }

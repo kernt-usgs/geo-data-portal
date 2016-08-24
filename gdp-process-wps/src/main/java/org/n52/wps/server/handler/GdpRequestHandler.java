@@ -1,6 +1,6 @@
 package org.n52.wps.server.handler;
 
-import gov.usgs.cida.gdp.wps.queue.RequestManager;
+import gov.usgs.cida.gdp.wps.queue.ExecuteRequestManager;
 import gov.usgs.cida.gdp.wps.util.DatabaseUtil;
 import java.io.IOException;
 import java.io.InputStream;
@@ -182,11 +182,11 @@ public class GdpRequestHandler extends RequestHandler {
         handleAgentLogging();  //USGS override logic: inserts the user_agent into the meta-data table. Required the requestId for the insert.
 
         if (req instanceof ExecuteRequestWrapper) {
-            LOGGER.info("USING wrapper functionality");
             ExecuteRequestWrapper execReq = (ExecuteRequestWrapper) req; //#USGS override code
 
+            LOGGER.debug("RequestId before updating to Accepted:" + execReq.getUniqueId());
             execReq.updateStatusAccepted();
-            RequestManager.getInstance().getThrottleQueue().putRequest(execReq); //inserts with ACCEPTED into the ThrottleQueue table. Does not actually add the request to the RequestQueue.
+            ExecuteRequestManager.getInstance().getThrottleQueue().putRequest(execReq); //inserts with ACCEPTED into the Throttle_Queue table. Does not actually add the request to the RequestQueue.
 
             if (execReq.isStoreResponse()) {
                 addToQueue(execReq, resp);
@@ -213,7 +213,7 @@ public class GdpRequestHandler extends RequestHandler {
             InputStream is = resp.getAsStream();
             IOUtils.copy(is, os);
             is.close();
-            RequestManager.getInstance().getExecuteRequestQueue().put(execReq);  //pool.submit
+            //RequestManager.getInstance().getExecuteRequestQueue().put(execReq);  //#USGS pool.submit   - now done via timer task
 
             // retrieve status with timeout enabled
         } catch (RejectedExecutionException ree) {
@@ -232,10 +232,10 @@ public class GdpRequestHandler extends RequestHandler {
     }
 
     private void synchAddToQueue(ExecuteRequestWrapper execReq, Response resp) throws ExceptionReport {
-        // ExceptionReport exceptionReport = null;
         try {
+            LOGGER.info("Adding to queue synchronously.");
             // add to queue even though the user is waiting ie synchronous <test> this may block the asynch requests
-            resp = RequestManager.getInstance().getExecuteRequestQueue().put(execReq);
+            resp = ExecuteRequestManager.getInstance().getExecuteRequestQueue().put(execReq); // #USGS pool.submit
         } catch (RejectedExecutionException ree) {
             LOGGER.warn("exception handling ExecuteRequest.", ree);
             // server too busy?

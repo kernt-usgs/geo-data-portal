@@ -1,17 +1,16 @@
 package org.n52.wps.server.request;
 
-import gov.usgs.cida.gdp.wps.queue.RequestManager;
+import gov.usgs.cida.gdp.wps.queue.ExecuteRequestManager;
 import gov.usgs.cida.gdp.wps.queue.ThrottleQueueToggle;
 import gov.usgs.cida.gdp.wps.queue.ThrottleStatus;
 import gov.usgs.cida.gdp.wps.util.DatabaseUtil;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.Timestamp;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import net.opengis.wps.x100.ExecuteDocument;
 import net.opengis.wps.x100.InputType;
 import org.apache.commons.collections.map.CaseInsensitiveMap;
@@ -39,7 +38,6 @@ public class ExecuteRequestWrapper extends ExecuteRequest {
 
     private static Logger LOGGER_WRAPPER = LoggerFactory.getLogger(ExecuteRequestWrapper.class);
     private ExecuteDocument execDom;
-    // Map<String, IData> returnResults;
     private static final long SLEEPTIME = 10000; //milli seconds
     private static final ConnectionHandler CONNECTION_HANDLER = DatabaseUtil.getJNDIConnectionHandler();
     private static final String SELECT_IF_RESOURCE_INUSE = "Select DISTINCT(INPUT_VALUE) FROM input WHERE input.INPUT_IDENTIFIER = 'DATASET_URI' AND input.request_id = ? AND INPUT_VALUE IN (Select DISTINCT(INPUT_VALUE) FROM input input, response resp WHERE resp.request_id = input.request_id AND input.INPUT_IDENTIFIER = 'DATASET_URI' AND resp.status = 'STARTED')";
@@ -82,7 +80,7 @@ public class ExecuteRequestWrapper extends ExecuteRequest {
 
                 updateStatusStarted();
                 // #USGS want to maintain an internal hashmap or DB representation of everything that is on this VMs queue 
-                RequestManager.getInstance().getThrottleQueue().updateStatus(this, ThrottleStatus.STARTED);
+                ExecuteRequestManager.getInstance().getThrottleQueue().updateStatus(this, ThrottleStatus.STARTED);
                 //insertThrottleQueueStatus(this.getUniqueId().toString()); //#USGS override code  - do I need this anymore?
 
                 // parse the input
@@ -121,12 +119,12 @@ public class ExecuteRequestWrapper extends ExecuteRequest {
                     LOGGER_WRAPPER.error("Error reported while handling ExecuteRequest for " + getAlgorithmIdentifier() + ": " + errorMessage + " with requestId " + this.getUniqueId());
                     updateStatusError(errorMessage);
                     // #USGS# remove the request from the hashmap / DB throttle_queue with status of processed
-                    RequestManager.getInstance().getThrottleQueue().removeRequest(this.getUniqueId().toString());
+                    ExecuteRequestManager.getInstance().getThrottleQueue().removeRequest(this.getUniqueId().toString());
                 } else {
                     updateStatusSuccess();
                     LOGGER_WRAPPER.info("Update was successful" );
                     // #USGS# remove the request from the hashmap / DB throttle_queue with status of processed
-                    RequestManager.getInstance().getThrottleQueue().removeRequest(this.getUniqueId().toString());
+                    ExecuteRequestManager.getInstance().getThrottleQueue().removeRequest(this.getUniqueId().toString());
                 }
             }  //close if isInUse()  //#USGS override code
             else {
@@ -134,7 +132,7 @@ public class ExecuteRequestWrapper extends ExecuteRequest {
                 LOGGER_WRAPPER.info("Dataset was in use. Request will wait:" + this.getUniqueId().toString());
                 //update the status to WAITING
                 //place in waiting status
-                RequestManager.getInstance().getThrottleQueue().updateStatus(this, ThrottleStatus.WAITING);
+                ExecuteRequestManager.getInstance().getThrottleQueue().updateStatus(this, ThrottleStatus.WAITING);
                 Thread.sleep(SLEEPTIME);  //do this or the DB will get overly taxed checking to see if its inUse
             }
         } catch (Throwable e) {
@@ -182,10 +180,12 @@ public class ExecuteRequestWrapper extends ExecuteRequest {
                 }
             }
             // #USGS:override code
-            //places this request on the queue if the datasource was inUse to try again later, will need to sleep for a bit to allow the data source to release
+            //Places this request on the queue if the datasource was inUse to try again later to cover the edge case :
+            //where it was added to the queue while another request (with same datasource)ahead of it but not yet started at the time both were on the queue
+            //and the first request then starts and consumes the datasource. 
             if (wasInUse) { 
-                LOGGER_WRAPPER.info("Dataset was in use. Request will be placed back on the queue:" + this.getUniqueId().toString());
-                RequestManager.getInstance().getExecuteRequestQueue().put(this);
+                LOGGER_WRAPPER.info("Dataset was in use. Request will be placed back on the queue at the end of the line:" + this.getUniqueId().toString());
+                ExecuteRequestManager.getInstance().getExecuteRequestQueue().put(this);
             }
         }
 
@@ -227,26 +227,8 @@ public class ExecuteRequestWrapper extends ExecuteRequest {
         return result;
     }
     
-    // #TODO I'll probably remove this after the refacto
-    private void insertThrottleQueueStatus(String requestId) throws ExceptionReport {
-        //ACCEPTED status upon insert
-
-        Timestamp now = new Timestamp(Calendar.getInstance().getTimeInMillis());
-
-        try (Connection connection = CONNECTION_HANDLER.getConnection()) {
-            PreparedStatement preparedStatement = connection.prepareStatement(INSERT_STATUS_REQUEST_STATEMENT);
-            preparedStatement.setString(1, requestId);
-            preparedStatement.setString(2, ThrottleStatus.ACCEPTED.toString());
-            preparedStatement.setTimestamp(3, now);
-            preparedStatement.setTimestamp(4, null); //dont want to set the dequeue time now
-
-            preparedStatement.execute();
-            LOGGER_WRAPPER.info("Inserted request in throttle_queue table with ID:" + requestId);
-        } catch (Exception e) {
-            String msg = "Failed to insert request and status into throttle_queue table.";
-            LOGGER_WRAPPER.error(msg, e);
-            throw new ExceptionReport(msg, ExceptionReport.NO_APPLICABLE_CODE);
-        }
+    // during the serialization of the Request for the throttle queue, the id is set on the re-constructed request from the DB 
+    public void setId(UUID id){
+        this.id = id;
     }
-
 }
