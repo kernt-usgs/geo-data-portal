@@ -41,7 +41,6 @@ public class ExecuteRequestWrapper extends ExecuteRequest {
     private static final long SLEEPTIME = 10000; //milli seconds
     private static final ConnectionHandler CONNECTION_HANDLER = DatabaseUtil.getJNDIConnectionHandler();
     private static final String SELECT_IF_RESOURCE_INUSE = "Select DISTINCT(INPUT_VALUE) FROM input WHERE input.INPUT_IDENTIFIER = 'DATASET_URI' AND input.request_id = ? AND INPUT_VALUE IN (Select DISTINCT(INPUT_VALUE) FROM input input, response resp WHERE resp.request_id = input.request_id AND input.INPUT_IDENTIFIER = 'DATASET_URI' AND resp.status = 'STARTED')";
-    private static final String INSERT_STATUS_REQUEST_STATEMENT = "INSERT INTO throttle_queue (REQUEST_ID, STATUS, ENQUEUED, DEQUEUED) VALUES (?, ?, ?, ?)";
 
     public ExecuteRequestWrapper(CaseInsensitiveMap ciMap) throws ExceptionReport {
         super(ciMap);
@@ -122,7 +121,7 @@ public class ExecuteRequestWrapper extends ExecuteRequest {
                     ExecuteRequestManager.getInstance().getThrottleQueue().removeRequest(this.getUniqueId().toString());
                 } else {
                     updateStatusSuccess();
-                    LOGGER_WRAPPER.info("Update was successful" );
+                    LOGGER_WRAPPER.info("Status update was successful" );
                     // #USGS# remove the request from the hashmap / DB throttle_queue with status of processed
                     ExecuteRequestManager.getInstance().getThrottleQueue().removeRequest(this.getUniqueId().toString());
                 }

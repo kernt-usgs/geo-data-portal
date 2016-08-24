@@ -60,9 +60,8 @@ public class ThrottleQueueImpl implements ThrottleQueue {
     private static final String UPDATE_STATUS_ENQUEUE_STATEMENT = "UPDATE " + THROTTLE_QUEUE_TABLE + " SET (STATUS, ENQUEUED) = (?, ?) WHERE REQUEST_ID = ?";
     //private static final String UPDATE_STATUS_WAITING_STATEMENT = "UPDATE " + THROTTLE_QUEUE_TABLE + " SET (STATUS) = (?) WHERE REQUEST_ID = ?";
     private static final String UPDATE_STATUS_STATEMENT = "UPDATE " + THROTTLE_QUEUE_TABLE + " SET (STATUS) = (?) WHERE REQUEST_ID = ?";
-    private static final String SELECT_NEXT_AVAILABLE = "SELECT request_id, enqueued from " + THROTTLE_QUEUE_TABLE + " where status = 'ACCEPTED' ORDER BY enqueued";
+    
     private static final String SELECT_DATA_SOURCES_STATEMENT = "SELECT INPUT_VALUE FROM INPUT WHERE INPUT_IDENTIFIER = 'DATASET_URI' AND REQUEST_ID = ?";
-    private static final String UPDATE_TO_PROCESSED_STATUS = "UPDATE " + THROTTLE_QUEUE_TABLE + " SET status = 'PROCESSED' WHERE request_id in (SELECT resp.request_id from response resp, throttle_queue queue where resp.request_id = queue.request_id and queue.status = 'STARTED' and resp.status in ('SUCCEEDED', 'FAILED'))";
     private static final String SELECT_DATASETS_COMPLETED = "SELECT DISTINCT(INPUT_VALUE) FROM INPUT WHERE INPUT_IDENTIFIER = 'DATASET_URI' AND REQUEST_ID in (SELECT resp.request_id from response resp, throttle_queue queue where resp.request_id = queue.request_id and queue.status = 'STARTED' and resp.status in ('SUCCEEDED','FAILED'))";
     private static final String UPDATE_ONE_WORK_RETURNING = "UPDATE throttle_queue q SET STATUS = 'PREENQUEUE' FROM (WITH nextRequest as (SELECT request_id from throttle_queue where status = 'ACCEPTED' ORDER BY ENQUEUED ASC limit 1) select DISTINCT(INPUT_VALUE) , request_id FROM input WHERE input.INPUT_IDENTIFIER = 'DATASET_URI' AND input.request_id = (select request_id from nextRequest) AND INPUT_VALUE NOT IN (Select DISTINCT(INPUT_VALUE) FROM input input, response resp WHERE resp.request_id = input.request_id AND input.INPUT_IDENTIFIER = 'DATASET_URI' AND resp.status = 'STARTED')) sub WHERE q.request_id = sub.request_id RETURNING q.request_id";
    // private static final String UPDATE_WORK_RETURNING = "UPDATE throttle_queue q SET STATUS = 'PREENQUEUE' FROM (WITH nextRequest as (SELECT request_id from throttle_queue where status = 'ACCEPTED' ORDER BY ENQUEUED ASC) select DISTINCT(INPUT_VALUE) , request_id FROM input WHERE input.INPUT_IDENTIFIER = 'DATASET_URI' AND input.request_id = (select request_id from nextRequest) AND INPUT_VALUE NOT IN (Select DISTINCT(INPUT_VALUE) FROM input input, response resp WHERE resp.request_id = input.request_id AND input.INPUT_IDENTIFIER = 'DATASET_URI' AND resp.status = 'STARTED')) sub WHERE q.request_id = sub.request_id RETURNING q.request_id";
@@ -519,7 +518,8 @@ public class ThrottleQueueImpl implements ThrottleQueue {
     }
 
     private void addWorkToQueue(List<String> requestIds) throws ExceptionReport { 
-
+        System.setProperty("javax.xml.parsers.DocumentBuilderFactory", "org.apache.xerces.jaxp.DocumentBuilderFactoryImpl");
+        
         for (String id : requestIds) {
 
             try {
@@ -561,7 +561,7 @@ public class ThrottleQueueImpl implements ThrottleQueue {
             if (rs != null) {
                 while (rs.next()) {
                     result = rs.getString("request_xml");
-                    LOGGER.info("Fetched doc from request with request id:" + id);
+                    LOGGER.debug("Fetched doc from request with request id:" + id);
                 }
             }
         } catch (Exception e) {
@@ -585,7 +585,7 @@ public class ThrottleQueueImpl implements ThrottleQueue {
             if (rs != null) {
                 while (rs.next()) {
                     result.add(rs.getString("request_id"));
-                    LOGGER.debug("Fetched work from throttle_queue with request id:" + rs.getString(1));
+                    LOGGER.info("Fetched work from throttle_queue with request id:" + rs.getString(1));
                 }
             }
         } catch (Exception e) {

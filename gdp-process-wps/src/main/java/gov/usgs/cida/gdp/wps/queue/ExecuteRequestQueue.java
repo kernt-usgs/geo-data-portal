@@ -27,7 +27,7 @@ public class ExecuteRequestQueue {
     public Response put(ExecuteRequestWrapper execReq) throws ExceptionReport {
         Response response = null;
         ExceptionReport exceptionReport = null;
-        LOGGER.info("There are currently: " + this.POOL.getActiveCount() + " active requests in the queue.");
+        LOGGER.info("There are currently ___: " + this.POOL.getActiveCount() + " active requests in the queue.");
         LOGGER.debug("Queue status: " + getStatus());
       
 
@@ -67,7 +67,7 @@ public class ExecuteRequestQueue {
                             ExceptionReport.NO_APPLICABLE_CODE);
                 } finally {
                     if (exceptionReport != null) {
-                        LOGGER.debug("ExceptionReport not null attempting to add to ExecuteRequestQeue: " + exceptionReport.getMessage());
+                        LOGGER.info("ExceptionReport not null attempting to add to ExecuteRequestQeue: " + exceptionReport.getMessage());
                         // NOT SURE, if this exceptionReport is also written to the DB, if required... test please!
                         throw exceptionReport;
                     }
@@ -126,6 +126,7 @@ public class ExecuteRequestQueue {
         boolean result = false;
         // run query that selects all the requests that are in ENQUEUE status on the throttle_queue table
          result = ExecuteRequestManager.getInstance().getThrottleQueue().isEnqueue(execRequest);
+         LOGGER.info("Request: " + execRequest.getUniqueId().toString() + " isOnQueue: " + result);
         return result;
     }
 }

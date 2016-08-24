@@ -267,6 +267,7 @@ public class GdpRequestHandler extends RequestHandler {
     public void handleAgentLogging() throws ExceptionReport {
         if (StringUtils.isNotBlank(userAgent)) {
             UUID uniqueId = super.req.getUniqueId();
+            LOGGER.info("Inserting Agent Logging:" + userAgent);
             //UUID uniqueId = parent.req.getUniqueId();
             try (Connection connection = connectionHandler.getConnection()) {
                 UUID pkey = UUID.randomUUID();
