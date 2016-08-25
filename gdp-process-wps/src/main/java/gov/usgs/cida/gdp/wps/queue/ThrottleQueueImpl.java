@@ -51,22 +51,24 @@ public class ThrottleQueueImpl implements ThrottleQueue {
     private static final Logger LOGGER = LoggerFactory.getLogger(ThrottleQueueImpl.class);
     private static final ConnectionHandler CONNECTION_HANDLER = DatabaseUtil.getJNDIConnectionHandler();
     private static final int TIME_OUT_SECONDS = 20;
-    
-    // queries     // fyi: throttle_queue status life cycle: ACCEPTED<insert>—> ENQUEUED <update>with time—>STARTED<update> or WAITING<update> —>PROCESSED<update>
-    private static final String THROTTLE_QUEUE_TABLE = "throttle_queue";    
-    private static final String SELECT_RESPONSE_URL_STATEMENT = "SELECT response FROM results, response WHERE results.request_id = response.request_id and response.status = 'SUCCEEDED' and response.request_id = ?"; 
+
+    // queries     // fyi: throttle_queue status life cycle: ACCEPTED<insert>—> PRE then ENQUEUED <update>with time—>STARTED<update> —>PROCESSED<update>
+    private static final String THROTTLE_QUEUE_TABLE = "throttle_queue";
+    private static final String SELECT_RESPONSE_URL_STATEMENT = "SELECT response FROM results, response WHERE results.request_id = response.request_id and response.status = 'SUCCEEDED' and response.request_id = ?";
     private static final String INSERT_STATUS_REQUEST_STATEMENT = "INSERT INTO " + THROTTLE_QUEUE_TABLE + "(REQUEST_ID, STATUS, ENQUEUED, DEQUEUED) VALUES (?, ?, ?, ?)";
     private static final String UPDATE_STATUS_DEQUEUE_STATEMENT = "UPDATE " + THROTTLE_QUEUE_TABLE + " SET (STATUS, DEQUEUED) = (?, ?) WHERE REQUEST_ID = ?";
     private static final String UPDATE_STATUS_ENQUEUE_STATEMENT = "UPDATE " + THROTTLE_QUEUE_TABLE + " SET (STATUS, ENQUEUED) = (?, ?) WHERE REQUEST_ID = ?";
-    //private static final String UPDATE_STATUS_WAITING_STATEMENT = "UPDATE " + THROTTLE_QUEUE_TABLE + " SET (STATUS) = (?) WHERE REQUEST_ID = ?";
     private static final String UPDATE_STATUS_STATEMENT = "UPDATE " + THROTTLE_QUEUE_TABLE + " SET (STATUS) = (?) WHERE REQUEST_ID = ?";
-    
     private static final String SELECT_DATA_SOURCES_STATEMENT = "SELECT INPUT_VALUE FROM INPUT WHERE INPUT_IDENTIFIER = 'DATASET_URI' AND REQUEST_ID = ?";
     private static final String SELECT_DATASETS_COMPLETED = "SELECT DISTINCT(INPUT_VALUE) FROM INPUT WHERE INPUT_IDENTIFIER = 'DATASET_URI' AND REQUEST_ID in (SELECT resp.request_id from response resp, throttle_queue queue where resp.request_id = queue.request_id and queue.status = 'STARTED' and resp.status in ('SUCCEEDED','FAILED'))";
-    private static final String UPDATE_ONE_WORK_RETURNING = "UPDATE throttle_queue q SET STATUS = 'PREENQUEUE' FROM (WITH nextRequest as (SELECT request_id from throttle_queue where status = 'ACCEPTED' ORDER BY ENQUEUED ASC limit 1) select DISTINCT(INPUT_VALUE) , request_id FROM input WHERE input.INPUT_IDENTIFIER = 'DATASET_URI' AND input.request_id = (select request_id from nextRequest) AND INPUT_VALUE NOT IN (Select DISTINCT(INPUT_VALUE) FROM input input, response resp WHERE resp.request_id = input.request_id AND input.INPUT_IDENTIFIER = 'DATASET_URI' AND resp.status = 'STARTED')) sub WHERE q.request_id = sub.request_id RETURNING q.request_id";
-   // private static final String UPDATE_WORK_RETURNING = "UPDATE throttle_queue q SET STATUS = 'PREENQUEUE' FROM (WITH nextRequest as (SELECT request_id from throttle_queue where status = 'ACCEPTED' ORDER BY ENQUEUED ASC) select DISTINCT(INPUT_VALUE) , request_id FROM input WHERE input.INPUT_IDENTIFIER = 'DATASET_URI' AND input.request_id = (select request_id from nextRequest) AND INPUT_VALUE NOT IN (Select DISTINCT(INPUT_VALUE) FROM input input, response resp WHERE resp.request_id = input.request_id AND input.INPUT_IDENTIFIER = 'DATASET_URI' AND resp.status = 'STARTED')) sub WHERE q.request_id = sub.request_id RETURNING q.request_id";
+    private static final String UPDATE_ONE_WORK_RETURNING = "UPDATE throttle_queue q SET STATUS = 'PREENQUEUE' FROM "
+            + "(Select input.request_id, input_value FROM input input, throttle_queue throttle WHERE input.input_identifier = 'DATASET_URI' AND input.input_value NOT IN "
+            + "(Select DISTINCT(INPUT_VALUE) FROM input input, response resp, throttle_queue throttle WHERE resp.request_id = input.request_id AND resp.request_id = throttle.request_id  "
+            + "AND input.INPUT_IDENTIFIER = 'DATASET_URI' AND (resp.status = 'STARTED' OR throttle.status = 'ENQUEUE')) AND throttle.request_id = input.request_id AND throttle.status = 'ACCEPTED' "
+            + "ORDER BY enqueued ASC LIMIT 1) sub WHERE q.request_id = sub.request_id RETURNING q.request_id";
     private static final String SELECT_WORK_EXISTS = "SELECT EXISTS (SELECT 1 FROM RESPONSE WHERE STATUS = 'ACCEPTED' LIMIT 1)"; //test this in the editor
     private static final String SELECT_REQUEST_XML = "SELECT request_xml FROM request WHERE request_id = ?";
+
     /**
      * Ensures the same request is not processed again (either finished or
      * executing). As a pre-processing check, first check to see if it has ran
@@ -189,21 +191,23 @@ public class ThrottleQueueImpl implements ThrottleQueue {
      */
     @Override
     public void updateStatus(ExecuteRequest exec, ThrottleStatus status) throws ExceptionReport {
-        if (null != status) switch (status) {
-            case ENQUEUE:
-                LOGGER.debug("Status recieved as ENQUEUE.");
-                updateQueueEnqueue(exec.getUniqueId().toString());
-                break;
-            case WAITING:
-                LOGGER.debug("Status recieved as WAITING.");
-                updateStatusWaiting(exec.getUniqueId().toString());
-                break;
-            case STARTED:
-                LOGGER.debug("Status recieved as STARTED.");
-                updateStatusStarted(exec.getUniqueId().toString());
-                break;
-            default:
-                break;
+        if (null != status) {
+            switch (status) {
+                case ENQUEUE:
+                    LOGGER.debug("Status recieved as ENQUEUE.");
+                    updateQueueEnqueue(exec.getUniqueId().toString());
+                    break;
+                case WAITING:
+                    LOGGER.debug("Status recieved as WAITING.");
+                    updateStatusWaiting(exec.getUniqueId().toString());
+                    break;
+                case STARTED:
+                    LOGGER.debug("Status recieved as STARTED.");
+                    updateStatusStarted(exec.getUniqueId().toString());
+                    break;
+                default:
+                    break;
+            }
         }
     }
 
@@ -458,11 +462,10 @@ public class ThrottleQueueImpl implements ThrottleQueue {
             throw new ExceptionReport(msg, ExceptionReport.NO_APPLICABLE_CODE);
         }
     }
-    
+
     /**
      *
-     * @return
-     * @throws ExceptionReport
+     * @return @throws ExceptionReport
      */
     @Override
     public boolean isWorkAvailable() throws ExceptionReport {
@@ -482,12 +485,13 @@ public class ThrottleQueueImpl implements ThrottleQueue {
         }
         return result;
     }
-    
+
     /**
-     * Enqueues the work from the db found with a status of ACCEPTED on the throttle queue.
-     * This is called from a timer task held onto by the RequestManager. 
-     * Forces a separation between processing the requests and any pre-check logic 
-     * ie if the request has been made before or if the request's data source is in-use.
+     * Enqueues the work from the db found with a status of ACCEPTED on the
+     * throttle queue. This is called from a timer task held onto by the
+     * RequestManager. Forces a separation between processing the requests and
+     * any pre-check logic ie if the request has been made before or if the
+     * request's data source is in-use.
      *
      * @throws org.n52.wps.server.ExceptionReport
      */
@@ -517,9 +521,9 @@ public class ThrottleQueueImpl implements ThrottleQueue {
 
     }
 
-    private void addWorkToQueue(List<String> requestIds) throws ExceptionReport { 
+    private void addWorkToQueue(List<String> requestIds) throws ExceptionReport {
         System.setProperty("javax.xml.parsers.DocumentBuilderFactory", "org.apache.xerces.jaxp.DocumentBuilderFactoryImpl");
-        
+
         for (String id : requestIds) {
 
             try {
@@ -537,7 +541,7 @@ public class ThrottleQueueImpl implements ThrottleQueue {
                 //must reset the id to the previously stored id that occurred when the request was 'ACCEPTED'
                 LOGGER.debug("Setting id on ExecuteRequest." + id);
                 req.setId(UUID.fromString(id)); //overlay the id with previous ACCEPTED id
-      
+
                 ExecuteRequestManager.getInstance().getExecuteRequestQueue().put(req); //adds the request to the queue
 
             } catch (ParserConfigurationException | SAXException | IOException ex) {

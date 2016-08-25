@@ -177,7 +177,7 @@ public class WebProcessingService extends HttpServlet {
 
         LOGGER.info("WPS up and running!");
                 
-        ExecuteRequestManager rm = ExecuteRequestManager.getInstance(); // this will init the timer task responsible for adding work to the queue
+        ExecuteRequestManager rm = ExecuteRequestManager.getInstance(); // #USGS this will init the timer task responsible for adding work to the queue
         if (rm == null)
         {
             LOGGER.error("Error while getting RequestManager instance.");

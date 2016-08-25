@@ -63,7 +63,7 @@ public class ExecuteRequestWrapper extends ExecuteRequest {
         boolean wasInUse = false;  //#USGS override
         LOGGER_WRAPPER.info("PROCESSING in call of ExecuteRequestWrapper. reqId: " + this.getUniqueId());
         try {
-            if (!isDataSourceInUse()) { //#USGS override code - check to see if throttle is on, then check to see if any of the requests data resources are presently in use.
+//            if (!isDataSourceInUse()) { //#USGS override code - check to see if throttle is on, then check to see if any of the requests data resources are presently in use.
                 ExecutionContext context;
                 if (getExecute().isSetResponseForm()) {
                     context = getExecute().getResponseForm().isSetRawDataOutput()
@@ -125,15 +125,15 @@ public class ExecuteRequestWrapper extends ExecuteRequest {
                     // #USGS# remove the request from the hashmap / DB throttle_queue with status of processed
                     ExecuteRequestManager.getInstance().getThrottleQueue().removeRequest(this.getUniqueId().toString());
                 }
-            }  //close if isInUse()  //#USGS override code
-            else {
-                wasInUse = true;
-                LOGGER_WRAPPER.info("Dataset was in use. Request will wait:" + this.getUniqueId().toString());
+        //    }  //close if isInUse()  //#USGS override code
+        //    else {
+        //        wasInUse = true;
+        //        LOGGER_WRAPPER.info("Dataset was in use. Request will wait:" + this.getUniqueId().toString());
                 //update the status to WAITING
                 //place in waiting status
-                ExecuteRequestManager.getInstance().getThrottleQueue().updateStatus(this, ThrottleStatus.WAITING);
-                Thread.sleep(SLEEPTIME);  //do this or the DB will get overly taxed checking to see if its inUse
-            }
+        //        ExecuteRequestManager.getInstance().getThrottleQueue().updateStatus(this, ThrottleStatus.WAITING);
+        //        Thread.sleep(SLEEPTIME);  //do this or the DB will get overly taxed checking to see if its inUse
+        //    }
         } catch (Throwable e) {
             String errorMessage = null;
             if (algorithm != null && algorithm.getErrors() != null && !algorithm.getErrors().isEmpty()) {
@@ -182,10 +182,10 @@ public class ExecuteRequestWrapper extends ExecuteRequest {
             //Places this request on the queue if the datasource was inUse to try again later to cover the edge case :
             //where it was added to the queue while another request (with same datasource)ahead of it but not yet started at the time both were on the queue
             //and the first request then starts and consumes the datasource. 
-            if (wasInUse) { 
-                LOGGER_WRAPPER.info("Dataset was in use. Request will be placed back on the queue at the end of the line:" + this.getUniqueId().toString());
-                ExecuteRequestManager.getInstance().getExecuteRequestQueue().put(this);
-            }
+    //        if (wasInUse) { 
+    //            LOGGER_WRAPPER.info("Dataset was in use. Request will be placed back on the queue at the end of the line:" + this.getUniqueId().toString());
+    //            ExecuteRequestManager.getInstance().getExecuteRequestQueue().put(this);
+    //        }
         }
 
         ExecuteResponse response = new ExecuteResponse(this);

@@ -61,7 +61,7 @@ public class ExecuteRequestManager {
     	TimerTask task = new ThrottleQueueExecuter();
 
     	Timer timer = new Timer();
-    	timer.schedule(task, delay, period);  //Frequency that work is checked to be added to the queue. -milliseconds so a 1 second delay with check every 6 seconds is 1000, 6000
+    	timer.schedule(task, delay, period);  //Frequency that work is checked to be added to the queue. 1000, 6000 = milliseconds so a 1 second delay before the first execution and will check every 6 seconds
 
     }
 }
