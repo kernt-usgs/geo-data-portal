@@ -12,5 +12,5 @@
 	<include file="response.sql" relativeToChangelogFile="true"/>
 	<include file="output.sql" relativeToChangelogFile="true"/>
 	<include file="requestMetadata.sql" relativeToChangelogFile="true"/>
-	
+	<include file="alterRequestMetadata.sql" relativeToChangelogFile="true"/>
 </databaseChangeLog>
