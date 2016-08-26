@@ -51,7 +51,7 @@ public class ExecuteRequestWrapper extends ExecuteRequest {
     public Response call() throws ExceptionReport {
         IAlgorithm algorithm = null;
         Map<String, List<IData>> inputMap = null;
-        boolean wasInUse = false;  //#USGS override
+
         LOGGER_WRAPPER.info("PROCESSING in call of ExecuteRequestWrapper. reqId: " + this.getUniqueId());
         try {
             ExecutionContext context;
