@@ -33,7 +33,7 @@ public class DummyAlgorithm extends AbstractAnnotatedAlgorithm {
 @LiteralDataOutput(
         identifier = "OUTPUT",
         title = "Output File",
-        abstrakt = "A string.")
+        abstrakt = "A string message.")
         //binding = CSVFileBinding.class)  //mimetype="text/plain
         public String getOutput() {
 		return output;

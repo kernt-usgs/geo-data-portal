@@ -52,7 +52,7 @@ public class ThrottleQueueImpl implements ThrottleQueue {
     private static final ConnectionHandler CONNECTION_HANDLER = DatabaseUtil.getJNDIConnectionHandler();
     private static final int TIME_OUT_SECONDS = 20;
 
-    // queries     // fyi: throttle_queue status life cycle: ACCEPTED<insert>—> PRE then ENQUEUED <update>with time—>STARTED<update> —>PROCESSED<update>
+    // queries     // fyi: throttle_queue status life cycle: ACCEPTED<insert>—> PREENQUEUE then ENQUEUE <update>with time—>STARTED<update> —>PROCESSED<update>
     private static final String THROTTLE_QUEUE_TABLE = "throttle_queue";
     private static final String SELECT_RESPONSE_URL_STATEMENT = "SELECT response FROM results, response WHERE results.request_id = response.request_id and response.status = 'SUCCEEDED' and response.request_id = ?";
     private static final String INSERT_STATUS_REQUEST_STATEMENT = "INSERT INTO " + THROTTLE_QUEUE_TABLE + "(REQUEST_ID, STATUS, ENQUEUED, DEQUEUED) VALUES (?, ?, ?, ?)";
@@ -60,13 +60,12 @@ public class ThrottleQueueImpl implements ThrottleQueue {
     private static final String UPDATE_STATUS_ENQUEUE_STATEMENT = "UPDATE " + THROTTLE_QUEUE_TABLE + " SET (STATUS, ENQUEUED) = (?, ?) WHERE REQUEST_ID = ?";
     private static final String UPDATE_STATUS_STATEMENT = "UPDATE " + THROTTLE_QUEUE_TABLE + " SET (STATUS) = (?) WHERE REQUEST_ID = ?";
     private static final String SELECT_DATA_SOURCES_STATEMENT = "SELECT INPUT_VALUE FROM INPUT WHERE INPUT_IDENTIFIER = 'DATASET_URI' AND REQUEST_ID = ?";
-    private static final String SELECT_DATASETS_COMPLETED = "SELECT DISTINCT(INPUT_VALUE) FROM INPUT WHERE INPUT_IDENTIFIER = 'DATASET_URI' AND REQUEST_ID in (SELECT resp.request_id from response resp, throttle_queue queue where resp.request_id = queue.request_id and queue.status = 'STARTED' and resp.status in ('SUCCEEDED','FAILED'))";
     private static final String UPDATE_ONE_WORK_RETURNING = "UPDATE throttle_queue q SET STATUS = 'PREENQUEUE' FROM "
             + "(Select input.request_id, input_value FROM input input, throttle_queue throttle WHERE input.input_identifier = 'DATASET_URI' AND input.input_value NOT IN "
             + "(Select DISTINCT(INPUT_VALUE) FROM input input, response resp, throttle_queue throttle WHERE resp.request_id = input.request_id AND resp.request_id = throttle.request_id  "
             + "AND input.INPUT_IDENTIFIER = 'DATASET_URI' AND (resp.status = 'STARTED' OR throttle.status = 'ENQUEUE')) AND throttle.request_id = input.request_id AND throttle.status = 'ACCEPTED' "
             + "ORDER BY enqueued ASC LIMIT 1) sub WHERE q.request_id = sub.request_id RETURNING q.request_id";
-    private static final String SELECT_WORK_EXISTS = "SELECT EXISTS (SELECT 1 FROM RESPONSE WHERE STATUS = 'ACCEPTED' LIMIT 1)"; //test this in the editor
+
     private static final String SELECT_REQUEST_XML = "SELECT request_xml FROM request WHERE request_id = ?";
 
     /**
@@ -236,30 +235,6 @@ public class ThrottleQueueImpl implements ThrottleQueue {
         return result;
     }
 
-    // looks at the status of the previous requests to see if they have completed and removes the dataset from inuse set
-    // Note that if the wps algo process throws an exception, the request will need to be updated with either a status of failed or succeeded. 
-    // If the request is left in a started or accepted status, the dataset remains 'in-use' and prevents contention.
-    // response table (SUCCEEDED or FAILED) and throttle_queue table (STARTED)
-    private void updateInUse() throws ExceptionReport {
-
-        try (Connection connection = CONNECTION_HANDLER.getConnection()) {
-
-            String sql = SELECT_DATASETS_COMPLETED;
-            Statement statement = connection.createStatement();
-            ResultSet rs = statement.executeQuery(sql);
-            while (rs.next()) {
-                String dataResource = rs.getString("INPUT_VALUE");
-                LOGGER.debug("Removing resource from in-use set: " + dataResource);
-
-                this.dataSetInUse.remove(dataResource);  // removes this from the internal set
-            }
-        } catch (SQLException ex) {
-            String msg = "Query issue trying to select the data sources associated with the recently completed wps requests.";
-            LOGGER.error(msg, ex);
-            throw new ExceptionReport(msg, ExceptionReport.NO_APPLICABLE_CODE);
-        }
-    }
-
     private void updateStatusStarted(String requestId) throws ExceptionReport {
         ThrottleStatus status = ThrottleStatus.STARTED;
 
@@ -296,7 +271,7 @@ public class ThrottleQueueImpl implements ThrottleQueue {
         }
     }
 
-    // #PRE_CHECK#  // 7/2016 blocked on requirement identifying what attributes should be compared to determine if it has ran before without comparing the results
+    // #PRE_CHECK#  // 7/2016 blocked on requirement: will a pre-sort of the inputs be needed to satisfy sameness?
     private boolean hasRan(ExecuteRequest req) {
         // "TBD: impl later";
         Document currentRequestDoc = req.getDocument();
@@ -421,7 +396,7 @@ public class ThrottleQueueImpl implements ThrottleQueue {
 
     //update the requests status on the throttle_queue table for the dequeuing process
     private void updateQueueStatusProcessed(String requestId) throws ExceptionReport {
-        //ENQUEUE -> STARTED -> PROCESSED 
+        //PREENQUEUE / ENQUEUE -> STARTED -> PROCESSED 
         Timestamp now = new Timestamp(Calendar.getInstance().getTimeInMillis());
         ThrottleStatus status = ThrottleStatus.PROCESSED;
 
@@ -461,29 +436,6 @@ public class ThrottleQueueImpl implements ThrottleQueue {
             LOGGER.error(msg, e);
             throw new ExceptionReport(msg, ExceptionReport.NO_APPLICABLE_CODE);
         }
-    }
-
-    /**
-     *
-     * @return @throws ExceptionReport
-     */
-    @Override
-    public boolean isWorkAvailable() throws ExceptionReport {
-        boolean result = true;
-        try (Connection connection = CONNECTION_HANDLER.getConnection()) {
-
-            Statement statement = connection.createStatement();
-            ResultSet rs = statement.executeQuery(SELECT_WORK_EXISTS);
-            while (rs.next()) {
-                String boolString = rs.getString("REQUEST_ID");
-                result = Boolean.valueOf(boolString);
-            }
-        } catch (SQLException ex) {
-            LOGGER.error("Problem selecting throttle_queue_toggle for pre-check redundant request enabled from the db.", ex);
-            LOGGER.debug("Throttle_queue reundant request enabled: " + result);
-            throw new ExceptionReport("Problem selecting throttle_queue_toggle enabled from the db. Redundant request 'enabled' is currently:" + result, ExceptionReport.NO_APPLICABLE_CODE);
-        }
-        return result;
     }
 
     /**

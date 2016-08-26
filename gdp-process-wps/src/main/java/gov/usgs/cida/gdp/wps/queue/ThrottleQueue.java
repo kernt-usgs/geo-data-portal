@@ -23,7 +23,5 @@ public interface ThrottleQueue  {
     public void updateStatus(ExecuteRequest req, ThrottleStatus status) throws ExceptionReport;
     
     public boolean isEnqueue(ExecuteRequest req) throws ExceptionReport;
-    
-    public boolean isWorkAvailable() throws ExceptionReport;
-      
+       
 }

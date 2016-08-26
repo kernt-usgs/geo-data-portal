@@ -39,7 +39,6 @@ public class ExecuteRequestQueue {
                     ExecuteRequestManager.getInstance().getThrottleQueue().updateStatus(execReq, ThrottleStatus.ENQUEUE); //updates to ENQUEUED
                 } finally {
                     LOGGER.debug("Queue status: " + getStatus());
-              //      LOGGER.info("and active queue count is " + this.POOL.getActiveCount());
                 }
 
             } else {

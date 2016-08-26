@@ -267,14 +267,14 @@ public class GdpRequestHandler extends RequestHandler {
     public void handleAgentLogging() throws ExceptionReport {
         if (StringUtils.isNotBlank(userAgent)) {
             UUID uniqueId = super.req.getUniqueId();
-            LOGGER.info("Inserting Agent Logging:" + userAgent);
+            LOGGER.debug("Inserting Agent Logging with ID:" + uniqueId);
             //UUID uniqueId = parent.req.getUniqueId();
             try (Connection connection = connectionHandler.getConnection()) {
                 UUID pkey = UUID.randomUUID();
                 PreparedStatement prepared = connection.prepareStatement("INSERT INTO request_metadata (ID, REQUEST_ID, USER_AGENT) VALUES (?, ?, ?)");
                 prepared.setString(1, pkey.toString());
                 prepared.setString(2, uniqueId.toString());
-                prepared.setString(3, userAgent);
+                prepared.setString(3,userAgent);
                 prepared.execute();
             } catch (SQLException ex) {
                 LOGGER.debug("Problem logging user agent", ex);
