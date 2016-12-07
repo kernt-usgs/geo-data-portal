@@ -34,6 +34,8 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 /**
+ * 
+ * @deprecated Service URL is non-existant, this will have to be re-worked if we want to bring something like this back
  * @author razoerb
  */
 public class WatersService {

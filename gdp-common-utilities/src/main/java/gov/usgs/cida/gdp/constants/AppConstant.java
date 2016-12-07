@@ -110,7 +110,7 @@ public enum AppConstant {
             ///////////////////// Endpoint constants
             // WFS_ENDPOINT
             if (input.equals("gdp.geoserver.url")) {
-                result = "http://localhost:8082/geoserver";
+                result = "https://localhost:8445/geoserver";
             }
             // WFS_USER
             if (input.equals("gdp.geoserver.username")) {
@@ -122,11 +122,11 @@ public enum AppConstant {
             }
             // WPS_ENDPOINT
             if (input.equals("gdp.endpoint.wps.url")) {
-                result = "http://localhost:8080/gdp-utility-wps/WebProcessingService";
+                result = "https://localhost:8443/gdp-utility-wps/WebProcessingService";
             }
-            // CSW_ENDPOINT
+            // CSW_ENDPOINT !CLEANUP!
             if (input.equals("gdp.endpoint.csw.url")) {
-                result = "http://localhost:8082/geonetwork/srv/en/csw";
+                result = "https://localhost:8445/geonetwork/srv/en/csw";
             }
 
             ///////////////////// Communication constants
