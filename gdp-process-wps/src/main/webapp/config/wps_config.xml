@@ -178,7 +178,8 @@
             <Property name="Algorithm" active="true">gov.usgs.cida.gdp.wps.algorithm.FeatureGridStatisticsAlgorithm</Property>
             <Property name="Algorithm" active="true">gov.usgs.cida.gdp.wps.algorithm.FeatureCoverageIntersectionAlgorithm</Property>
             <Property name="Algorithm" active="true">gov.usgs.cida.gdp.wps.algorithm.FeatureCoverageOPeNDAPIntersectionAlgorithm</Property>
-            <Property name="Algorithm" active="true">gov.usgs.cida.gdp.wps.algorithm.PRMSParameterGeneratorAlgorithm</Property>
+            <Property name="Algorithm" active="true">gov.usgs.cida.gdp.wps.algorithm.FeatureTimeSeriesAlgorithm</Property>
+            <Property name="Algorithm" active="true">gov.usgs.cida.gdp.wps.algorithm.DummyAlgorithm</Property>
         </Repository>
 		<Repository name="ServiceLoaderAlgorithmRepository"
 			className="org.n52.wps.server.ServiceLoaderAlgorithmRepository" active="false">

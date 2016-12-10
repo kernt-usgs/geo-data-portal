@@ -1,10 +1,5 @@
 package gov.usgs.cida.gdp.wps.algorithm;
 
-import gov.usgs.cida.gdp.constants.AppConstant;
-import gov.usgs.cida.gdp.wps.binding.GMLStreamingFeatureCollectionBinding;
-import gov.usgs.cida.gdp.wps.binding.GeoTIFFFileBinding;
-import gov.usgs.cida.gdp.wps.util.WCSUtil;
-
 import java.io.File;
 import java.net.URI;
 
@@ -15,6 +10,13 @@ import org.n52.wps.algorithm.annotation.ComplexDataOutput;
 import org.n52.wps.algorithm.annotation.Execute;
 import org.n52.wps.algorithm.annotation.LiteralDataInput;
 import org.n52.wps.server.AbstractAnnotatedAlgorithm;
+import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.feature.simple.SimpleFeatureType;
+
+import gov.usgs.cida.gdp.constants.AppConstant;
+import gov.usgs.cida.gdp.wps.binding.GMLStreamingFeatureCollectionBinding;
+import gov.usgs.cida.gdp.wps.binding.GeoTIFFFileBinding;
+import gov.usgs.cida.gdp.wps.util.WCSUtil;
 
 /**
  *
@@ -26,7 +28,7 @@ import org.n52.wps.server.AbstractAnnotatedAlgorithm;
     abstrakt="This service returns the subset of data that intersects a set of vector polygon features and a Web Coverage Service (WCS) data source. A GeoTIFF file will be returned.")
 public class FeatureCoverageIntersectionAlgorithm extends AbstractAnnotatedAlgorithm {
 
-    private FeatureCollection featureCollection;
+    private FeatureCollection<SimpleFeatureType,SimpleFeature> featureCollection;
     private URI datasetURI;
     private String datasetId;
     private boolean requireFullCoverage = true;
@@ -38,7 +40,7 @@ public class FeatureCoverageIntersectionAlgorithm extends AbstractAnnotatedAlgor
             title=GDPAlgorithmConstants.FEATURE_COLLECTION_TITLE,
             abstrakt=GDPAlgorithmConstants.FEATURE_COLLECTION_ABSTRACT,
             binding=GMLStreamingFeatureCollectionBinding.class)
-    public void setFeatureCollection(FeatureCollection featureCollection) {
+    public void setFeatureCollection(FeatureCollection<SimpleFeatureType,SimpleFeature> featureCollection) {
         this.featureCollection = featureCollection;
     }
 

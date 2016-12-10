@@ -1,5 +1,6 @@
 package gov.usgs.cida.gdp.wps.service;
 
+import gov.usgs.cida.gdp.wps.util.DatabaseUtil;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -21,13 +22,12 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.stream.StreamSource;
 import net.opengis.wps.v_1_0_0.Execute;
-import org.n52.wps.DatabaseDocument.Database;
-import org.n52.wps.PropertyDocument.Property;
-import org.n52.wps.commons.WPSConfig;
 import org.n52.wps.server.database.connection.ConnectionHandler;
 import org.n52.wps.server.database.connection.JNDIConnectionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static gov.usgs.cida.gdp.wps.util.DatabaseUtil.getDatabaseProperty;
 
 /**
  * @author abramhall (Arthur Bramhall), isuftin@usgs.gov (Ivan Suftin)
@@ -48,18 +48,7 @@ public abstract class BaseProcessServlet extends HttpServlet {
 	private ConnectionHandler connectionHandler;
 
 	public BaseProcessServlet() {
-		String jndiName = getDatabaseProperty("jndiName");
-		if (null != jndiName) {
-			try {
-				connectionHandler = new JNDIConnectionHandler(jndiName);
-			} catch (NamingException e) {
-				LOGGER.error("Error creating database connection handler", e);
-				throw new RuntimeException("Error creating database connection handler", e);
-			}
-		} else {
-			LOGGER.error("Error creating database connection handler. No jndiName provided.");
-			throw new RuntimeException("Must configure a Postgres JNDI datasource");
-		}
+		connectionHandler = DatabaseUtil.getJNDIConnectionHandler();
 
 		try {
 			wpsUnmarshaller = JAXBContext.newInstance(WPS_NAMESPACE).createUnmarshaller();
@@ -67,20 +56,6 @@ public abstract class BaseProcessServlet extends HttpServlet {
 			LOGGER.error("Error creating WPS parsing context.");
 			throw new RuntimeException("JAXBContext for " + WPS_NAMESPACE + " could not be created", ex);
 		}
-	}
-
-	private String getDatabaseProperty(String propertyName) {
-		Database database = WPSConfig.getInstance().getWPSConfig().getServer().getDatabase();
-		String property = null;
-		if (null != database) {
-			Property[] dbProperties = database.getPropertyArray();
-			for (Property dbProperty : dbProperties) {
-				if (property == null && dbProperty.getName().equalsIgnoreCase(propertyName)) {
-					property = dbProperty.getStringValue();
-				}
-			}
-		}
-		return property;
 	}
 
 	protected InputStream getRequestEntityAsStream(String id) throws SQLException, IOException {

@@ -7,4 +7,5 @@
 	http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
 	
 	<include file="createTables/changeLog.xml" relativeToChangelogFile="true"/>
+        <include file="queueThrottleTables/changeLog.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

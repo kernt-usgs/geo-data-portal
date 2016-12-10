@@ -2,7 +2,7 @@ package gov.usgs.cida.gdp.coreprocessing.analysis.grid;
 
 import gov.usgs.cida.gdp.coreprocessing.Delimiter;
 import gov.usgs.cida.gdp.coreprocessing.analysis.grid.Statistics1DWriter.GroupBy;
-import gov.usgs.cida.gdp.coreprocessing.analysis.grid.Statistics1DWriter.Statistic;
+import gov.usgs.cida.gdp.coreprocessing.analysis.Statistic;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -20,8 +20,10 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 import static org.hamcrest.Matchers.*;
+
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
 import ucar.ma2.InvalidRangeException;
@@ -138,7 +140,7 @@ public class FeatureCoverageGridStatisticsTest {
 				"GRIDCODE",
 				getGrid(gridName),
 				Arrays.asList(),
-				Arrays.asList(Statistic.values()),
+				Arrays.asList(WeightedStatistic.values()),
 				writer,
 				GroupBy.STATISTIC,
 				Delimiter.COMMA,

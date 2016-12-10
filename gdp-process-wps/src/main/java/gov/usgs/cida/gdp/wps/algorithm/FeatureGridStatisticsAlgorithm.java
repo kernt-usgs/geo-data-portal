@@ -1,11 +1,13 @@
 package gov.usgs.cida.gdp.wps.algorithm;
 
+import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.feature.simple.SimpleFeatureType;
 import gov.usgs.cida.gdp.constants.AppConstant;
 import gov.usgs.cida.gdp.coreprocessing.Delimiter;
 import gov.usgs.cida.gdp.coreprocessing.analysis.grid.FeatureCoverageGridStatistics;
 import gov.usgs.cida.gdp.coreprocessing.analysis.grid.GridCellVisitor;
 import gov.usgs.cida.gdp.coreprocessing.analysis.grid.Statistics1DWriter.GroupBy;
-import gov.usgs.cida.gdp.coreprocessing.analysis.grid.Statistics1DWriter.Statistic;
+import gov.usgs.cida.gdp.coreprocessing.analysis.grid.WeightedStatistic;
 import gov.usgs.cida.gdp.wps.algorithm.heuristic.GeometrySizeAlgorithmHeuristic;
 import gov.usgs.cida.gdp.wps.algorithm.heuristic.SummaryOutputSizeAlgorithmHeuristic;
 import gov.usgs.cida.gdp.wps.algorithm.heuristic.TotalTimeAlgorithmHeuristic;
@@ -17,7 +19,6 @@ import static org.n52.wps.algorithm.annotation.LiteralDataInput.ENUM_COUNT;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.net.URI;
@@ -48,17 +49,17 @@ import ucar.nc2.dt.GridDatatype;
 @Algorithm(
 		version = "1.0.0",
 		title = "Area Grid Statistics (unweighted)",
-		abstrakt = "This algorithm generates unweighted statistics of a gridded dataset for a set of vector polygon features. Using the bounding-box that encloses the feature data and the time range, if provided, a subset of the gridded dataset is requested from the remote gridded data server. Polygon representations are generated for cells in the retrieved grid. The polygon grid-cell representations are then projected to the feature data coordinate reference system. The grid-cells are used to calculate per grid-cell feature coverage fractions. Area-weighted statistics are then calculated for each feature using the grid values and fractions as weights. If the gridded dataset has a time range the last step is repeated for each time step within the time range or all time steps if a time range was not supplied.")
+		abstrakt = "This algorithm generates unweighted statistics of a gridded dataset for a set of vector polygon features. Using the bounding-box that encloses the feature data and the time range, if provided, a subset of the gridded dataset is requested from the remote gridded data server. Point representations of the grid cells are generated for cells in the retrieved grid. The point grid-cell representations are then projected to the feature data coordinate reference system. The grid points are intersected with the polygons in a point-in-polygon analysis. Areal Statistics are then calculated for each feature using the grid values. If the gridded dataset has a time range the last step is repeated for each time step within the time range or all time steps if a time range was not supplied. NOTE: The point-in-polygon analysis is not saved in memory; it is performed for every time step to allow very large scale analyses to function. This algorithm should not be used for long time series. See the weighted grid statistics algorithm for the majority of processing needs.")
 public class FeatureGridStatisticsAlgorithm extends AbstractAnnotatedAlgorithm {
 
-	private FeatureCollection featureCollection;
+	private FeatureCollection<SimpleFeatureType,SimpleFeature> featureCollection;
 	private String featureAttributeName;
 	private URI datasetURI;
 	private List<String> datasetId;
 	private boolean requireFullCoverage = true;
 	private Date timeStart;
 	private Date timeEnd;
-	private List<Statistic> statistics;
+	private List<WeightedStatistic> statistics;
 	private GroupBy groupBy;
 	private Delimiter delimiter;
 	private boolean summarizeTimeStep = false;
@@ -71,7 +72,7 @@ public class FeatureGridStatisticsAlgorithm extends AbstractAnnotatedAlgorithm {
 			title = GDPAlgorithmConstants.FEATURE_COLLECTION_TITLE,
 			abstrakt = GDPAlgorithmConstants.FEATURE_COLLECTION_ABSTRACT,
 			binding = GMLStreamingFeatureCollectionBinding.class)
-	public void setFeatureCollection(FeatureCollection featureCollection) {
+	public void setFeatureCollection(FeatureCollection<SimpleFeatureType,SimpleFeature> featureCollection) {
 		this.featureCollection = featureCollection;
 	}
 
@@ -132,7 +133,7 @@ public class FeatureGridStatisticsAlgorithm extends AbstractAnnotatedAlgorithm {
 			title = "Statistics",
 			abstrakt = "Statistics that will be returned for each feature in the processing output.",
 			maxOccurs = ENUM_COUNT)
-	public void setStatistics(List<Statistic> statistics) {
+	public void setStatistics(List<WeightedStatistic> statistics) {
 		this.statistics = statistics;
 	}
 
@@ -195,6 +196,8 @@ public class FeatureGridStatisticsAlgorithm extends AbstractAnnotatedAlgorithm {
 			CountingOutputStream cos = new CountingOutputStream(new FileOutputStream(output));
 			writer = new BufferedWriter(new OutputStreamWriter(cos));
 
+			List<GridCellVisitor> heuristics = setupHeuristics(cos);
+			
 			for (String currentDatasetId : datasetId) {
 				GridDatatype gridDatatype = GDPAlgorithmUtil.generateGridDataType(
 						datasetURI,
@@ -213,8 +216,8 @@ public class FeatureGridStatisticsAlgorithm extends AbstractAnnotatedAlgorithm {
 						featureCollection,
 						featureAttributeName,
 						gridDatatype.makeSubset(null, null, timeRange, null, null, null),
-						setupHeuristics(null),
-						statistics == null || statistics.isEmpty() ? Arrays.asList(Statistic.values()) : statistics,
+						heuristics,
+						statistics == null || statistics.isEmpty() ? Arrays.asList(WeightedStatistic.values()) : statistics,
 						writer,
 						groupBy == null ? GroupBy.STATISTIC : groupBy,
 						delimiter == null ? Delimiter.getDefault() : delimiter,

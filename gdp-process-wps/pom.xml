@@ -4,7 +4,7 @@
 	<parent>
 		<artifactId>gdp</artifactId>
 		<groupId>gov.usgs.cida.gdp</groupId>
-		<version>46-SNAPSHOT</version>
+		<version>53-SNAPSHOT</version>
 	</parent>
 	<artifactId>gdp-process-wps</artifactId>
 	<packaging>war</packaging>
@@ -338,7 +338,6 @@
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
 			<version>1.10.19</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>

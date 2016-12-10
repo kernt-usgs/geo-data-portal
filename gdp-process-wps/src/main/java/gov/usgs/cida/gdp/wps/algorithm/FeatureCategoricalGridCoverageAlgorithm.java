@@ -1,16 +1,12 @@
 package gov.usgs.cida.gdp.wps.algorithm;
 
-import gov.usgs.cida.gdp.constants.AppConstant;
-import gov.usgs.cida.gdp.coreprocessing.Delimiter;
-import gov.usgs.cida.gdp.coreprocessing.analysis.grid.FeatureCategoricalGridCoverage;
-import gov.usgs.cida.gdp.wps.binding.CSVFileBinding;
-import gov.usgs.cida.gdp.wps.binding.GMLStreamingFeatureCollectionBinding;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
+
 import org.apache.commons.io.IOUtils;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.SchemaException;
@@ -20,8 +16,18 @@ import org.n52.wps.algorithm.annotation.ComplexDataOutput;
 import org.n52.wps.algorithm.annotation.Execute;
 import org.n52.wps.algorithm.annotation.LiteralDataInput;
 import org.n52.wps.server.AbstractAnnotatedAlgorithm;
+import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
+
+import gov.usgs.cida.gdp.constants.AppConstant;
+import gov.usgs.cida.gdp.coreprocessing.Delimiter;
+import gov.usgs.cida.gdp.coreprocessing.analysis.grid.FeatureCategoricalGridCoverage;
+import gov.usgs.cida.gdp.wps.binding.CSVFileBinding;
+import gov.usgs.cida.gdp.wps.binding.GMLStreamingFeatureCollectionBinding;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ucar.ma2.InvalidRangeException;
 import ucar.nc2.dt.GridDatatype;
 
@@ -34,8 +40,8 @@ import ucar.nc2.dt.GridDatatype;
     title="Categorical Coverage Fraction",
     abstrakt="This processing service is used with categorical gridded data to assess the percent coverage of each category for a set of features. This service does not process gridded time series. Using the feature dataset bounding-box, a subset of the gridded dataset is requested from the remote gridded data server. The location of each grid-cell center is then projected to the feature dataset coordinate reference system. For each grid-cell in the subsetted grid, the grid-cell center is tested for inclusion in each feature in the feature dataset. If the grid-cell center is in a given feature, the count for that cell's category is incremented for that feature. After all the grid-cell centers are processed the coverage fraction for each category is calculated for each feature.")
 public class FeatureCategoricalGridCoverageAlgorithm extends AbstractAnnotatedAlgorithm {
-
-    private FeatureCollection featureCollection;
+    private static final Logger log = LoggerFactory.getLogger(FeatureCategoricalGridCoverageAlgorithm.class);
+    private FeatureCollection<SimpleFeatureType,SimpleFeature> featureCollection;
     private String featureAttributeName;
     private URI datasetURI;
     private List<String> datasetId;
@@ -49,22 +55,29 @@ public class FeatureCategoricalGridCoverageAlgorithm extends AbstractAnnotatedAl
             title=GDPAlgorithmConstants.FEATURE_COLLECTION_TITLE,
             abstrakt=GDPAlgorithmConstants.FEATURE_COLLECTION_ABSTRACT,
             binding=GMLStreamingFeatureCollectionBinding.class)
-    public void setFeatureCollection(FeatureCollection featureCollection) {
+    public void setFeatureCollection(FeatureCollection<SimpleFeatureType,SimpleFeature> featureCollection) {
         this.featureCollection = featureCollection;
     }
 
     @LiteralDataInput(
             identifier=GDPAlgorithmConstants.FEATURE_ATTRIBUTE_NAME_IDENTIFIER,
             title=GDPAlgorithmConstants.FEATURE_ATTRIBUTE_NAME_TITLE,
-            abstrakt=GDPAlgorithmConstants.FEATURE_ATTRIBUTE_NAME_ABSTRACT)
+            abstrakt=GDPAlgorithmConstants.FEATURE_ATTRIBUTE_NAME_ABSTRACT,
+            minOccurs= 1,
+            maxOccurs= 1)
     public void setFeatureAttributeName(String featureAttributeName) {
+        if (null == featureAttributeName) {
+            log.debug("WPS request process error: Feature Attribute Name was null. Can not process without the output column name.");
+        }
         this.featureAttributeName = featureAttributeName;
     }
 
     @LiteralDataInput(
             identifier=GDPAlgorithmConstants.DATASET_URI_IDENTIFIER,
             title=GDPAlgorithmConstants.DATASET_URI_TITLE,
-            abstrakt=GDPAlgorithmConstants.DATASET_URI_ABSTRACT)
+            abstrakt=GDPAlgorithmConstants.DATASET_URI_ABSTRACT,
+            minOccurs= 1,            
+            maxOccurs= 1)
     public void setDatasetURI(URI datasetURI) {
         this.datasetURI = datasetURI;
     }
@@ -73,6 +86,7 @@ public class FeatureCategoricalGridCoverageAlgorithm extends AbstractAnnotatedAl
             identifier=GDPAlgorithmConstants.DATASET_ID_IDENTIFIER,
             title=GDPAlgorithmConstants.DATASET_ID_TITLE,
             abstrakt=GDPAlgorithmConstants.DATASET_ID_ABSTRACT + " The data variable must be categorical in nature.",
+            minOccurs= 1,            
             maxOccurs= Integer.MAX_VALUE)
     public void setDatasetId(List<String> datasetId) {
         this.datasetId = datasetId;
@@ -146,5 +160,5 @@ public class FeatureCategoricalGridCoverageAlgorithm extends AbstractAnnotatedAl
             IOUtils.closeQuietly(writer);
         }
     }
-
+    
 }
