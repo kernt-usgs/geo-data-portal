@@ -4,7 +4,12 @@ import gov.usgs.cida.gdp.dataaccess.bean.DataTypeCollection;
 import gov.usgs.cida.gdp.dataaccess.bean.DataTypeCollection.DataTypeBean;
 import gov.usgs.cida.gdp.dataaccess.bean.Response;
 import gov.usgs.cida.gdp.dataaccess.bean.Time;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,6 +35,7 @@ import opendap.dap.Int16PrimitiveVector;
 import opendap.dap.Int32PrimitiveVector;
 import opendap.dap.NoSuchAttributeException;
 import opendap.dap.PrimitiveVector;
+import org.apache.http.client.utils.URIBuilder;
 import org.slf4j.LoggerFactory;
 import ucar.nc2.time.Calendar;
 import ucar.nc2.time.CalendarDateUnit;
@@ -59,16 +65,7 @@ public class OpendapServerHelper {
 
     public static List<String> getOPeNDAPTimeRange(String datasetUrl, String gridSelection) throws IOException {
         try {
-            // call das, dds
-            String finalUrl = "";
-            if (datasetUrl.startsWith("dods:")) {
-                finalUrl = "http:" + datasetUrl.substring(5);
-            } else if (datasetUrl.startsWith("http:") || datasetUrl.startsWith("file:")) {
-                finalUrl = datasetUrl;
-            } else {
-                throw new java.net.MalformedURLException(datasetUrl + " must start with dods: or http: or file:");
-            }
-            DConnect2 dodsConnection = new DConnect2(finalUrl, false);
+            DConnect2 dodsConnection = createDODSConnection(datasetUrl);
             DDS dds = dodsConnection.getDDS(gridSelection);
 
             DAS das = dodsConnection.getDAS();
@@ -191,20 +188,14 @@ public class OpendapServerHelper {
     }
 
     public static DataTypeCollection callDDSandDAS(String datasetUrl) throws IOException {
-        // call das, dds
-        String finalUrl = "";
-        if (datasetUrl.startsWith("dods:")) {
-            finalUrl = "http:" + datasetUrl.substring(5);
-        } else {
-            if (datasetUrl.startsWith("http:")) {
-                finalUrl = datasetUrl;
-            } else {
-                throw new java.net.MalformedURLException(datasetUrl + " must start with dods: or http:");
-            }
+        DConnect2 dodsConnection;
+        try {
+             dodsConnection = createDODSConnection(datasetUrl);
+        } catch (URISyntaxException | FileNotFoundException | MalformedURLException ex) {
+            throw new RuntimeException("Error connecting to dods server", ex);
         }
-        DConnect2 dodsConnection = new DConnect2(finalUrl, false);
-        List<DataTypeBean> dtbListWithTimes = new LinkedList<DataTypeBean>();
-        List<DataTypeBean> dtbListNoTimes = new LinkedList<DataTypeBean>();
+        List<DataTypeBean> dtbListWithTimes = new LinkedList<>();
+        List<DataTypeBean> dtbListNoTimes = new LinkedList<>();
         try {
             DDS dds = dodsConnection.getDDS();
             DAS das = dodsConnection.getDAS();
@@ -329,4 +320,28 @@ public class OpendapServerHelper {
         }
         return timeVarName;
     }
+
+    private static DConnect2 createDODSConnection(String datasetUrl) throws URISyntaxException, MalformedURLException, FileNotFoundException {
+        // call das, dds
+        URI datasetURI = URI.create(datasetUrl);
+        if ("dods".equals(datasetURI.getScheme()) ||
+                "http".equals(datasetURI.getScheme()) ||
+                "https".equals(datasetURI.getScheme())) {
+            datasetURI = new URIBuilder(datasetURI).setScheme("https").build();
+        } else if ("file".equals(datasetURI.getScheme())) {
+            // leave URI alone
+        } else {
+            throw new java.net.MalformedURLException(datasetUrl + " must start with dods: or http(s): or file:");
+        }
+        DConnect2  dodsConnection;
+        try {
+            dodsConnection = new DConnect2(datasetURI.toString(), false);
+        } catch (IOException ioe) {
+            // fall back to http
+            datasetURI = new URIBuilder(datasetURI).setScheme("http").build();
+            dodsConnection = new DConnect2(datasetURI.toString(), false);
+        }
+        return dodsConnection;
+    }
+
 }
