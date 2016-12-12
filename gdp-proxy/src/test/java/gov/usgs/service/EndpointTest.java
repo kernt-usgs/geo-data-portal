@@ -33,7 +33,7 @@ public class EndpointTest {
 
     @Before
     public void setUp() {
-		testpoint = new Endpoint("http://internal.cida.usgs.gov/gdp/process/WebProcessingService?service=WPS&request=GetCapabilities");
+		testpoint = new Endpoint("https://internal.cida.usgs.gov/gdp/process/WebProcessingService?service=WPS&request=GetCapabilities");
     }
     
     @After
@@ -126,13 +126,13 @@ public class EndpointTest {
 	 */ @Test
 	public void testCreateComparisonString() {
 		System.out.println("createComparisonString");
-		String expResult = "http://internal.cida.usgs.gov/gdp/process/";
+		String expResult = "https://internal.cida.usgs.gov/gdp/process/";
 		String result = testpoint.getComparisonString();
 		assertThat(expResult, is(equalTo(result)));
-		testpoint = new Endpoint("http://internal.cida.usgs.gov/gdp/process/ServletServlet");
+		testpoint = new Endpoint("https://internal.cida.usgs.gov/gdp/process/ServletServlet");
 		result = testpoint.getComparisonString();
 		assertThat(expResult, is(equalTo(result)));
-		testpoint = new Endpoint("http://internal.cida.usgs.gov/gdp/process/Servlet?query=with/slashes");
+		testpoint = new Endpoint("https://internal.cida.usgs.gov/gdp/process/Servlet?query=with/slashes");
 		result = testpoint.getComparisonString();
 		assertThat(expResult, is(equalTo(result)));
 	}
@@ -143,7 +143,7 @@ public class EndpointTest {
      @Test
 	public void testEquals() {
 		System.out.println("equals");
-		Endpoint other = new Endpoint("http://internal.cida.usgs.gov/gdp/process/WebProcessingService?service=WPS&request=DescribeProcess&id=Algorithm1");
+		Endpoint other = new Endpoint("https://internal.cida.usgs.gov/gdp/process/WebProcessingService?service=WPS&request=DescribeProcess&id=Algorithm1");
 		boolean expResult = true;
 		boolean result = testpoint.equals(other);
 		assertThat(expResult, is(equalTo(result)));
@@ -154,7 +154,7 @@ public class EndpointTest {
 	 */ @Test
 	public void testEqualsFalse() {
 		System.out.println("equalsFalse");
-		Endpoint other = new Endpoint("http://internal.cida.usgs.gov/gdp/utility/WebProcessingService?Service=WPS&Request=GetCapabilities");
+		Endpoint other = new Endpoint("https://internal.cida.usgs.gov/gdp/utility/WebProcessingService?Service=WPS&Request=GetCapabilities");
 		boolean expResult = false;
 		boolean result = testpoint.equals(other);
 		assertThat(expResult, is(equalTo(result)));

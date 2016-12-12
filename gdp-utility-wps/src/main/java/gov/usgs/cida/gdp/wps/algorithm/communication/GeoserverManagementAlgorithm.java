@@ -94,7 +94,7 @@ public class GeoserverManagementAlgorithm extends AbstractAnnotatedAlgorithm {
         Preconditions.checkArgument(command == COMMAND.delete && !StringUtils.isBlank(workspace), "\"" + command + "\" requires " + PARAM_WORKSPACE + " to be set");
         Preconditions.checkArgument(command == COMMAND.delete && !StringUtils.isBlank(datastore), "\"" + command + "\" requires " + PARAM_DATASTORE + " to be set");
 
-        GeoserverManager gm = new GeoserverManager("http://" + wfsHost + ":" + wfsPort + "/geoserver", username, password);
+        GeoserverManager gm = new GeoserverManager("https://" + wfsHost + ":" + wfsPort + "/geoserver", username, password);
 
         try {
             gm.deleteAndWipeDataStore(workspace, datastore);

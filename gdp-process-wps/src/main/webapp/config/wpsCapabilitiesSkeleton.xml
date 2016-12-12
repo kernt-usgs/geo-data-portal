@@ -17,14 +17,14 @@
     </ows:ServiceIdentification>
     <ows:ServiceProvider>
         <ows:ProviderName>CIDA</ows:ProviderName>
-        <ows:ProviderSite xlink:href="http://cida.usgs.gov/"/>
+        <ows:ProviderSite xlink:href="https://cida.usgs.gov/"/>
         <ows:ServiceContact>
-            <ows:IndividualName>Tom Kunicki</ows:IndividualName>
+            <ows:IndividualName>Jordan Walker</ows:IndividualName>
             <ows:PositionName>Technical Lead</ows:PositionName>
             <ows:ContactInfo>
                 <ows:Phone>
-                    <ows:Voice>608-821-3851</ows:Voice>
-                    <ows:Facsimile></ows:Facsimile>
+                    <ows:Voice>608-821-3842</ows:Voice>
+                    <ows:Facsimile>608-821-3817</ows:Facsimile>
                 </ows:Phone>
                 <ows:Address>
                     <ows:DeliveryPoint>8505 Research Way</ows:DeliveryPoint>
@@ -32,7 +32,7 @@
                     <ows:AdministrativeArea>WI</ows:AdministrativeArea>
                     <ows:PostalCode>53562</ows:PostalCode>
                     <ows:Country>US</ows:Country>
-                    <ows:ElectronicMailAddress>tkunicki@usgs.gov</ows:ElectronicMailAddress>
+                    <ows:ElectronicMailAddress>jiwalker@usgs.gov</ows:ElectronicMailAddress>
                 </ows:Address>
             </ows:ContactInfo>
         </ows:ServiceContact>
@@ -49,7 +49,7 @@
             <ows:DCP>
                 <ows:HTTP>
                     <ows:Get xlink:href="http://dynamicallygeneratedURL/GeoPS/GeoPS?"/>
-					<!--ows:Post xlink:href="http://dynamicallygeneratedURL/GeoPS/GeoPS"/-->
+                    <!--ows:Post xlink:href="http://dynamicallygeneratedURL/GeoPS/GeoPS"/-->
                 </ows:HTTP>
             </ows:DCP>
         </ows:Operation>

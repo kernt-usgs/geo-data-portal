@@ -19,7 +19,7 @@
 		<pluginRepository>
 			<id>cida-public</id>
 			<name>CIDA plugin repository</name>
-			<url>http://cida.usgs.gov/maven/cida-public/</url>
+			<url>https://cida.usgs.gov/maven/cida-public/</url>
 		</pluginRepository>
 	</pluginRepositories>
 	<dependencies>

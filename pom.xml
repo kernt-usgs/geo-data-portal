@@ -15,9 +15,8 @@
 		<module>gdp-utility-wps</module>
 		<module>gdp-process-wps</module>
 		<module>geoserver</module>
-		<!-- These two can be removed when derivative portal is reworked -->
+		<!-- This is no longer used by modules, retained for reference only -->
 		<module>gdp-proxy</module>
-		<module>gdp-derivative-ui</module>
 	</modules>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -31,11 +30,11 @@
 		Owner: NB
 		Coders: IS, JW, DS, TK
 	</description>
-	<url>http://cida.usgs.gov</url>
+	<url>https://cida.usgs.gov</url>
 	<inceptionYear>2010</inceptionYear>
 	<organization>
 		<name>Center for Integrated Data Analytics</name>
-		<url>http://cida.usgs.gov</url>
+		<url>https://cida.usgs.gov</url>
 	</organization>
 	<developers>
 		<developer>
@@ -43,7 +42,7 @@
 			<email>jiwalker@usgs.gov</email>
 			<id>jiwalker</id>
 			<organization>Center for Integrated Data Analytics</organization>
-			<organizationUrl>http://cida.usgs.gov</organizationUrl>
+			<organizationUrl>https://cida.usgs.gov</organizationUrl>
 			<timezone>-6</timezone>
 		</developer>
 		<developer>
@@ -51,7 +50,7 @@
 			<email>isuftin@usgs.gov</email>
 			<id>isuftin</id>
 			<organization>Center for Integrated Data Analytics</organization>
-			<organizationUrl>http://cida.usgs.gov</organizationUrl>
+			<organizationUrl>https://cida.usgs.gov</organizationUrl>
 			<timezone>-6</timezone>
 		</developer>
 		<developer>
@@ -59,7 +58,7 @@
 			<email>dmsibley@usgs.gov</email>
 			<id>dmsibley</id>
 			<organization>Center for Integrated Data Analytics</organization>
-			<organizationUrl>http://cida.usgs.gov</organizationUrl>
+			<organizationUrl>https://cida.usgs.gov</organizationUrl>
 			<timezone>-6</timezone>
 		</developer>
 		<developer>
@@ -67,7 +66,7 @@
 			<email>tkunicki@usgs.gov</email>
 			<id>tkunicki</id>
 			<organization>Center for Integrated Data Analytics</organization>
-			<organizationUrl>http://cida.usgs.gov</organizationUrl>
+			<organizationUrl>https://cida.usgs.gov</organizationUrl>
 			<timezone>-6</timezone>
 		</developer>
 		<developer>
@@ -75,14 +74,14 @@
 			<email>prusso@usgs.gov</email>
 			<id>prusso</id>
 			<organization>Center for Integrated Data Analytics</organization>
-			<organizationUrl>http://cida.usgs.gov</organizationUrl>
+			<organizationUrl>https://cida.usgs.gov</organizationUrl>
 			<timezone>-6</timezone>
 		</developer>
 	</developers>
 	<licenses>
 		<license>
 			<name>Public Domain</name>
-			<url>http://en.wikipedia.org/wiki/Public_domain_software</url>
+			<url>https://en.wikipedia.org/wiki/Public_domain_software</url>
 			<comments>
 				All work of the US Government enter into the Public Domain within
 				the United States.  Whether that work is public domain outside of
@@ -90,10 +89,6 @@
 			</comments>
 		</license>
 	</licenses>
-	<ciManagement>
-		<system>Hudson</system>
-		<url>http://igsarm-cida-hudson1.er.usgs.gov:8080/hudson/job/GeoDataPortal/</url>
-	</ciManagement>
 	<scm>
 		<url>https://github.com/USGS-CIDA/geo-data-portal</url>
 		<connection>scm:git:git@github.com:USGS-CIDA/geo-data-portal.git</connection>
@@ -101,7 +96,7 @@
 	</scm>
 	<issueManagement>
 		<system>JIRA</system>
-		<url>http://internal.cida.usgs.gov/jira/browse/GDP</url>
+		<url>https://internal.cida.usgs.gov/jira/browse/GDP</url>
 	</issueManagement>
 	<distributionManagement>
 		<repository>
