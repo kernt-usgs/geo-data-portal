@@ -320,11 +320,11 @@ public class OpendapServerHelper {
     private static DConnect2 createDODSConnection(String datasetUrl) throws URISyntaxException, MalformedURLException, FileNotFoundException {
         // call das, dds
         URI datasetURI = URI.create(datasetUrl);
-        if ("dods".equals(datasetURI.getScheme()) ||
+        if ("dods".equals(datasetURI.getScheme()) ) {
+            datasetURI = new URIBuilder(datasetURI).setScheme("https").build();
+        } else if ("file".equals(datasetURI.getScheme())||
                 "http".equals(datasetURI.getScheme()) ||
                 "https".equals(datasetURI.getScheme())) {
-            datasetURI = new URIBuilder(datasetURI).setScheme("https").build();
-        } else if ("file".equals(datasetURI.getScheme())) {
             // leave URI alone
         } else {
             throw new java.net.MalformedURLException(datasetUrl + " must start with dods: or http(s): or file:");
@@ -332,7 +332,7 @@ public class OpendapServerHelper {
         DConnect2  dodsConnection;
         try {
             dodsConnection = new DConnect2(datasetURI.toString(), false);
-        } catch (IOException ioe) {
+        } catch (Exception ex) {
             // fall back to http
             datasetURI = new URIBuilder(datasetURI).setScheme("http").build();
             dodsConnection = new DConnect2(datasetURI.toString(), false);
