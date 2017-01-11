@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -34,12 +35,13 @@ import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import ucar.ma2.StructureData;
 import ucar.nc2.VariableSimpleIF;
-import ucar.nc2.ft.PointFeature;
-import ucar.nc2.ft.PointFeatureIterator;
-import ucar.nc2.ft.StationTimeSeriesFeature;
 import ucar.nc2.ft.StationTimeSeriesFeatureCollection;
-import ucar.nc2.units.DateRange;
+import ucar.nc2.ft.point.StationFeature;
+import ucar.nc2.time.CalendarDate;
+import ucar.nc2.time.CalendarDateRange;
 import ucar.unidata.geoloc.LatLonRect;
 import ucar.unidata.geoloc.Station;
 
@@ -59,7 +61,7 @@ public class StationDataCSVWriter {
             FeatureCollection<SimpleFeatureType, SimpleFeature> featureCollection,
             StationTimeSeriesFeatureCollection stationTimeSeriesFeatureCollection,
             List<VariableSimpleIF> variableList,
-            DateRange dateRange,
+            CalendarDateRange dateRange,
             BufferedWriter writer,
             boolean groupByVariable,
             String delimitter)
@@ -77,11 +79,8 @@ public class StationDataCSVWriter {
 
         TimeZone timeZone = TimeZone.getTimeZone("UTC");
 
-        GregorianCalendar start = new GregorianCalendar(timeZone);
-        start.setTime(dateRange.getStart().getDate());
-
-        GregorianCalendar end = new GregorianCalendar(timeZone);
-        end.setTime(dateRange.getEnd().getDate());
+        CalendarDate start = CalendarDate.parseISOformat(ucar.nc2.time.Calendar.gregorian.toString(), dateRange.getStart().toString());
+        CalendarDate end = CalendarDate.parseISOformat(ucar.nc2.time.Calendar.gregorian.toString(), dateRange.getEnd().toString());
 
         LatLonRect featureCollectionLLR = GeoToolsNetCDFUtility.getLatLonRectFromEnvelope(
                 featureCollection.getBounds(),
@@ -96,11 +95,12 @@ public class StationDataCSVWriter {
                 DefaultGeographicCRS.WGS84);
 
         List<PointFeatureCache> pointFeatureCacheList = new ArrayList<PointFeatureCache>();
-        for (Station station : stationTimeSeriesFeatureCollection.getStations(featureCollectionLLR)) {
+        for (Station station : stationTimeSeriesFeatureCollection.getStationFeatures(featureCollectionLLR)) {
             Coordinate stationCoordinate = new Coordinate(station.getLongitude(), station.getLatitude());
             Geometry stationGeometry = GEOMETRY_FACTORY.createPoint(stationCoordinate);
             boolean stationContained = false;
             FeatureIterator<SimpleFeature> featureIterator = featureCollection.features();
+
             try {
                 while (featureIterator.hasNext() && !stationContained) {
                     stationContained = ((Geometry) featureIterator.next().getDefaultGeometry()).contains(stationGeometry);
@@ -109,9 +109,10 @@ public class StationDataCSVWriter {
                 featureCollection.close(featureIterator);
             }
             if (stationContained) {
-                StationTimeSeriesFeature stationTimeSeriesFeature = stationTimeSeriesFeatureCollection.getStationFeature(station).subset(dateRange);
+                List<String> stationNames = Arrays.asList(station.getName()); // single name in list
+                List<StationFeature> stsfc = stationTimeSeriesFeatureCollection.subset(stationLLR, dateRange).getStationFeatures(stationNames);
                 PointFeatureCache pointFeatureCache
-                        = new PointFeatureCache(stationTimeSeriesFeature, variableList);
+                        = new PointFeatureCache(stsfc, variableList);
                 if (pointFeatureCache.getFeatureCount() > 0) {
                     pointFeatureCacheList.add(pointFeatureCache);
                 } else {
@@ -176,7 +177,7 @@ public class StationDataCSVWriter {
             DateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
             dateFormat.setTimeZone(timeZone);
             GregorianCalendar current = new GregorianCalendar(timeZone);
-            current.setTime(start.getTime());
+            current.setTime(start.toDate());
 
             if (groupByVariable) {
                 float[][] rowData = new float[stationCount][];
@@ -247,22 +248,12 @@ public class StationDataCSVWriter {
 
         long nextTimeMillis;
 
-        public PointFeatureCache(StationTimeSeriesFeature stationTimeSeriesFeature, List<VariableSimpleIF> variables) throws IOException {
+        public PointFeatureCache(List<StationFeature> stationTimeSeriesFeature, List<VariableSimpleIF> variables) throws IOException {
 
-            this.station = stationTimeSeriesFeature;
+            //this.station = stationTimeSeriesFeature;
 
             variableCount = variables.size();
-
-            PointFeatureIterator pointFeatureIterator = null;
             try {
-
-                try {
-                    pointFeatureIterator = stationTimeSeriesFeature.getPointFeatureIterator(-1);
-                } catch (IOException e) {
-                    log.warn("cdmremote protocol implementation will throw exception if request results in empty set. Ignore for now.", e);
-                }
-
-                if (pointFeatureIterator != null) {
 
                     cacheFile = File.createTempFile("tmp.", ".cache");
 
@@ -271,12 +262,12 @@ public class StationDataCSVWriter {
                         cacheOutputStream = new DataOutputStream(
                                 new BufferedOutputStream(
                                         new FileOutputStream(cacheFile), BUFFER_SIZE));
-                        while (pointFeatureIterator.hasNext()) {
-                            PointFeature pf = pointFeatureIterator.next();
-                            cacheOutputStream.writeLong(pf.getNominalTimeAsDate().getTime());
+                        for (StationFeature stf: stationTimeSeriesFeature) {
+                            cacheOutputStream.writeLong(stf.hashCode()); // SCA - LOOK: Wrong, but what would be right?
+                            //cacheOutputStream.writeLong(pf.getNominalTimeAsDate().getTime());
                             for (VariableSimpleIF variable : variables) {
                                 String shortName = variable.getShortName();
-                                cacheOutputStream.writeFloat(pf.getData().convertScalarFloat(shortName));
+                                cacheOutputStream.writeFloat(stf.getFeatureData().convertScalarFloat(shortName));
                             }
                             ++featureCount;
                         }
@@ -307,11 +298,8 @@ public class StationDataCSVWriter {
                         }
                         throw e;
                     }
-                }
+
             } finally {
-                if (pointFeatureIterator != null) {
-                    pointFeatureIterator.finish();
-                }
                 if (featureCount < 1 || cacheInputStream == null) {
                     if (cacheFile != null) {
                         cacheFile.delete();
