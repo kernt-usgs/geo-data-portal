@@ -46,7 +46,8 @@ public class NetCDFGridWriter {
 
         // global attributes
         Attribute historyAttribute = null;
-        for (Attribute att : gridDataset.getGlobalAttributes()) {
+        List<Attribute> globalAttributes = gridDataset.getGlobalAttributes();
+        for (Attribute att : globalAttributes) {
             String attributeName = att.getName();
             if ("history".equalsIgnoreCase(attributeName)) {
                 // defer write as we want to concatenate to existing attribute.
@@ -85,7 +86,8 @@ public class NetCDFGridWriter {
 
                 // add coordinate axes
                 gridCoordSystem = gridDataType.getCoordinateSystem();
-                for (CoordinateAxis axis : gridCoordSystem.getCoordinateAxes()) {
+                List<CoordinateAxis> coordinateAxis = gridCoordSystem.getCoordinateAxes();
+                for (CoordinateAxis axis : coordinateAxis) {
                     if (variableNameSet.add(axis.getName())) {
                         variableList.add(axis);
                         coordinateAxisList.add(axis);
@@ -93,7 +95,8 @@ public class NetCDFGridWriter {
                 }
 
                 // add coordinate transform variables
-                for (CoordinateTransform ct : gridCoordSystem.getCoordinateTransforms()) {
+                List<CoordinateTransform> coordinateTransforms = gridCoordSystem.getCoordinateTransforms();
+                for (CoordinateTransform ct : coordinateTransforms) {
                     Variable v = netcdfDataset.findVariable(ct.getName());
                     if (v != null && variableNameSet.add(ct.getName())) {
                         variableList.add(v);
