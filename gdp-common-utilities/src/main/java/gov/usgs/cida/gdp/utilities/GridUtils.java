@@ -103,8 +103,8 @@ public abstract class GridUtils {
         if (!gcsProjectionRect.intersects(bounds.getMinX(), bounds.getMinY(), bounds.getWidth(), bounds.getHeight())) {
             throw new InvalidRangeException("Grid doesn't intersect bounding box.");
         }
-        
-        if (requireFullCoverage && !gcsProjectionRect.contains(bounds.getMinX(), bounds.getMinY(), bounds.getWidth(), bounds.getHeight())) {
+
+        if (requireFullCoverage && !gcsProjectionRect.intersects(bounds.getMinX(), bounds.getMinY(), bounds.getWidth(), bounds.getHeight())) {
             throw new InvalidRangeException("Grid doesn't cover bounding box.");
         }
         
@@ -440,7 +440,7 @@ public abstract class GridUtils {
         protected final ArrayDouble.D2 cellCenters;
 
         public GridCellCenterAdapterAxis2D(CoordinateAxis2D axis2D) {
-            cellCenters = axis2D.getMidpoints();
+            cellCenters = axis2D.getCoordValuesArray();
         }
 
         @Override
@@ -517,7 +517,7 @@ public abstract class GridUtils {
         protected final ArrayDouble.D2 cellEdges;
 
         public GridCellEdgeAdapterAxis2D(CoordinateAxis2D axis2D) {
-            cellEdges = CoordinateAxis2D.makeXEdges(axis2D.getMidpoints());
+            cellEdges = CoordinateAxis2D.makeEdges(axis2D.getCoordValuesArray());
         }
 
         @Override
