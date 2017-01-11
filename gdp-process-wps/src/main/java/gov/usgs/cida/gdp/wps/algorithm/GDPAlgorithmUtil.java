@@ -132,7 +132,7 @@ public abstract class GDPAlgorithmUtil {
                     : 0;
             int timeEndIndex = timeEnd != null
                     ? timeAxis.findTimeIndexFromDate(timeEnd)
-                    : timeAxis.getShape(0) - 1;
+                    : timeAxis.getShape()[0] - 1;
             try {
                 timeRange = new Range(timeStartIndex, timeEndIndex);
             } catch (InvalidRangeException e) {
