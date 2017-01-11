@@ -25,6 +25,8 @@ import ucar.nc2.VariableSimpleIF;
 import ucar.nc2.ft.FeatureDataset;
 import ucar.nc2.ft.FeatureDatasetPoint;
 import ucar.nc2.ft.StationTimeSeriesFeatureCollection;
+import ucar.nc2.time.CalendarDate;
+import ucar.nc2.time.CalendarDateRange;
 import ucar.nc2.units.DateRange;
 
 /**
@@ -35,7 +37,7 @@ public class DelimitedWriter {
 	public static boolean station(
             FeatureDataset featureDataset,
             FeatureCollection<SimpleFeatureType, SimpleFeature> featureCollection,
-            Date fromDate, Date toDate, Delimiter delimiterOption,
+            CalendarDate fromDate, CalendarDate toDate, Delimiter delimiterOption,
             String[] dataTypes, String groupById, String outputFile)
             throws FactoryException, SchemaException,
             org.opengis.coverage.grid.InvalidRangeException,
@@ -45,9 +47,9 @@ public class DelimitedWriter {
         String outputFilePath = new File(System.getProperty("applicationWorkDir"),outputFile).getPath();
         log.debug(new StringBuilder("Attempting to write output to ").append(outputFilePath).toString());
         FeatureDatasetPoint fdp = (FeatureDatasetPoint) featureDataset;
-        List<ucar.nc2.ft.FeatureCollection> fcl = fdp.getPointFeatureCollectionList();
+        List<ucar.nc2.ft.DsgFeatureCollection> fcl = fdp.getPointFeatureCollectionList();
         if (fcl != null && fcl.size() == 1) {
-            ucar.nc2.ft.FeatureCollection fc = fcl.get(0);
+            ucar.nc2.ft.DsgFeatureCollection fc = fcl.get(0);
             if (fc != null && fc instanceof StationTimeSeriesFeatureCollection) {
                 StationTimeSeriesFeatureCollection stsfc = (StationTimeSeriesFeatureCollection) fc;
                 List<VariableSimpleIF> variableList = new ArrayList<VariableSimpleIF>();
@@ -76,7 +78,7 @@ public class DelimitedWriter {
                             System.getProperty("applicationWorkDir"),
                             outputFile)));
                     StationDataCSVWriter.write(featureCollection, stsfc,
-                            variableList, new DateRange(fromDate, toDate),
+                            variableList, CalendarDateRange.of(fromDate, toDate),
                             writer, groupBy == StationOption.variable,
                             delimiterOption.delimiter);
                 } finally {
