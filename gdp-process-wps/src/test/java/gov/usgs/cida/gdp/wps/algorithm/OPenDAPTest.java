@@ -1,9 +1,10 @@
 package gov.usgs.cida.gdp.wps.algorithm;
 
-import gov.usgs.cida.gdp.coreprocessing.analysis.grid.GridUtility;
 import java.util.Formatter;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import gov.usgs.cida.gdp.utilities.GridUtils;
 import ucar.ma2.Array;
 import ucar.nc2.constants.FeatureType;
 import ucar.nc2.dt.GridCoordSystem;
@@ -37,8 +38,8 @@ public class OPenDAPTest {
                 if (gdt != null) {
                     GridCoordSystem gcs = gdt.getCoordinateSystem();
                     int tCount = gcs.getTimeAxis1D().getShape(0);
-                    int xIndex = GridUtility.getXAxisLength(gcs) / 2;
-                    int yIndex = GridUtility.getYAxisLength(gcs) / 2;
+                    int xIndex = GridUtils.getXAxisLength(gcs) / 2;
+                    int yIndex = GridUtils.getYAxisLength(gcs) / 2;
                     for (int tIndex = 0; tIndex < tCount; ++tIndex) {
                         Array a = gdt.readDataSlice(tIndex, -1, yIndex, xIndex);
                         while (a.hasNext()) {

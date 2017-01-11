@@ -1,6 +1,6 @@
 package gov.usgs.cida.gdp.wps.algorithm;
 
-import gov.usgs.cida.gdp.coreprocessing.analysis.grid.GridUtility;
+import gov.usgs.cida.gdp.utilities.GridUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -76,7 +76,7 @@ public class NetCDFGridWriter {
 
                 // generate sub-set
                 Range tRange = GDPAlgorithmUtil.generateTimeRange(gridDataType, dateTimeStart, dateTimeEnd);
-                Range[] xyRanges = GridUtility.getXYRangesFromBoundingBox(featureCollection.getBounds(), gridCoordSystem, requireFullCoverage); 
+                Range[] xyRanges = GridUtils.getXYRangesFromBoundingBox(featureCollection.getBounds(), gridCoordSystem, requireFullCoverage);
                 gridDataType = gridDataType.makeSubset(null, null, tRange, null, xyRanges[1], xyRanges[0]);
 
                 Variable gridV = (Variable) gridDataType.getVariable();

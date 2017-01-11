@@ -1,5 +1,6 @@
 package gov.usgs.cida.gdp.coreprocessing.analysis.grid;
 
+import gov.usgs.cida.gdp.utilities.GridUtils;
 import ucar.nc2.dataset.CoordinateAxis1D;
 import org.slf4j.Logger;
 import gov.usgs.cida.gdp.coreprocessing.Delimiter;
@@ -90,7 +91,7 @@ public class FeatureCoverageWeightedGridStatistics {
             throw new IllegalStateException("incompatible grid dimensions");
         }
 
-        Range[] ranges = GridUtility.getXYRangesFromBoundingBox(
+        Range[] ranges = GridUtils.getXYRangesFromBoundingBox(
                 featureCollection.getBounds(),
                 gridDatatype.getCoordinateSystem(),
                 requireFullCoverage);

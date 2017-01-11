@@ -1,7 +1,7 @@
 package gov.usgs.cida.gdp.wps.algorithm.heuristic;
 
 import gov.usgs.cida.gdp.constants.AppConstant;
-import gov.usgs.cida.gdp.coreprocessing.analysis.grid.GridUtility;
+import gov.usgs.cida.gdp.utilities.GridUtils;
 import gov.usgs.cida.gdp.utilities.OPeNDAPUtils;
 import gov.usgs.cida.gdp.utilities.exception.OPeNDAPUtilException;
 import gov.usgs.cida.gdp.wps.algorithm.GDPAlgorithmUtil;
@@ -93,7 +93,7 @@ public class CoverageSizeAlgorithmHeuristic extends AlgorithmHeuristic {
 		try {
 			timeRange = GDPAlgorithmUtil.generateTimeRange(gridDatatype, dateTimeStart, dateTimeEnd);
 			GridCoordSystem gridCoordSystem = gridDatatype.getCoordinateSystem();
-			Range[] xyRanges = GridUtility.getXYRangesFromBoundingBox(featureCollection.getBounds(), gridCoordSystem, requireFullCoverage);
+			Range[] xyRanges = GridUtils.getXYRangesFromBoundingBox(featureCollection.getBounds(), gridCoordSystem, requireFullCoverage);
 			yRange = new Range(xyRanges[1].first(), xyRanges[1].last());
 			xRange = new Range(xyRanges[0].first(), xyRanges[0].last());
 			subset = gridDatatype.makeSubset(null, null, timeRange, null, yRange, xRange);

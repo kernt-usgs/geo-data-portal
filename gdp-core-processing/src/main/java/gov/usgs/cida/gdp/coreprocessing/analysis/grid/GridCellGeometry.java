@@ -4,7 +4,8 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.PrecisionModel;
-import gov.usgs.cida.gdp.coreprocessing.analysis.grid.GridUtility.IndexToCoordinateBuilder;
+import gov.usgs.cida.gdp.utilities.GridUtils;
+import gov.usgs.cida.gdp.utilities.GridUtils.IndexToCoordinateBuilder;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import ucar.nc2.dt.GridCoordSystem;
 
@@ -31,15 +32,15 @@ public class GridCellGeometry {
 
 		this.gridCRS = CRSUtility.getCRSFromGridCoordSystem(gridCoordSystem);
 
-        xCellCount = GridUtility.getXAxisLength(gridCoordSystem);
-        yCellCount = GridUtility.getYAxisLength(gridCoordSystem);
+        xCellCount = GridUtils.getXAxisLength(gridCoordSystem);
+        yCellCount = GridUtils.getYAxisLength(gridCoordSystem);
         cellCount = xCellCount * yCellCount;
 
 		geometryFactory = new GeometryFactory(
                 new PrecisionModel(PrecisionModel.FLOATING));
 
 		coordinateBuilder =
-                GridUtility.generateIndexToCellEdgeCoordinateBuilder(gridCoordSystem);
+                GridUtils.generateIndexToCellEdgeCoordinateBuilder(gridCoordSystem);
     }
 
     public GridCoordSystem getGridCoordSystem() {

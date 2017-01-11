@@ -5,7 +5,7 @@ import org.geotools.feature.FeatureCollection;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 
-import gov.usgs.cida.gdp.coreprocessing.analysis.grid.GridUtility;
+import gov.usgs.cida.gdp.utilities.GridUtils;
 import gov.usgs.cida.gdp.wps.algorithm.heuristic.exception.AlgorithmHeuristicException;
 import org.apache.commons.io.FileUtils;
 import org.opengis.referencing.FactoryException;
@@ -51,7 +51,7 @@ public class GeometrySizeAlgorithmHeuristic extends AlgorithmHeuristic {
 		int dataTypeSize = -1;
 		
 		try {
-			Range[] ranges = GridUtility.getXYRangesFromBoundingBox(
+			Range[] ranges = GridUtils.getXYRangesFromBoundingBox(
 					featureCollection.getBounds(),
 					gridDatatype.getCoordinateSystem(),
 					requireFullCoverage);

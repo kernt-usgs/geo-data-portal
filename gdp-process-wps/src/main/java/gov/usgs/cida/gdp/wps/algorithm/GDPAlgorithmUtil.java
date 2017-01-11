@@ -1,7 +1,7 @@
 package gov.usgs.cida.gdp.wps.algorithm;
 
 import gov.usgs.cida.gdp.constants.AppConstant;
-import gov.usgs.cida.gdp.coreprocessing.analysis.grid.GridUtility;
+import gov.usgs.cida.gdp.utilities.GridUtils;
 import gov.usgs.cida.gdp.wps.util.WCSUtil;
 
 import java.io.File;
@@ -81,7 +81,7 @@ public abstract class GDPAlgorithmUtil {
                         throw new RuntimeException("Unable to open dataset at " + datasetURI + " with identifier " + datasetId);
                     }
                     try {
-                        Range[] ranges = GridUtility.getXYRangesFromBoundingBox(featureBounds, gridDatatype.getCoordinateSystem(), requireFullCoverage);
+                        Range[] ranges = GridUtils.getXYRangesFromBoundingBox(featureBounds, gridDatatype.getCoordinateSystem(), requireFullCoverage);
                         gridDatatype = gridDatatype.makeSubset(
                             null,       /* runtime */
                             null,       /* ensemble */
