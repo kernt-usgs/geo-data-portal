@@ -21,13 +21,13 @@ import ucar.nc2.VariableSimpleIF;
 import ucar.nc2.constants.FeatureType;
 import ucar.nc2.dt.grid.GeoGrid;
 import ucar.nc2.dt.grid.GridDataset;
-import ucar.nc2.ft.FeatureCollection;
+import ucar.nc2.ft.DsgFeatureCollection;
 import ucar.nc2.ft.FeatureDataset;
 import ucar.nc2.ft.FeatureDatasetFactoryManager;
 import ucar.nc2.ft.FeatureDatasetPoint;
 import ucar.nc2.ft.StationTimeSeriesFeature;
 import ucar.nc2.ft.StationTimeSeriesFeatureCollection;
-import ucar.nc2.units.DateRange;
+import ucar.nc2.time.CalendarDateRange;
 import ucar.nc2.util.NamedObject;
 
 public abstract class NetCDFUtility {
@@ -51,7 +51,8 @@ public abstract class NetCDFUtility {
         }
 
         List<InvAccess> handles = new LinkedList<InvAccess>();
-        for (InvDataset dataset : catalog.getDatasets()) {
+        List<InvDataset> datasets = catalog.getDatasets();
+        for (InvDataset dataset : datasets) {
             handles.addAll(getDatasetHandles(dataset, serviceType));
         }
 
@@ -72,13 +73,15 @@ public abstract class NetCDFUtility {
         }
 
         List<InvAccess> handles = new LinkedList<InvAccess>();
-        for (InvAccess handle : dataset.getAccess()) {
+        List<InvAccess> datasetAccess = dataset.getAccess();
+        for (InvAccess handle : datasetAccess) {
             if (handle.getService().getServiceType() == serviceType) {
                 handles.add(handle);
             }
         }
 
-        for (InvDataset nestedDataset : dataset.getDatasets()) {
+        List<InvDataset> datasets = dataset.getDatasets();
+        for (InvDataset nestedDataset : datasets) {
             handles.addAll(getDatasetHandles(nestedDataset, serviceType));
         }
 
@@ -113,7 +116,6 @@ public abstract class NetCDFUtility {
         switch (dataset.getFeatureType()) {
             case POINT:
             case PROFILE:
-            case SECTION:
             case STATION:
             case STATION_PROFILE:
             case STATION_RADIAL:
@@ -281,17 +283,18 @@ public abstract class NetCDFUtility {
                 String endTime = endTimeNamedObject.getName();
                 dateRange.add(1, endTime);
             } else if (dataset.getFeatureType() == FeatureType.STATION) {
-                DateRange dr = dataset.getDateRange();
+                CalendarDateRange dr = dataset.getCalendarDateRange();
+
                 if (dr == null) {
-                    List<FeatureCollection> list =
+                    List<DsgFeatureCollection> list =
                             ((FeatureDatasetPoint) dataset).getPointFeatureCollectionList();
-                    for (FeatureCollection fc : list) {
+                    for (DsgFeatureCollection fc : list) {
                         if (fc instanceof StationTimeSeriesFeatureCollection) {
                             StationTimeSeriesFeatureCollection stsfc =
                                     (StationTimeSeriesFeatureCollection) fc;
                             while (dr == null && stsfc.hasNext()) {
                                 StationTimeSeriesFeature stsf = stsfc.next();
-                                dr = stsf.getDateRange();
+                                dr = stsf.getCalendarDateRange();
                             }
                         }
                     }
