@@ -41,9 +41,9 @@ public class NetCDFUtilityTest {
 		InvCatalogFactory factory = new InvCatalogFactory("default", true);
 		InvCatalog catalog = factory.readXML(catalogURI);
 
-		StringBuilder errorBuilder = new StringBuilder();
-		if (!catalog.check(errorBuilder)) {
-			throw new IOException(errorBuilder.toString());
+		StringBuffer errorBuffer = new StringBuffer();
+		if (!catalog.check(errorBuffer)) {
+			throw new IOException(errorBuffer.toString());
 		}
 
 		List<InvAccess> handlesFromCatalog = NetCDFUtility.getDatasetHandles(catalog, ServiceType.OPENDAP);
@@ -72,9 +72,9 @@ public class NetCDFUtilityTest {
 		InvCatalogFactory factory = new InvCatalogFactory("default", true);
 		InvCatalog catalog = factory.readXML(catalogURI);
 
-		StringBuilder errorBuilder = new StringBuilder();
-		if (!catalog.check(errorBuilder)) {
-			fail(errorBuilder.toString());
+		StringBuffer errorBuffer = new StringBuffer();
+		if (!catalog.check(errorBuffer)) {
+			fail(errorBuffer.toString());
 		}
 
 		List<InvAccess> openDAPHandlesFromCatalog = NetCDFUtility.getDatasetHandles(catalog, ServiceType.OPENDAP);

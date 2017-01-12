@@ -6,6 +6,7 @@ import org.junit.Test;
 
 import gov.usgs.cida.gdp.utilities.GridUtils;
 import ucar.ma2.Array;
+import ucar.ma2.IndexIterator;
 import ucar.nc2.constants.FeatureType;
 import ucar.nc2.dt.GridCoordSystem;
 import ucar.nc2.dt.GridDataset;
@@ -37,13 +38,14 @@ public class OPenDAPTest {
                 GridDatatype gdt = gds.findGridDatatype("P01M_NONE");
                 if (gdt != null) {
                     GridCoordSystem gcs = gdt.getCoordinateSystem();
-                    int tCount = gcs.getTimeAxis1D().getShape(0);
+                    int tCount = gcs.getTimeAxis1D().getShape()[0];
                     int xIndex = GridUtils.getXAxisLength(gcs) / 2;
                     int yIndex = GridUtils.getYAxisLength(gcs) / 2;
                     for (int tIndex = 0; tIndex < tCount; ++tIndex) {
                         Array a = gdt.readDataSlice(tIndex, -1, yIndex, xIndex);
-                        while (a.hasNext()) {
-                            System.out.println(tIndex + ":" + yIndex + ":" + xIndex + " -> " + a.nextDouble());
+                        IndexIterator ittr = a.getIndexIterator();
+                        while (ittr.hasNext()) {
+                            System.out.println(tIndex + ":" + yIndex + ":" + xIndex + " -> " + ittr.getDoubleNext());
                         }
                     }
                 }
