@@ -44,7 +44,6 @@ public class GeoTiffUtils {
          *      QUOTE (JIRA GDP-947)
          *          dataId should be what comes after dodsC in the OPeNDAP URI with '/'s replaced with '-'s
          */
-        gridDataset.getLocation();
         String datasetURI = gridDataset.getLocation();
         String dataId = datasetURI.replace(OPeNDAPUtils.OPENDAP_PROTO, "");
         dataId = dataId.replace("//", ""); // remove protocal //
