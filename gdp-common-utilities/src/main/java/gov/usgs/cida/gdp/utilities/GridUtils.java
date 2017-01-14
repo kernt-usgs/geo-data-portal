@@ -100,11 +100,13 @@ public abstract class GridUtils {
         bounds = bounds.toBounds(gridCRS);
 
         ProjectionRect gcsProjectionRect = gcs.getBoundingBox();
-        if (!gcsProjectionRect.intersects(bounds.getMinX(), bounds.getMinY(), bounds.getWidth(), bounds.getHeight())) {
+
+        ProjectionRect boundingBox = new ProjectionRect(bounds.getMinX(), bounds.getMinY(), bounds.getMaxX(), bounds.getMaxY());
+        if (!gcsProjectionRect.intersects(boundingBox)) {
             throw new InvalidRangeException("Grid doesn't intersect bounding box.");
         }
 
-        if (requireFullCoverage && !gcsProjectionRect.intersects(bounds.getMinX(), bounds.getMinY(), bounds.getWidth(), bounds.getHeight())) {
+        if (requireFullCoverage && !gcsProjectionRect.contains(boundingBox)) {
             throw new InvalidRangeException("Grid doesn't cover bounding box.");
         }
         
