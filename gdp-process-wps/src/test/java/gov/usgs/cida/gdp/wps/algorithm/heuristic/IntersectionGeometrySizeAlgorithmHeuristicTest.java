@@ -37,9 +37,8 @@ public class IntersectionGeometrySizeAlgorithmHeuristicTest {
 		FeatureType ft = FeatureType.GRID;
 		String file = ResultSizeAlgorithmHeuristicTest.class.getClassLoader().getResource("nc/prism.nc").toString();
 		Formatter formatter = new Formatter(System.err);
-		FeatureDataset prismFeatureDataSet = FeatureDatasetFactoryManager.open(ft,
-				file,
-				null, formatter);
+		FeatureDataset prismFeatureDataSet = FeatureDatasetFactoryManager.open(file);
+
 		if (prismFeatureDataSet instanceof GridDataset) {
 			prismGridDataSet = (GridDataset) prismFeatureDataSet;
 		}

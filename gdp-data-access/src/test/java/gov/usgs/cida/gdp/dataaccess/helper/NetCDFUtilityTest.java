@@ -78,8 +78,8 @@ public class NetCDFUtilityTest {
 		assertFalse(invServiceList.isEmpty());
 
 		Dataset invDataSet = catalog.findDatasetByID("gmo/GMO_w_meta.ncml");
-		DataFormatType dft = invDataSet.getDataFormatType();
-		assertEquals("NetCDF-Grid", dft.toString());
+		String dataFormatName = invDataSet.getDataFormatName();
+		assertEquals("NetCDF-Grid", dataFormatName);
 
 		String catalogURL = invDataSet.getCatalogUrl();
 		assertTrue(catalogURL.contains("file:/"));
@@ -100,7 +100,7 @@ public class NetCDFUtilityTest {
 
 		invAccess = invDataSet.getAccess(ServiceType.HTTPServer);
 		assertNotNull(invAccess);
-		assertTrue(Double.isNaN(invAccess.getDataSize()));
+		assertTrue(invAccess.getDataSize() == -1);
 		assertEquals("gmo/GMO_w_meta.ncml", invAccess.getUrlPath());
 		assertTrue(invAccess.getUnresolvedUrlName().contains("/thredds/"));
 		assertTrue(invAccess.getUnresolvedUrlName().contains("/gmo/GMO_w_meta.ncml"));
