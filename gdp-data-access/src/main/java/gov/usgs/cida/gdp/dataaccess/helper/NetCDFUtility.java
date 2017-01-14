@@ -52,8 +52,10 @@ public abstract class NetCDFUtility {
         }
 
         List<Access> handles = new LinkedList<Access>();
-        handles.addAll(getDatasetHandles(catalog, serviceType));
-
+        for (Dataset dataset : catalog.getDatasets()) {
+            List<Access> tmp = getDatasetHandles(dataset, serviceType);
+            handles.addAll(tmp);
+        }
         return handles;
     }
 

@@ -13,7 +13,6 @@ import opendap.dap.BaseType;
 import opendap.dap.DAP2Exception;
 import opendap.dap.DConnect2;
 import opendap.dap.DDS;
-import opendap.dap.parser.ParseException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
@@ -139,9 +138,7 @@ public class InterrogateDataset extends AbstractAnnotatedAlgorithm {
 					
 					// Add newline for PROXY_URL output
 					proxyUrl.append("\n");
-				} catch (IOException | DAP2Exception | ParseException ex ) {
-					// ParseException is coming from a very old netCDF-Java (edu.ucar:netcdf:jar:2.2.20)
-					// pulled in by geotiff-iosp
+				} catch (IOException | DAP2Exception ex ) {
 					log.error("Error interrogating OPeNDAP", ex);
 				}
 			} else {

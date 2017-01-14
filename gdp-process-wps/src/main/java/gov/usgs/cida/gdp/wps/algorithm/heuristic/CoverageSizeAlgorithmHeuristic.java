@@ -121,9 +121,7 @@ public class CoverageSizeAlgorithmHeuristic extends AlgorithmHeuristic {
 			 * Retrieve the OPeNDAP URL for this request
 			 */
 			try {
-				// getLocationURI() should be getLocation(), but there is a conflict coming from
-				// a very old netCDF-Java (edu.ucar:netcdf:jar:2.2.20) pulled in by geotiff-iosp
-				String OPeNDAPurl = OPeNDAPUtils.generateOpenDapURL(gridDataset.getLocationURI(), gridVariableList, gridDataset.getNetcdfFile().getVariables(), timeRange, yRange, xRange);
+				String OPeNDAPurl = OPeNDAPUtils.generateOpenDapURL(gridDataset.getLocation(), gridVariableList, gridDataset.getNetcdfFile().getVariables(), timeRange, yRange, xRange);
 				message.append("  The following URI can be used with the nccopy tool")
 					.append("to create a local copy of the data in the NetCDF4 format. See the Geo Data Portal")
 					.append("documentation for more information: ")
