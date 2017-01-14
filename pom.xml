@@ -342,6 +342,11 @@
 				<version>${netcdf.version}</version>
 			</dependency>
 			<dependency>
+				<groupId>edu.ucar</groupId>
+				<artifactId>opendap</artifactId>
+				<version>${netcdf.version}</version>
+			</dependency>
+			<dependency>
 				<groupId>gov.usgs.cida.netcdf.iosp</groupId>
 				<artifactId>geotiff-iosp</artifactId>
 				<version>1.2</version>
@@ -619,7 +624,7 @@
 			<dependency>
 				<groupId>org.mockito</groupId>
 				<artifactId>mockito-core</artifactId>
-				<version>1.10.19</version>
+				<version>2.6.2</version>
 				<scope>test</scope>
 			</dependency>
 			<dependency>

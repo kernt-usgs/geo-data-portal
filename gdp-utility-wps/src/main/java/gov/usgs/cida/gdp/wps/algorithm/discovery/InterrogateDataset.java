@@ -140,6 +140,8 @@ public class InterrogateDataset extends AbstractAnnotatedAlgorithm {
 					// Add newline for PROXY_URL output
 					proxyUrl.append("\n");
 				} catch (IOException | DAP2Exception | ParseException ex ) {
+					// ParseException is coming from a very old netCDF-Java (edu.ucar:netcdf:jar:2.2.20)
+					// pulled in by geotiff-iosp
 					log.error("Error interrogating OPeNDAP", ex);
 				}
 			} else {

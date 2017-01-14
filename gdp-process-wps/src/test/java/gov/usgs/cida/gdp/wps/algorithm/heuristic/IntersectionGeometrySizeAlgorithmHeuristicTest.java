@@ -71,7 +71,7 @@ public class IntersectionGeometrySizeAlgorithmHeuristicTest {
 	@Test
 	public void prismHeuristicPasses() {
 		GeometrySizeAlgorithmHeuristic geometrySizeHeuristic = new GeometrySizeAlgorithmHeuristic(coloradoFeatureCollection, false);
-		List<GeoGrid> gridDataset = prismGridDataSet.getGrids();
+		List<GridDatatype> gridDataset = prismGridDataSet.getGrids();
 		geometrySizeHeuristic.traverseStart(gridDataset.get(0));
 		// if no exception thrown this works
 	}
@@ -82,7 +82,7 @@ public class IntersectionGeometrySizeAlgorithmHeuristicTest {
 	@Test(expected = AlgorithmHeuristicException.class)
 	public void prismHeuriticFails() {
 		GeometrySizeAlgorithmHeuristic geometrySizeHeuristic = new GeometrySizeAlgorithmHeuristic(coloradoFeatureCollection, false, 100, 1024);
-		List<GeoGrid> gridDataset = prismGridDataSet.getGrids();
+		List<GridDatatype> gridDataset = prismGridDataSet.getGrids();
 		geometrySizeHeuristic.traverseStart(gridDataset.get(0));
 	}
 }
