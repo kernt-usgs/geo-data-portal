@@ -337,16 +337,6 @@
 				<scope>import</scope>
 			</dependency>
 			<dependency>
-				<groupId>edu.ucar</groupId>
-				<artifactId>netcdfAll</artifactId>
-				<version>${netcdf.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>edu.ucar</groupId>
-				<artifactId>opendap</artifactId>
-				<version>${netcdf.version}</version>
-			</dependency>
-			<dependency>
 				<groupId>gov.usgs.cida.netcdf.iosp</groupId>
 				<artifactId>geotiff-iosp</artifactId>
 				<version>1.7</version>

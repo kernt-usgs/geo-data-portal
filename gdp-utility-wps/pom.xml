@@ -81,7 +81,7 @@
 		</dependency>
 		<dependency>
 			<groupId>edu.ucar</groupId>
-			<artifactId>netcdfAll</artifactId>
+			<artifactId>cdm</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>edu.ucar</groupId>
