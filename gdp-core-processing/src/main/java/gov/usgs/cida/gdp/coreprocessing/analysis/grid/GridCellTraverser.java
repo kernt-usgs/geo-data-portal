@@ -81,9 +81,9 @@ public class GridCellTraverser {
             }
         } else if (gridType == GridType.ZYX) {
             for (int zCellIndex = 0; zCellIndex < zCellCount; ++zCellIndex) {
+                Array array = readDataSlice(INVALID_INDEX, zCellIndex);
                 for (GridCellVisitor visitor : visitorList) {
                     if (visitor.zStart(zCellIndex) && visitor.traverseContinue()) {
-                        Array array = readDataSlice(INVALID_INDEX, zCellIndex);
                         doTraverseXY(visitor, array);
                         visitor.zEnd(zCellIndex);
                     }
@@ -91,9 +91,9 @@ public class GridCellTraverser {
             }
         } else if (gridType == GridType.TYX) {
             for (int tCellIndex = 0; tCellIndex < tCellCount; ++tCellIndex) {
+                Array array = readDataSlice(tCellIndex, INVALID_INDEX);
                 for (GridCellVisitor visitor : visitorList) {
                     if (visitor.tStart(tCellIndex) && visitor.traverseContinue()) {
-                        Array array = readDataSlice(tCellIndex, INVALID_INDEX);
                         doTraverseXY(visitor, array);
                         visitor.tEnd(tCellIndex);
                     }
@@ -109,9 +109,9 @@ public class GridCellTraverser {
                 }
                 if (!tVisitorList.isEmpty()) {
                     for (int zCellIndex = 0; zCellIndex < zCellCount; ++zCellIndex) {
+                        Array array = readDataSlice(tCellIndex, zCellIndex);
                         for (GridCellVisitor tVisitor : tVisitorList) {
                             if (tVisitor.zStart(zCellIndex) && tVisitor.traverseContinue()) {
-                                Array array = readDataSlice(tCellIndex, zCellIndex);
                                 doTraverseXY(tVisitor, array);
                                 tVisitor.zEnd(zCellIndex);
                             }

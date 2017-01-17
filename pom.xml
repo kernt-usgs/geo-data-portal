@@ -134,6 +134,11 @@
 			<id>opengeo</id>
 			<url>http://repo.boundlessgeo.com/main/</url>
 		</repository>
+		<repository>
+			<id>oracle</id>
+			<name>Oracle Maven</name>
+			<url>http://download.oracle.com/maven</url>
+		</repository>
 	</repositories>
 	<dependencies>
 		<dependency>
