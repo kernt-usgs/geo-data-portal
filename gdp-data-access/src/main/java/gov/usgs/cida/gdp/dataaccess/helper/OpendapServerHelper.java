@@ -37,6 +37,8 @@ import opendap.dap.NoSuchAttributeException;
 import opendap.dap.PrimitiveVector;
 import org.apache.http.client.utils.URIBuilder;
 import org.slf4j.LoggerFactory;
+
+import ucar.httpservices.HTTPException;
 import ucar.nc2.time.Calendar;
 import ucar.nc2.time.CalendarDateUnit;
 
@@ -317,7 +319,7 @@ public class OpendapServerHelper {
         return timeVarName;
     }
 
-    private static DConnect2 createDODSConnection(String datasetUrl) throws URISyntaxException, MalformedURLException, FileNotFoundException {
+    private static DConnect2 createDODSConnection(String datasetUrl) throws URISyntaxException, MalformedURLException, FileNotFoundException, HTTPException {
         // call das, dds
         URI datasetURI = URI.create(datasetUrl);
         if ("dods".equals(datasetURI.getScheme()) ) {

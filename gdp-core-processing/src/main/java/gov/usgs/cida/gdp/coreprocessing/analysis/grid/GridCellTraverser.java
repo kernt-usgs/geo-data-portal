@@ -6,6 +6,8 @@ import java.util.Arrays;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import gov.usgs.cida.gdp.utilities.GridUtils;
 import ucar.ma2.Array;
 import ucar.ma2.Index;
 import ucar.nc2.dataset.CoordinateAxis;
@@ -56,8 +58,8 @@ public class GridCellTraverser {
         CoordinateAxis1DTime tAxis = gridCoordSystem.getTimeAxis1D();
 
         // will handle both CoordinateAxis1D or CoordinateAxis2D for x and y
-        xCellCount = GridUtility.getXAxisLength(gridCoordSystem);
-        yCellCount = GridUtility.getYAxisLength(gridCoordSystem);
+        xCellCount = GridUtils.getXAxisLength(gridCoordSystem);
+        yCellCount = GridUtils.getYAxisLength(gridCoordSystem);
         zCellCount = zAxis == null ? 0 : zAxis.getShape(0);
         tCellCount = tAxis == null ? 0 : tAxis.getShape(0);
     }

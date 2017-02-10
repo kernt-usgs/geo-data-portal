@@ -1,7 +1,7 @@
 package gov.usgs.cida.gdp.wps.algorithm.heuristic;
 
 import gov.usgs.cida.gdp.constants.AppConstant;
-import gov.usgs.cida.gdp.coreprocessing.analysis.grid.GridUtility;
+import gov.usgs.cida.gdp.utilities.GridUtils;
 import gov.usgs.cida.gdp.utilities.OPeNDAPUtils;
 import gov.usgs.cida.gdp.utilities.exception.OPeNDAPUtilException;
 import gov.usgs.cida.gdp.wps.algorithm.GDPAlgorithmUtil;
@@ -87,13 +87,13 @@ public class CoverageSizeAlgorithmHeuristic extends AlgorithmHeuristic {
 
 		int numVariables = gridVariableList.size();
 		int dataTypeSize = gridDatatype.getDataType().getSize();
-		String dataTypeName = gridDatatype.getDataType().name();
+		String dataTypeName = gridDatatype.getDataType().toString();
 		
 		GridDatatype subset = null;
 		try {
 			timeRange = GDPAlgorithmUtil.generateTimeRange(gridDatatype, dateTimeStart, dateTimeEnd);
 			GridCoordSystem gridCoordSystem = gridDatatype.getCoordinateSystem();
-			Range[] xyRanges = GridUtility.getXYRangesFromBoundingBox(featureCollection.getBounds(), gridCoordSystem, requireFullCoverage);
+			Range[] xyRanges = GridUtils.getXYRangesFromBoundingBox(featureCollection.getBounds(), gridCoordSystem, requireFullCoverage);
 			yRange = new Range(xyRanges[1].first(), xyRanges[1].last());
 			xRange = new Range(xyRanges[0].first(), xyRanges[0].last());
 			subset = gridDatatype.makeSubset(null, null, timeRange, null, yRange, xRange);
@@ -121,7 +121,7 @@ public class CoverageSizeAlgorithmHeuristic extends AlgorithmHeuristic {
 			 * Retrieve the OPeNDAP URL for this request
 			 */
 			try {
-				String OPeNDAPurl = OPeNDAPUtils.generateOpenDapURL(gridDataset.getLocationURI(), gridVariableList, gridDataset.getNetcdfFile().getVariables(), timeRange, yRange, xRange);
+				String OPeNDAPurl = OPeNDAPUtils.generateOpenDapURL(gridDataset.getLocation(), gridVariableList, gridDataset.getNetcdfFile().getVariables(), timeRange, yRange, xRange);
 				message.append("  The following URI can be used with the nccopy tool")
 					.append("to create a local copy of the data in the NetCDF4 format. See the Geo Data Portal")
 					.append("documentation for more information: ")

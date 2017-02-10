@@ -11,23 +11,24 @@ import java.util.Formatter;
 import java.util.LinkedList;
 import java.util.List;
 import org.slf4j.LoggerFactory;
-import thredds.catalog.InvAccess;
-import thredds.catalog.InvCatalog;
-import thredds.catalog.InvDataset;
-import thredds.catalog.ServiceType;
+
+import thredds.client.catalog.Access;
+import thredds.client.catalog.Catalog;
+import thredds.client.catalog.Dataset;
+import thredds.client.catalog.ServiceType;
 import ucar.nc2.Attribute;
 import ucar.nc2.Dimension;
 import ucar.nc2.VariableSimpleIF;
 import ucar.nc2.constants.FeatureType;
 import ucar.nc2.dt.grid.GeoGrid;
 import ucar.nc2.dt.grid.GridDataset;
-import ucar.nc2.ft.FeatureCollection;
+import ucar.nc2.ft.DsgFeatureCollection;
 import ucar.nc2.ft.FeatureDataset;
 import ucar.nc2.ft.FeatureDatasetFactoryManager;
 import ucar.nc2.ft.FeatureDatasetPoint;
 import ucar.nc2.ft.StationTimeSeriesFeature;
 import ucar.nc2.ft.StationTimeSeriesFeatureCollection;
-import ucar.nc2.units.DateRange;
+import ucar.nc2.time.CalendarDateRange;
 import ucar.nc2.util.NamedObject;
 
 public abstract class NetCDFUtility {
@@ -45,16 +46,16 @@ public abstract class NetCDFUtility {
      * @param serviceType   the type of service that the returned handles will use to access data.
      * @return  a list of dataset handles. The list will be empty if {@code catalog} or {@code serviceType} is null.
      */
-    public static List<InvAccess> getDatasetHandles(InvCatalog catalog, ServiceType serviceType) {
+    public static List<Access> getDatasetHandles(Catalog catalog, ServiceType serviceType) {
         if (catalog == null || serviceType == null) {
             return Collections.emptyList();     // Template parameter inferred from return type.
         }
 
-        List<InvAccess> handles = new LinkedList<InvAccess>();
-        for (InvDataset dataset : catalog.getDatasets()) {
-            handles.addAll(getDatasetHandles(dataset, serviceType));
+        List<Access> handles = new LinkedList<Access>();
+        for (Dataset dataset : catalog.getDatasets()) {
+            List<Access> tmp = getDatasetHandles(dataset, serviceType);
+            handles.addAll(tmp);
         }
-
         return handles;
     }
 
@@ -66,19 +67,21 @@ public abstract class NetCDFUtility {
      * @param serviceType   the type of service that the returned handles will use to access data.
      * @return  a list of dataset handles. The list will be empty if {@code dataset} or {@code serviceType} is null.
      */
-    public static List<InvAccess> getDatasetHandles(InvDataset dataset, ServiceType serviceType) {
+    public static List<Access> getDatasetHandles(Dataset dataset, ServiceType serviceType) {
         if (dataset == null || serviceType == null) {
             return Collections.emptyList();     // Template parameter inferred from return type.
         }
 
-        List<InvAccess> handles = new LinkedList<InvAccess>();
-        for (InvAccess handle : dataset.getAccess()) {
-            if (handle.getService().getServiceType() == serviceType) {
+        List<Access> handles = new LinkedList<Access>();
+        List<Access> datasetAccess = dataset.getAccess();
+        for (Access handle : datasetAccess) {
+            if (handle.getService().getType() == serviceType) {
                 handles.add(handle);
             }
         }
 
-        for (InvDataset nestedDataset : dataset.getDatasets()) {
+        List<Dataset> datasets = dataset.getDatasets();
+        for (Dataset nestedDataset : datasets) {
             handles.addAll(getDatasetHandles(nestedDataset, serviceType));
         }
 
@@ -113,7 +116,6 @@ public abstract class NetCDFUtility {
         switch (dataset.getFeatureType()) {
             case POINT:
             case PROFILE:
-            case SECTION:
             case STATION:
             case STATION_PROFILE:
             case STATION_RADIAL:
@@ -142,7 +144,8 @@ public abstract class NetCDFUtility {
                                         // is observed behavior...
                                         variableList.add(var);
                                     } else {
-                                        for (Dimension dim : var.getDimensions()) {
+                                        List<Dimension> dims = var.getDimensions();
+                                        for (Dimension dim : dims) {
                                             if (obsDimName.equalsIgnoreCase(dim.getName())) {
                                                 variableList.add(var);
                                             }
@@ -155,7 +158,8 @@ public abstract class NetCDFUtility {
                             // no explicit observation dimension found? look for
                             // variables with unlimited dimension
                             for (VariableSimpleIF var : dataset.getDataVariables()) {
-                                for (Dimension dim : var.getDimensions()) {
+                                List<Dimension> dims = var.getDimensions();
+                                for (Dimension dim : dims) {
                                     if (dim.isUnlimited()) {
                                         variableList.add(var);
                                     }
@@ -281,17 +285,18 @@ public abstract class NetCDFUtility {
                 String endTime = endTimeNamedObject.getName();
                 dateRange.add(1, endTime);
             } else if (dataset.getFeatureType() == FeatureType.STATION) {
-                DateRange dr = dataset.getDateRange();
+                CalendarDateRange dr = dataset.getCalendarDateRange();
+
                 if (dr == null) {
-                    List<FeatureCollection> list =
+                    List<DsgFeatureCollection> list =
                             ((FeatureDatasetPoint) dataset).getPointFeatureCollectionList();
-                    for (FeatureCollection fc : list) {
+                    for (DsgFeatureCollection fc : list) {
                         if (fc instanceof StationTimeSeriesFeatureCollection) {
                             StationTimeSeriesFeatureCollection stsfc =
                                     (StationTimeSeriesFeatureCollection) fc;
                             while (dr == null && stsfc.hasNext()) {
                                 StationTimeSeriesFeature stsf = stsfc.next();
-                                dr = stsf.getDateRange();
+                                dr = stsf.getCalendarDateRange();
                             }
                         }
                     }

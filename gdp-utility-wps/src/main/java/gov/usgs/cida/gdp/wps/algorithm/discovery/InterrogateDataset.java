@@ -13,6 +13,7 @@ import opendap.dap.BaseType;
 import opendap.dap.DAP2Exception;
 import opendap.dap.DConnect2;
 import opendap.dap.DDS;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.n52.wps.ServerDocument;
@@ -137,7 +138,7 @@ public class InterrogateDataset extends AbstractAnnotatedAlgorithm {
 					
 					// Add newline for PROXY_URL output
 					proxyUrl.append("\n");
-				} catch (IOException | DAP2Exception ex) {
+				} catch (IOException | DAP2Exception ex ) {
 					log.error("Error interrogating OPeNDAP", ex);
 				}
 			} else {

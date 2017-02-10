@@ -11,7 +11,8 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.prep.PreparedGeometry;
 import com.vividsolutions.jts.geom.prep.PreparedGeometryFactory;
-import gov.usgs.cida.gdp.coreprocessing.analysis.grid.GridUtility.IndexToCoordinateBuilder;
+import gov.usgs.cida.gdp.utilities.GridUtils;
+import gov.usgs.cida.gdp.utilities.GridUtils.IndexToCoordinateBuilder;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -106,7 +107,7 @@ public class FeatureCoverageGridStatistics {
 
 		// these two calls are used to test for coverage/intersection based on 'requireFullCoverage',
 		// if required coverage criterea is not fufilled an exception will be thrown.
-		Range[] featureCollectionRanges = GridUtility.getXYRangesFromBoundingBox(featureCollection.getBounds(), gcs, requireFullCoverage);
+		Range[] featureCollectionRanges = GridUtils.getXYRangesFromBoundingBox(featureCollection.getBounds(), gcs, requireFullCoverage);
 		gridDatatype = gridDatatype.makeSubset(null, null, null, null, featureCollectionRanges[1], featureCollectionRanges[0]);
 
 		CoordinateReferenceSystem gridCRS = CRSUtility.getCRSFromGridCoordSystem(gcs);
@@ -170,7 +171,7 @@ public class FeatureCoverageGridStatistics {
 							Geometry featureGeometry = (Geometry) feature.getDefaultGeometry();
 
 							try {
-								Range[] featureRanges = GridUtility.getXYRangesFromBoundingBox(
+								Range[] featureRanges = GridUtils.getXYRangesFromBoundingBox(
 										featureBoundingBox, gridDatatype.getCoordinateSystem(), requireFullCoverage);
 
 								GridDatatype featureGridDataType = gridDatatype.makeSubset(null, null, tRange, zRange, featureRanges[1], featureRanges[0]);
@@ -249,7 +250,7 @@ public class FeatureCoverageGridStatistics {
 
 		@Override
 		public void traverseStart(GridDatatype gridDatatype) {
-			coordinateBuilder = GridUtility.generateIndexToCellCenterCoordinateBuilder(gridDatatype.getCoordinateSystem());
+			coordinateBuilder = GridUtils.generateIndexToCellCenterCoordinateBuilder(gridDatatype.getCoordinateSystem());
 		}
 
 		@Override

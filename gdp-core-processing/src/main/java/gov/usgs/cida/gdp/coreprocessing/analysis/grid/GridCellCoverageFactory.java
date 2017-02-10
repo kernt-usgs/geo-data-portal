@@ -21,6 +21,8 @@ import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.TransformException;
+
+import gov.usgs.cida.gdp.utilities.GridUtils;
 import ucar.ma2.InvalidRangeException;
 import ucar.ma2.Range;
 import ucar.nc2.dt.GridCoordSystem;
@@ -153,7 +155,7 @@ public abstract class GridCellCoverageFactory {
 
             final int xCellCount = gridCellGeometry.getCellCountX();
 
-            final Range[] ranges = GridUtility.getXYRangesFromBoundingBox(
+            final Range[] ranges = GridUtils.getXYRangesFromBoundingBox(
                 feature.getBounds(),
                 gridCellGeometry.getGridCoordSystem(),
                 false);

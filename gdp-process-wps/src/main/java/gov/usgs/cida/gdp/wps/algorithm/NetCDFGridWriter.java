@@ -1,6 +1,6 @@
 package gov.usgs.cida.gdp.wps.algorithm;
 
-import gov.usgs.cida.gdp.coreprocessing.analysis.grid.GridUtility;
+import gov.usgs.cida.gdp.utilities.GridUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -16,7 +16,8 @@ import org.opengis.referencing.operation.TransformException;
 import ucar.ma2.InvalidRangeException;
 import ucar.ma2.Range;
 import ucar.nc2.Attribute;
-import ucar.nc2.FileWriter;
+import ucar.nc2.FileWriter2;
+import ucar.nc2.NetcdfFileWriter;
 import ucar.nc2.Variable;
 import ucar.nc2.dataset.CoordinateAxis;
 import ucar.nc2.dataset.CoordinateTransform;
@@ -41,18 +42,21 @@ public class NetCDFGridWriter {
             String metaDataString)
             throws IOException, InvalidRangeException, TransformException, FactoryException {
 
-        FileWriter writer = new FileWriter(location, false);
+        NetcdfFileWriter writer = NetcdfFileWriter.createNew(location, false);
+        //FileWriter2 writer = new FileWriter2(gridDataset.getNetcdfFile(), location,
+        //       null, null);
+        //FileWriter writer = new FileWriter(location, false);
         NetcdfDataset netcdfDataset = (NetcdfDataset) gridDataset.getNetcdfFile();
-
         // global attributes
         Attribute historyAttribute = null;
-        for (Attribute att : gridDataset.getGlobalAttributes()) {
+        List<Attribute> globalAttributes = gridDataset.getGlobalAttributes();
+        for (Attribute att : globalAttributes) {
             String attributeName = att.getName();
             if ("history".equalsIgnoreCase(attributeName)) {
                 // defer write as we want to concatenate to existing attribute.
                 historyAttribute = att;  
             } else {
-                writer.writeGlobalAttribute(att);
+                writer.addGlobalAttribute(att);
             }
         }
 
@@ -60,9 +64,9 @@ public class NetCDFGridWriter {
             new Attribute("history", metaDataString) :  
             new Attribute(historyAttribute.getName(),
                     historyAttribute.getStringValue() + "/n" + metaDataString);
-        writer.writeGlobalAttribute(historyAttribute);
+        writer.addGlobalAttribute(historyAttribute);
 
-        List<Variable> variableList = new ArrayList<Variable>();
+       // List<Variable> variableList = new ArrayList<Variable>();
         Set<String> variableNameSet = new HashSet<String>();
         List<CoordinateAxis> coordinateAxisList = new ArrayList<CoordinateAxis>();
 
@@ -76,35 +80,33 @@ public class NetCDFGridWriter {
 
                 // generate sub-set
                 Range tRange = GDPAlgorithmUtil.generateTimeRange(gridDataType, dateTimeStart, dateTimeEnd);
-                Range[] xyRanges = GridUtility.getXYRangesFromBoundingBox(featureCollection.getBounds(), gridCoordSystem, requireFullCoverage); 
+                Range[] xyRanges = GridUtils.getXYRangesFromBoundingBox(featureCollection.getBounds(), gridCoordSystem, requireFullCoverage);
                 gridDataType = gridDataType.makeSubset(null, null, tRange, null, xyRanges[1], xyRanges[0]);
 
                 Variable gridV = (Variable) gridDataType.getVariable();
-                variableList.add(gridV);
                 total_size += gridV.getSize() * gridV.getElementSize();
 
                 // add coordinate axes
                 gridCoordSystem = gridDataType.getCoordinateSystem();
-                for (CoordinateAxis axis : gridCoordSystem.getCoordinateAxes()) {
+                List<CoordinateAxis> coordinateAxis = gridCoordSystem.getCoordinateAxes();
+                for (CoordinateAxis axis : coordinateAxis) {
                     if (variableNameSet.add(axis.getName())) {
-                        variableList.add(axis);
+                        writer.write(axis, axis.read());
                         coordinateAxisList.add(axis);
                     }
                 }
 
                 // add coordinate transform variables
-                for (CoordinateTransform ct : gridCoordSystem.getCoordinateTransforms()) {
+                List<CoordinateTransform> coordinateTransforms = gridCoordSystem.getCoordinateTransforms();
+                for (CoordinateTransform ct : coordinateTransforms) {
                     Variable v = netcdfDataset.findVariable(ct.getName());
                     if (v != null && variableNameSet.add(ct.getName())) {
-                        variableList.add(v);
+                        writer.write(v, v.read());
                     }
                 }
             }
         }
-
-        writer.writeVariables(variableList);
-
-        writer.finish();
+        writer.close();
     }
     
 }

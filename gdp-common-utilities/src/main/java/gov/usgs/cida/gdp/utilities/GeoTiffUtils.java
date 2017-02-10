@@ -16,7 +16,6 @@ import gov.usgs.cida.gdp.utilities.exception.GeoTiffUtilExceptionID;
 import ucar.ma2.Array;
 import ucar.ma2.InvalidRangeException;
 import ucar.ma2.Range;
-import ucar.ma2.Range.Iterator;
 import ucar.nc2.dt.GridCoordSystem;
 import ucar.nc2.dt.GridDataset;
 import ucar.nc2.dt.GridDatatype;
@@ -44,8 +43,8 @@ public class GeoTiffUtils {
          * Get the dataset ID and format it accordingly
          *      QUOTE (JIRA GDP-947)
          *          dataId should be what comes after dodsC in the OPeNDAP URI with '/'s replaced with '-'s
-         */        
-        String datasetURI = gridDataset.getLocationURI();        
+         */
+        String datasetURI = gridDataset.getLocation();
         String dataId = datasetURI.replace(OPeNDAPUtils.OPENDAP_PROTO, "");
         dataId = dataId.replace("//", ""); // remove protocal //
         dataId = dataId.replace("/", "-");
@@ -78,7 +77,7 @@ public class GeoTiffUtils {
                 } catch (Exception e) {
                     throw new GeoTiffUtilException(GeoTiffUtilExceptionID.GENERAL_EXCEPTION,
                             "GeoTiffUtils", "generateGeoTiffZipFromGrid", "Unable to generate Grid Data Type " +
-                            "for dataset [" + gridDataset.getLocationURI() + "] and variable [" + gridVariable +
+                            "for dataset [" + gridDataset.getLocation() + "] and variable [" + gridVariable +
                             "].  Exception: " + e.getMessage());
                 }
                 
@@ -102,7 +101,7 @@ public class GeoTiffUtils {
 				} catch (Exception e) {
 					throw new GeoTiffUtilException(GeoTiffUtilExceptionID.GENERAL_EXCEPTION,
                             "GeoTiffUtils", "generateGeoTiffZipFromGrid", "Unable to generate XY Range set from Grid Data Type " +
-                            "for dataset [" + gridDataset.getLocationURI() + "] and variable [" + gridVariable +
+                            "for dataset [" + gridDataset.getLocation() + "] and variable [" + gridVariable +
                             "].  Exception: " + e.getMessage());
 				}
 				
@@ -115,7 +114,7 @@ public class GeoTiffUtils {
 				} catch (Exception e) {
 					throw new GeoTiffUtilException(GeoTiffUtilExceptionID.GENERAL_EXCEPTION,
                             "GeoTiffUtils", "generateGeoTiffZipFromGrid", "Unable to generate Grid Subset " +
-                            "for dataset [" + gridDataset.getLocationURI() + "] and variable [" + gridVariable +
+                            "for dataset [" + gridDataset.getLocation() + "] and variable [" + gridVariable +
                             "].  Exception: " + e.getMessage());
 				}
                 
@@ -137,15 +136,11 @@ public class GeoTiffUtils {
 				} catch (InvalidRangeException e) {
 					throw new GeoTiffUtilException(GeoTiffUtilExceptionID.GENERAL_EXCEPTION,
                             "GeoTiffUtils", "generateGeoTiffZipFromGrid", "Unable to generate Subset time range " +
-                            "for dataset [" + gridDataset.getLocationURI() + "] and variable [" + gridVariable +
+                            "for dataset [" + gridDataset.getLocation() + "] and variable [" + gridVariable +
                             "].  Exception: " + e.getMessage());
 				}
-                
-                Iterator iter = deltaRange.getIterator();
-                
-                while (iter.hasNext()) {
-                    int tRange = iter.next();
-                                    
+
+                for (int tRange : deltaRange) {
                     /*
                      * Create the filename with the dataId and time of this iteration
                      *      QUOTE (JIRA GDP-947)
@@ -212,7 +207,7 @@ public class GeoTiffUtils {
         } catch (Exception e) {
             throw new GeoTiffUtilException(GeoTiffUtilExceptionID.GEOTIFFWRITER_EXCEPTION,
                     "GeoTiffUtils", "generateGeoTiffZipFromGrid", "Unable to generate Tiff image from grid [" +
-                    gridDataset.getLocationURI() + "].  Exception: " + e.getMessage());
+                    gridDataset.getLocation() + "].  Exception: " + e.getMessage());
         } finally {
             if(writer != null) {
                 try {
