@@ -6,6 +6,9 @@
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd
 	http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
 	
-	<include file="createTables/changeLog.xml" relativeToChangelogFile="true"/>
-        <include file="queueThrottleTables/changeLog.xml" relativeToChangelogFile="true"/>
+	<include file="createTableThrottleQueue.sql" relativeToChangelogFile="true"/>
+        <include file="createTableThrottleQueueToggle.sql" relativeToChangelogFile="true"/>
+        <include file="insertToggleData.sql" relativeToChangelogFile="true"/>
+
+	
 </databaseChangeLog>

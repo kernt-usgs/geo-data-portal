@@ -29,6 +29,7 @@
 package org.n52.wps.server;
 
 // FvK: added Property Change Listener support
+import gov.usgs.cida.gdp.wps.queue.ExecuteRequestManager;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.BufferedReader;
@@ -55,8 +56,8 @@ import org.n52.wps.commons.WPSConfig;
 import org.n52.wps.io.GeneratorFactory;
 import org.n52.wps.io.ParserFactory;
 import org.n52.wps.server.database.DatabaseFactory;
+import org.n52.wps.server.handler.GdpRequestHandler;
 import org.n52.wps.server.handler.RequestHandler;
-import org.n52.wps.server.handler.RequestHandlerWrapper;
 import org.n52.wps.util.XMLBeansHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -175,6 +176,12 @@ public class WebProcessingService extends HttpServlet {
         DatabaseFactory.getDatabase();
 
         LOGGER.info("WPS up and running!");
+                
+        ExecuteRequestManager rm = ExecuteRequestManager.getInstance(); // #USGS this will init the timer task responsible for adding work to the queue
+        if (rm == null)
+        {
+            LOGGER.error("Error while getting RequestManager instance.");
+        }
 
         // FvK: added Property Change Listener support
         // creates listener and register it to the wpsConfig instance.
@@ -222,7 +229,7 @@ public class WebProcessingService extends HttpServlet {
                                                                   }
                                                               }
                                                           });
-
+        
     }
 
     protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
@@ -252,6 +259,7 @@ public class WebProcessingService extends HttpServlet {
     public final static String SPECIAL_XML_POST_VARIABLE = "request";
     private static final String XML_CONTENT_TYPE = "text/xml";
 
+    @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
         BufferedReader reader = null;
 
@@ -310,14 +318,13 @@ public class WebProcessingService extends HttpServlet {
                 documentString = URLDecoder.decode(documentString, characterEncoding);
                 LOGGER.debug("Decoded of POST:\n" + documentString + "\n");
             }
-
-            RequestHandler handler = new RequestHandler(new ByteArrayInputStream(documentString.getBytes("UTF-8")),
-                                                        res.getOutputStream());
+            //#USGS
+            GdpRequestHandler handler = new GdpRequestHandler(new ByteArrayInputStream(documentString.getBytes("UTF-8")),
+                                                        res.getOutputStream());  //USGS override code - done to intro the throttle queue
             String mimeType = handler.getResponseMimeType();
             res.setContentType(mimeType);
-            RequestHandlerWrapper wrapper = new RequestHandlerWrapper(handler);
-            wrapper.setUserAgent(req.getHeader(HttpHeaders.USER_AGENT));
-            wrapper.handle();
+            handler.setUserAgent(req.getHeader(HttpHeaders.USER_AGENT)); //#USGS
+            handler.handle();
 
             res.setStatus(HttpServletResponse.SC_OK);
         }

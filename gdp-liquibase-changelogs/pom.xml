@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>gov.usgs.cida.gdp</groupId>
 		<artifactId>gdp</artifactId>
-		<version>49-SNAPSHOT</version>
+		<version>55-SNAPSHOT</version>
 	</parent>
 	<artifactId>gdp-liquibase-changelogs</artifactId>
 	<packaging>jar</packaging>
@@ -19,7 +19,7 @@
 		<pluginRepository>
 			<id>cida-public</id>
 			<name>CIDA plugin repository</name>
-			<url>http://cida.usgs.gov/maven/cida-public/</url>
+			<url>https://cida.usgs.gov/maven/cida-public/</url>
 		</pluginRepository>
 	</pluginRepositories>
 	<dependencies>

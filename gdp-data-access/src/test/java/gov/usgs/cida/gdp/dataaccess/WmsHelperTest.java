@@ -22,7 +22,7 @@ public class WmsHelperTest {
     public void getCapabilitiesWithBogusURL() throws Exception {
         String result = null;
         try {
-            result = WmsHelper.getCapabilities("http://bogus.url.gov");
+            result = WmsHelper.getCapabilities("https://bogus.url.gov");
         } catch (IOException ex) {
             assertThat(ex, is(instanceOf(UnknownHostException.class)));
         }

@@ -206,7 +206,7 @@ public class TimeTest {
 
 		CacheIdentifier cacheId = null;
 		try {
-			cacheId = new ResponseCache.CacheIdentifier("http://not-a-r-eal-url.gov", ResponseCache.CacheIdentifier.CacheType.TIME_RANGE, "Dummy cache data");
+			cacheId = new ResponseCache.CacheIdentifier("https://not-a-r-eal-url.gov", ResponseCache.CacheIdentifier.CacheType.TIME_RANGE, "Dummy cache data");
 			boolean didWrite = bean.writeToCache(cacheId);
 			assertTrue(didWrite);
 		} finally {
@@ -232,7 +232,7 @@ public class TimeTest {
 
 		CacheIdentifier cacheId = null;
 		try {
-			cacheId = new ResponseCache.CacheIdentifier("http://not-a-r-eal-url.gov", ResponseCache.CacheIdentifier.CacheType.TIME_RANGE, "Dummy cache data");
+			cacheId = new ResponseCache.CacheIdentifier("https://not-a-r-eal-url.gov", ResponseCache.CacheIdentifier.CacheType.TIME_RANGE, "Dummy cache data");
 			boolean didWrite = inputBean.writeToCache(cacheId);
 			assertTrue(didWrite);
 
@@ -261,7 +261,7 @@ public class TimeTest {
 
 		CacheIdentifier cacheId = null;
 		try {
-			cacheId = new ResponseCache.CacheIdentifier("http://not-a-r-eal-url.gov", ResponseCache.CacheIdentifier.CacheType.TIME_RANGE, "Dummy cache data");
+			cacheId = new ResponseCache.CacheIdentifier("https://not-a-r-eal-url.gov", ResponseCache.CacheIdentifier.CacheType.TIME_RANGE, "Dummy cache data");
 			boolean didWrite = inputBean.writeToCache(cacheId);
 			assertTrue(didWrite);
 

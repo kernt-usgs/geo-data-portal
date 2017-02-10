@@ -218,6 +218,8 @@ public class FeatureWeightedGridStatisticsAlgorithm extends AbstractAnnotatedAlg
 			CountingOutputStream cos = new CountingOutputStream(new FileOutputStream(output));
 			writer = new BufferedWriter(new OutputStreamWriter(cos));
 
+			List<GridCellVisitor> heuristics = setupHeuristics(cos);
+			
 			for (String currentDatasetId : datasetId) {
 				GridDatatype gridDatatype = GDPAlgorithmUtil.generateGridDataType(
 						datasetURI,
@@ -236,7 +238,7 @@ public class FeatureWeightedGridStatisticsAlgorithm extends AbstractAnnotatedAlg
 						featureCollection,
 						featureAttributeName,
 						gridDatatype.makeSubset(null, null, timeRange, null, null, null),
-						setupHeuristics(cos),
+						heuristics,
 						statistics == null || statistics.isEmpty() ? Arrays.asList(WeightedStatistic.values()) : statistics,
 						writer,
 						groupBy == null ? GroupBy.STATISTIC : groupBy,

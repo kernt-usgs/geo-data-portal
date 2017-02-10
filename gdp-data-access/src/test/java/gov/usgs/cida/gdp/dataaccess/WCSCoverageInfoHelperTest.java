@@ -42,7 +42,7 @@ public class WCSCoverageInfoHelperTest {
     public void getWcsDescribeCoveragesWithBogusURLTest() {
         String result = null;
         try {
-            result = WCSCoverageInfoHelper.getWcsDescribeCoverages("http://bogus.url.gov");
+            result = WCSCoverageInfoHelper.getWcsDescribeCoverages("https://bogus.url.gov");
         } catch (IOException ex) {
             assertThat(ex, is(instanceOf(UnknownHostException.class)));
         }

@@ -4,7 +4,12 @@ import gov.usgs.cida.gdp.dataaccess.bean.DataTypeCollection;
 import gov.usgs.cida.gdp.dataaccess.bean.DataTypeCollection.DataTypeBean;
 import gov.usgs.cida.gdp.dataaccess.bean.Response;
 import gov.usgs.cida.gdp.dataaccess.bean.Time;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,10 +35,10 @@ import opendap.dap.Int16PrimitiveVector;
 import opendap.dap.Int32PrimitiveVector;
 import opendap.dap.NoSuchAttributeException;
 import opendap.dap.PrimitiveVector;
+import org.apache.http.client.utils.URIBuilder;
 import org.slf4j.LoggerFactory;
 import ucar.nc2.time.Calendar;
 import ucar.nc2.time.CalendarDateUnit;
-import ucar.nc2.units.DateUnit;
 
 public class OpendapServerHelper {
 
@@ -59,16 +64,7 @@ public class OpendapServerHelper {
 
     public static List<String> getOPeNDAPTimeRange(String datasetUrl, String gridSelection) throws IOException {
         try {
-            // call das, dds
-            String finalUrl = "";
-            if (datasetUrl.startsWith("dods:")) {
-                finalUrl = "http:" + datasetUrl.substring(5);
-            } else if (datasetUrl.startsWith("http:") || datasetUrl.startsWith("file:")) {
-                finalUrl = datasetUrl;
-            } else {
-                throw new java.net.MalformedURLException(datasetUrl + " must start with dods: or http: or file:");
-            }
-            DConnect2 dodsConnection = new DConnect2(finalUrl, false);
+            DConnect2 dodsConnection = createDODSConnection(datasetUrl);
             DDS dds = dodsConnection.getDDS(gridSelection);
 
             DAS das = dodsConnection.getDAS();
@@ -103,7 +99,7 @@ public class OpendapServerHelper {
         }
         return Collections.EMPTY_LIST;  // Could not get time, fall through
     }
-
+    
     private static List<String> getDatesFromTimeVariable(DArray variable, AttributeTable attributeTable) throws NoSuchAttributeException {
         // TODO make utility to cast this stuff for me
         List<String> dateList = new ArrayList<String>();
@@ -139,20 +135,17 @@ public class OpendapServerHelper {
             throw new UnsupportedOperationException("This primitive type for time is not yet supported");
         }
 
-        Attribute units = attributeTable.getAttribute("units");
+        return makeDates(attributeTable, first, last);
+    }
+
+    private static List<String> makeDates(AttributeTable attributeTable, double first, double last) throws NoSuchAttributeException {
+        Attribute units = attributeTable.getAttribute("units");        
+        List<String> dateList = new ArrayList<>();
+        
         if (null == units) {
             units = attributeTable.getAttribute("_CoordinateAxisType");
-        }
-        String dateValue = units.getValueAt(0);
-
-        try {
-            DateUnit unit = new DateUnit(dateValue);
-            dateList.add(unit.makeStandardDateString(first));
-            dateList.add(unit.makeStandardDateString(last));
-            return dateList;
-        } catch (Exception e) {
-            log.warn("Unit is not a date unit", e);
-        }
+        }       
+        String dateValue = units.getValueAt(0);    
 
         try {
             CalendarDateUnit unit = CalendarDateUnit.withCalendar(getCalendarFromAttributeTable(attributeTable), dateValue);
@@ -160,22 +153,24 @@ public class OpendapServerHelper {
             dateList.add(unit.makeCalendarDate(last).toString());
             return dateList;
         } catch (IllegalArgumentException iae) {
-            log.warn("Unit is not a calendar date unit", iae);
+            log.warn("Unit is not a CalendarDateUnit.", iae);
         }
-
+ 
         return dateList;
     }
 
     public static Calendar getCalendarFromAttributeTable(AttributeTable at) {
         Attribute calendarType = at.getAttribute("calendar");
         Calendar calendar = Calendar.getDefault();
+        log.debug("Default calendar is:" + calendar.name());
         if (calendarType != null) {
             try {
-                Calendar.get(calendarType.getValueAt(0));
+                calendar = Calendar.get(calendarType.getValueAt(0));
             } catch (NoSuchAttributeException ex) {
                 log.warn("No calendar attribute, default calendar will be returned", ex);
             }
         }
+        log.debug("Calendar type ACTUALLY in use: " + calendar);
         return calendar;
     }
 
@@ -191,20 +186,14 @@ public class OpendapServerHelper {
     }
 
     public static DataTypeCollection callDDSandDAS(String datasetUrl) throws IOException {
-        // call das, dds
-        String finalUrl = "";
-        if (datasetUrl.startsWith("dods:")) {
-            finalUrl = "http:" + datasetUrl.substring(5);
-        } else {
-            if (datasetUrl.startsWith("http:")) {
-                finalUrl = datasetUrl;
-            } else {
-                throw new java.net.MalformedURLException(datasetUrl + " must start with dods: or http:");
-            }
+        DConnect2 dodsConnection;
+        try {
+             dodsConnection = createDODSConnection(datasetUrl);
+        } catch (URISyntaxException | FileNotFoundException | MalformedURLException ex) {
+            throw new RuntimeException("Error connecting to dods server", ex);
         }
-        DConnect2 dodsConnection = new DConnect2(finalUrl, false);
-        List<DataTypeBean> dtbListWithTimes = new LinkedList<DataTypeBean>();
-        List<DataTypeBean> dtbListNoTimes = new LinkedList<DataTypeBean>();
+        List<DataTypeBean> dtbListWithTimes = new LinkedList<>();
+        List<DataTypeBean> dtbListNoTimes = new LinkedList<>();
         try {
             DDS dds = dodsConnection.getDDS();
             DAS das = dodsConnection.getDAS();
@@ -294,31 +283,29 @@ public class OpendapServerHelper {
             DArrayDimension nextDim = dimensions.nextElement();
             String name = nextDim.getEncodedName();  // or getClearName(), NetCDF-Java 4.3.x
             try {
-                AttributeTable attributeTable = das.getAttributeTable(name);
+                AttributeTable attributeTable = das.getAttributeTable(name); //element [2] has the calendar type ie noleap
                 if (null != attributeTable) {
                     Attribute units = attributeTable.getAttribute("units");
                     if (units != null) {
+                        String unitValue = units.getValueAt(0); //units will have days since ...
                         Object unit = null;
-                        try {
-                            unit = new DateUnit(units.getValueAt(0));
-                        } catch (Exception e) {
-                            log.warn("Unit is not a date unit", e);
-                        }
 
                         try {
-                            unit = CalendarDateUnit.withCalendar(getCalendarFromAttributeTable(attributeTable), units.getValueAt(0));
+                            unit = CalendarDateUnit.withCalendar(getCalendarFromAttributeTable(attributeTable), unitValue);
+                            log.debug("Using CalendarDateUnit.");
                         } catch (IllegalArgumentException iae) {
                             log.warn("Unit is not a calendar date unit", iae);
                         }
 
                         if (null != unit) {
-                            timeVarName = name;
+                            timeVarName = name; // example: this returns a string "Time" or "time"
                         }
                     } else {
                         units = attributeTable.getAttribute("_CoordinateAxisType");
+                        log.debug("CoordinateAxisType used to get units.");
                         if (null != units) {
                             if (null != units.getValueAt(0)) {
-                                timeVarName = name;
+                                timeVarName = name; 
                             }
                         }
                     }
@@ -329,4 +316,28 @@ public class OpendapServerHelper {
         }
         return timeVarName;
     }
+
+    private static DConnect2 createDODSConnection(String datasetUrl) throws URISyntaxException, MalformedURLException, FileNotFoundException {
+        // call das, dds
+        URI datasetURI = URI.create(datasetUrl);
+        if ("dods".equals(datasetURI.getScheme()) ) {
+            datasetURI = new URIBuilder(datasetURI).setScheme("https").build();
+        } else if ("file".equals(datasetURI.getScheme())||
+                "http".equals(datasetURI.getScheme()) ||
+                "https".equals(datasetURI.getScheme())) {
+            // leave URI alone
+        } else {
+            throw new java.net.MalformedURLException(datasetUrl + " must start with dods: or http(s): or file:");
+        }
+        DConnect2  dodsConnection;
+        try {
+            dodsConnection = new DConnect2(datasetURI.toString(), false);
+        } catch (Exception ex) {
+            // fall back to http
+            datasetURI = new URIBuilder(datasetURI).setScheme("http").build();
+            dodsConnection = new DConnect2(datasetURI.toString(), false);
+        }
+        return dodsConnection;
+    }
+
 }

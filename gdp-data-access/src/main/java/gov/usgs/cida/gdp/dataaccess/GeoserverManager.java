@@ -112,7 +112,7 @@ public class GeoserverManager {
      * @param workspaces 
      * @throws IOException 
      * @throws XPathExpressionException 
-     * @See http://internal.cida.usgs.gov/jira/browse/GDP-174?focusedCommentId=18712&page=com.atlassian.jira.plugin.system.issuetabpanels%3Acomment-tabpanel#action_18712
+     * @See https://internal.cida.usgs.gov/jira/browse/GDP-174?focusedCommentId=18712&page=com.atlassian.jira.plugin.system.issuetabpanels%3Acomment-tabpanel#action_18712
      */
     public void deleteOutdatedDataStores(long maximumFileAge, String... workspaces)
             throws IOException, XPathExpressionException {
