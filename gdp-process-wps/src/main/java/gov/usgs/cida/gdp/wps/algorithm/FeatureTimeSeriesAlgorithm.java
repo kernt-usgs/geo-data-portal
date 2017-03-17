@@ -1,7 +1,5 @@
 package gov.usgs.cida.gdp.wps.algorithm;
 
-
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -50,13 +48,12 @@ import java.io.BufferedOutputStream;
 import java.util.zip.ZipException;
 
 @Algorithm(
-		version = "1.0.0",
-		title = "OPeNDAP Subset",
+		version = "1.0.1",
+		title = "Timeseries Service Subset",
 		abstrakt = "This service returns the Time Series SOS data.")
 public class FeatureTimeSeriesAlgorithm extends AbstractAnnotatedAlgorithm {
 	
 	private static final Logger log = LoggerFactory.getLogger(FeatureTimeSeriesAlgorithm.class);
-
 
 	private FeatureCollection<SimpleFeatureType,SimpleFeature> featureCollection;
     private String featureAttributeName;
