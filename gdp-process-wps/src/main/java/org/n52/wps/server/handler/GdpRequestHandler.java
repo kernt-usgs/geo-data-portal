@@ -1,5 +1,6 @@
 package org.n52.wps.server.handler;
 
+import gov.usgs.cida.gdp.wps.analytics.UserAgentInfo;
 import gov.usgs.cida.gdp.wps.queue.ExecuteRequestManager;
 import gov.usgs.cida.gdp.wps.util.DatabaseUtil;
 import java.io.IOException;
@@ -38,7 +39,6 @@ import org.xml.sax.SAXException;
 public class GdpRequestHandler extends RequestHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GdpRequestHandler.class);
-    private static ConnectionHandler connectionHandler = DatabaseUtil.getJNDIConnectionHandler();
     private String userAgent;
 
     /**
@@ -179,7 +179,6 @@ public class GdpRequestHandler extends RequestHandler {
         if (req == null) {
             throw new ExceptionReport("Internal Error", "");
         }
-        handleAgentLogging();  //USGS override logic: inserts the user_agent into the meta-data table. Required the requestId for the insert.
 
         if (req instanceof ExecuteRequestWrapper) {
             ExecuteRequestWrapper execReq = (ExecuteRequestWrapper) req; //#USGS override code
@@ -187,6 +186,9 @@ public class GdpRequestHandler extends RequestHandler {
             LOGGER.debug("RequestId before updating to Accepted:" + execReq.getUniqueId());
             execReq.updateStatusAccepted();
             ExecuteRequestManager.getInstance().getThrottleQueue().putRequest(execReq); //inserts with ACCEPTED into the Throttle_Queue table. Does not actually add the request to the RequestQueue.
+
+            UserAgentInfo uaInfo = new UserAgentInfo(userAgent);
+            uaInfo.log(execReq.getUniqueId().toString());
 
             if (execReq.isStoreResponse()) {
                 addToQueue(execReq, resp);
@@ -258,27 +260,6 @@ public class GdpRequestHandler extends RequestHandler {
                 }
 
                 LOGGER.info("Served ExecuteRequest.");
-            }
-        }
-    }
-
-    // below is all the USGS additional functionality that is sliced into the original RequestHandler
-    //this was originally done first and then it was tossed back to the parent.handle(). Had to add another intercept at a different point so now override the entire handle method
-    public void handleAgentLogging() throws ExceptionReport {
-        if (StringUtils.isNotBlank(userAgent)) {
-            UUID uniqueId = super.req.getUniqueId();
-            LOGGER.debug("Inserting Agent Logging with ID:" + uniqueId);
-            //UUID uniqueId = parent.req.getUniqueId();
-            try (Connection connection = connectionHandler.getConnection()) {
-                UUID pkey = UUID.randomUUID();
-                PreparedStatement prepared = connection.prepareStatement("INSERT INTO request_metadata (ID, REQUEST_ID, USER_AGENT) VALUES (?, ?, ?)");
-                prepared.setString(1, pkey.toString());
-                prepared.setString(2, uniqueId.toString());
-                prepared.setString(3,userAgent);
-                prepared.execute();
-            } catch (SQLException ex) {
-                LOGGER.debug("Problem logging user agent", ex);
-                // don't rethrow, just keep going
             }
         }
     }
