@@ -11,6 +11,7 @@ import gov.usgs.cida.gdp.coreprocessing.analysis.grid.WeightedStatistic;
 import gov.usgs.cida.gdp.wps.algorithm.heuristic.GeometrySizeAlgorithmHeuristic;
 import gov.usgs.cida.gdp.wps.algorithm.heuristic.SummaryOutputSizeAlgorithmHeuristic;
 import gov.usgs.cida.gdp.wps.algorithm.heuristic.TotalTimeAlgorithmHeuristic;
+import gov.usgs.cida.gdp.wps.algorithm.heuristic.UpdatePercentHeuristic;
 import gov.usgs.cida.gdp.wps.binding.CSVFileBinding;
 import gov.usgs.cida.gdp.wps.binding.GMLStreamingFeatureCollectionBinding;
 
@@ -254,6 +255,7 @@ public class FeatureGridStatisticsAlgorithm extends AbstractAnnotatedAlgorithm {
 		heuristics.add(new GeometrySizeAlgorithmHeuristic(featureCollection, requireFullCoverage));
 		heuristics.add(new SummaryOutputSizeAlgorithmHeuristic(cos, datasetId.size()));
 		heuristics.add(new TotalTimeAlgorithmHeuristic(datasetId.size()));
+		heuristics.add(new UpdatePercentHeuristic(this, datasetId.size()));
 		return heuristics;
 	}
 }
