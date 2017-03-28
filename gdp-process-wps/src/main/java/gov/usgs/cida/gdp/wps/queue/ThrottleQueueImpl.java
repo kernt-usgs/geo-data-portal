@@ -474,7 +474,6 @@ public class ThrottleQueueImpl implements ThrottleQueue {
     }
 
     private void addWorkToQueue(List<String> requestIds) throws ExceptionReport {
-        System.setProperty("javax.xml.parsers.DocumentBuilderFactory", "org.apache.xerces.jaxp.DocumentBuilderFactoryImpl");
 
         for (String id : requestIds) {
 
