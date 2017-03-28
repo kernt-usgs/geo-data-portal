@@ -175,4 +175,16 @@ public class ExecuteRequestWrapper extends ExecuteRequest {
     public void setId(UUID id) {
         this.id = id;
     }
+
+    @Override
+    public void update(ISubject subject) {
+        /* We will handle percent complete updates via MetadataObserver
+         * This needs to cancel out the super class which fails if subject is
+         * not Integer or String.
+         *
+         * In regular use, the super class should ignore subjects it can't handle
+         * rather than perform a botched update (currently ProcessFailed)
+         */
+    }
+
 }
