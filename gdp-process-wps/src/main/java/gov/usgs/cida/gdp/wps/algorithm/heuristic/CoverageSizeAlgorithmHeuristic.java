@@ -1,7 +1,6 @@
 package gov.usgs.cida.gdp.wps.algorithm.heuristic;
 
 import gov.usgs.cida.gdp.constants.AppConstant;
-import gov.usgs.cida.gdp.coreprocessing.analysis.grid.GridUtility;
 import gov.usgs.cida.gdp.utilities.OPeNDAPUtils;
 import gov.usgs.cida.gdp.utilities.exception.OPeNDAPUtilException;
 import gov.usgs.cida.gdp.wps.algorithm.GDPAlgorithmUtil;
@@ -12,14 +11,9 @@ import java.util.List;
 import org.apache.commons.io.FileUtils;
 
 import org.geotools.feature.FeatureCollection;
-import org.opengis.referencing.FactoryException;
-import org.opengis.referencing.operation.TransformException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ucar.ma2.InvalidRangeException;
-import ucar.ma2.Range;
-import ucar.nc2.dt.GridCoordSystem;
 import ucar.nc2.dt.GridDataset;
 import ucar.nc2.dt.GridDatatype;
 
@@ -81,47 +75,28 @@ public class CoverageSizeAlgorithmHeuristic extends AlgorithmHeuristic {
 		}
 		dataTypesEstimated++;
 		
-		Range timeRange = null;
-		Range yRange = null;
-		Range xRange = null;
-
-		int numVariables = gridVariableList.size();
-		int dataTypeSize = gridDatatype.getDataType().getSize();
 		String dataTypeName = gridDatatype.getDataType().name();
+		int numVariables = gridVariableList.size();
 		
-		GridDatatype subset = null;
-		try {
-			timeRange = GDPAlgorithmUtil.generateTimeRange(gridDatatype, dateTimeStart, dateTimeEnd);
-			GridCoordSystem gridCoordSystem = gridDatatype.getCoordinateSystem();
-			Range[] xyRanges = GridUtility.getXYRangesFromBoundingBox(featureCollection.getBounds(), gridCoordSystem, requireFullCoverage);
-			yRange = new Range(xyRanges[1].first(), xyRanges[1].last());
-			xRange = new Range(xyRanges[0].first(), xyRanges[0].last());
-			subset = gridDatatype.makeSubset(null, null, timeRange, null, yRange, xRange);
-		} catch (InvalidRangeException | TransformException | FactoryException e) {
-			log.debug("User specified invalid request", e);
-			// wrapping in Runtime to propogate to error handler, nothin we can do to recover
-			throw new RuntimeException(e);
-		}
+		GDPAlgorithmUtil.DataCube cubeSize = GDPAlgorithmUtil.calculateDataCube(gridDatatype, featureCollection, dateTimeStart, dateTimeEnd, requireFullCoverage);
 		
-		int xLength = subset.getXDimension().getLength();
-		int yLength = subset.getYDimension().getLength();
-		int tLength = subset.getTimeDimension().getLength();
+		long allVariableSize = cubeSize.totalSize * numVariables;
 		
-		long totalSize = xLength * yLength * tLength * numVariables * dataTypeSize;
 		log.debug("ResultSizeHeuristic on {}x{}x{} with {} variables of type {} has an estimated size of {} bytes",
-				xLength, yLength, tLength, numVariables, dataTypeName, totalSize);
+				cubeSize.xLength, cubeSize.yLength, cubeSize.tLength, numVariables, dataTypeName, allVariableSize);
 
-		if (totalSize >= maximumSizeConfigured) {
+		if (allVariableSize >= maximumSizeConfigured) {
 			StringBuilder message = new StringBuilder();
 			message.append(String.format(
 					"Estimated data size %s is greater than allowed maximum %s.",
-					FileUtils.byteCountToDisplaySize(totalSize), FileUtils.byteCountToDisplaySize(maximumSizeConfigured)));
+					FileUtils.byteCountToDisplaySize(allVariableSize), FileUtils.byteCountToDisplaySize(maximumSizeConfigured)));
 			
 			/*
 			 * Retrieve the OPeNDAP URL for this request
 			 */
 			try {
-				String OPeNDAPurl = OPeNDAPUtils.generateOpenDapURL(gridDataset.getLocationURI(), gridVariableList, gridDataset.getNetcdfFile().getVariables(), timeRange, yRange, xRange);
+				String OPeNDAPurl = OPeNDAPUtils.generateOpenDapURL(gridDataset.getLocationURI(), 
+						gridVariableList, gridDataset.getNetcdfFile().getVariables(), cubeSize.timeRange, cubeSize.yRange, cubeSize.xRange);
 				message.append("  The following URI can be used with the nccopy tool")
 					.append("to create a local copy of the data in the NetCDF4 format. See the Geo Data Portal")
 					.append("documentation for more information: ")
