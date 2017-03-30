@@ -10,4 +10,8 @@ ALTER TABLE request_metadata ADD COLUMN jobid TEXT,
 	ADD COLUMN varcount INTEGER,
 	ADD COLUMN cellsize_bytes INTEGER,
 	ADD COLUMN bounding_rect TEXT,
-	ADD COLUMN total_bytes BIGINT;
+	ADD COLUMN data_retrieved BIGINT,
+	ADD COLUMN data_returned BIGINT;
+
+-- changeset jiwalker:9addIdConstraint
+ALTER TABLE request_metadata ADD CONSTRAINT unique_request_constraint UNIQUE (request_id); 

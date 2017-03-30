@@ -41,9 +41,9 @@ public class DataFetchInfo implements IMetadataLogger {
 		try (Connection connection = connectionHandler.getConnection()) {
 			UUID pkey = UUID.randomUUID();
 			PreparedStatement prepared = connection.prepareStatement(
-					"INSERT INTO request_metadata (ID, REQUEST_ID, TIMESTEPS, GRIDCELLS, VARCOUNT, CELLSIZE_BYTES, BOUNDING_RECT, TOTAL_BYTES)"
+					"INSERT INTO request_metadata (ID, REQUEST_ID, TIMESTEPS, GRIDCELLS, VARCOUNT, CELLSIZE_BYTES, BOUNDING_RECT, DATA_RETRIEVED)"
 							+ " VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (REQUEST_ID) DO UPDATE SET TIMESTEPS = ?, GRIDCELLS = ?, VARCOUNT = ?, "
-							+ " CELLSIZE_BYTES = ?, BOUNDING_RECT = ?, TOTAL_BYTES = ?");
+							+ " CELLSIZE_BYTES = ?, BOUNDING_RECT = ?, DATA_RETRIEVED = ?");
 			prepared.setString(1, pkey.toString());
 			prepared.setString(2, requestId);
 			prepared.setInt(3, timesteps);
