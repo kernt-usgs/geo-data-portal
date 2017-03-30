@@ -4,7 +4,7 @@
 ALTER TABLE request_metadata ALTER COLUMN user_agent TYPE TEXT;
 
 -- changeset jiwalker:8addSizeInfo
-ALTER TABLE request_metadata ADD COLUMN jobid TEXT,
+ALTER TABLE request_metadata ADD COLUMN user_hash TEXT,
 	ADD COLUMN timesteps INTEGER,
 	ADD COLUMN gridcells BIGINT,
 	ADD COLUMN varcount INTEGER,

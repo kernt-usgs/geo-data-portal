@@ -1,16 +1,12 @@
 package org.n52.wps.server.handler;
 
-import gov.usgs.cida.gdp.wps.analytics.UserAgentInfo;
+import gov.usgs.cida.gdp.wps.analytics.ClientInfo;
+import gov.usgs.cida.gdp.wps.analytics.MetadataLoggingWorker;
 import gov.usgs.cida.gdp.wps.queue.ExecuteRequestManager;
-import gov.usgs.cida.gdp.wps.util.DatabaseUtil;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.RejectedExecutionException;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -18,7 +14,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.n52.wps.server.ExceptionReport;
 import org.n52.wps.server.WebProcessingService;
-import org.n52.wps.server.database.connection.ConnectionHandler;
 import org.n52.wps.server.request.CapabilitiesRequest;
 import org.n52.wps.server.request.DescribeProcessRequest;
 import org.n52.wps.server.request.ExecuteRequest;
@@ -40,6 +35,7 @@ public class GdpRequestHandler extends RequestHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GdpRequestHandler.class);
     private String userAgent;
+    private String ipAddr;
 
     /**
      * Handles requests of type HTTP_POST (currently executeProcess). A Document
@@ -160,6 +156,19 @@ public class GdpRequestHandler extends RequestHandler {
         this.userAgent = userAgent;
     }
 
+    public String getIpAddr() {
+        return ipAddr;
+    }
+
+    public void setIpAddr(String ... ipAddr) {
+        for (String addr : ipAddr) {
+            if (StringUtils.isNotBlank(addr)) {
+                this.ipAddr = addr;
+                return;  // only set the first viable ip
+            }
+        }
+    }
+
     /**
      * Handle a request after its type is determined. The request is scheduled
      * for execution. If the server has enough free resources, the client will
@@ -187,8 +196,9 @@ public class GdpRequestHandler extends RequestHandler {
             execReq.updateStatusAccepted();
             ExecuteRequestManager.getInstance().getThrottleQueue().putRequest(execReq); //inserts with ACCEPTED into the Throttle_Queue table. Does not actually add the request to the RequestQueue.
 
-            UserAgentInfo uaInfo = new UserAgentInfo(userAgent);
-            uaInfo.log(execReq.getUniqueId().toString());
+            ClientInfo uaInfo = new ClientInfo(userAgent, ipAddr);
+            MetadataLoggingWorker worker = new MetadataLoggingWorker(execReq.getUniqueId(), uaInfo);
+            worker.poolJob();
 
             if (execReq.isStoreResponse()) {
                 addToQueue(execReq, resp);

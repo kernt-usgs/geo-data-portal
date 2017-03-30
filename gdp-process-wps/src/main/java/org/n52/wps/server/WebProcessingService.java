@@ -324,6 +324,7 @@ public class WebProcessingService extends HttpServlet {
             String mimeType = handler.getResponseMimeType();
             res.setContentType(mimeType);
             handler.setUserAgent(req.getHeader(HttpHeaders.USER_AGENT)); //#USGS
+            handler.setIpAddr(req.getHeader("X-Client-IP"), req.getRemoteAddr());
             handler.handle();
 
             res.setStatus(HttpServletResponse.SC_OK);
