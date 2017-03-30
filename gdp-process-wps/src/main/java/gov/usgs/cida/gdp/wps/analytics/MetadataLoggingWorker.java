@@ -1,14 +1,10 @@
 package gov.usgs.cida.gdp.wps.analytics;
 
 import com.google.common.collect.Lists;
-import java.math.BigInteger;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Asynchronous calls to add extra process metadata to database.

@@ -33,10 +33,12 @@ public class UserAgentInfo implements IMetadataLogger {
             log.debug("Inserting Agent Logging with ID:" + requestId);
             try (Connection connection = connectionHandler.getConnection()) {
                 UUID pkey = UUID.randomUUID();
-                PreparedStatement prepared = connection.prepareStatement("INSERT INTO request_metadata (ID, REQUEST_ID, USER_AGENT) VALUES (?, ?, ?)");
+                PreparedStatement prepared = connection.prepareStatement("INSERT INTO request_metadata (ID, REQUEST_ID, USER_AGENT) VALUES (?, ?, ?) ON CONFLICT (REQUEST_ID)"
+                        + " DO UPDATE SET USER_AGENT = ?");
                 prepared.setString(1, pkey.toString());
                 prepared.setString(2, requestId);
                 prepared.setString(3, userAgent);
+                prepared.setString(4, userAgent);
                 prepared.execute();
             } catch (SQLException ex) {
                 log.debug("Problem logging user agent", ex);
