@@ -33,6 +33,10 @@
         <description>Tear down metadata logging thread pool before closing up shop</description>
         <listener-class>gov.usgs.cida.gdp.wps.analytics.MetadataWorkerServletListener</listener-class>
     </listener>
+    <listener>
+        <description>Start up or tear down the queue manager</description>
+        <listener-class>gov.usgs.cida.gdp.wps.queue.ExecuteRequestManager</listener-class>
+    </listener>
     <servlet>
         <servlet-name>wpsServlet</servlet-name>
         <servlet-class>org.n52.wps.server.WebProcessingService</servlet-class>

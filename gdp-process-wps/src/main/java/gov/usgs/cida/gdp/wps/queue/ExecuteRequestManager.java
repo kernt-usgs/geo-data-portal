@@ -2,6 +2,8 @@ package gov.usgs.cida.gdp.wps.queue;
 
 import java.util.Timer;
 import java.util.TimerTask;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,11 +12,13 @@ import org.slf4j.LoggerFactory;
  *
  * @author smlarson
  */
-// #TODO# rename to ExecuteRequestManager ...
-public class ExecuteRequestManager {
+public class ExecuteRequestManager implements ServletContextListener {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExecuteRequestManager.class);
+    private static final String TIMER_NAME = "RequestManagerPoll";
     private final ThrottleQueue queue;
     private final ExecuteRequestQueue executeQueue;
+
+    private Timer timer = null;
     
     // private constructor prevents instantiation from external classes
     private ExecuteRequestManager() {
@@ -58,10 +62,21 @@ public class ExecuteRequestManager {
         long period = 6000;
         
         
-    	TimerTask task = new ThrottleQueueExecuter();
+        TimerTask task = new ThrottleQueueExecuter();
 
-    	Timer timer = new Timer();
-    	timer.schedule(task, delay, period);  //Frequency that work is checked to be added to the queue. 1000, 6000 = milliseconds so a 1 second delay before the first execution and will check every 6 seconds
+        timer = new Timer(TIMER_NAME);
+        timer.schedule(task, delay, period);  //Frequency that work is checked to be added to the queue. 1000, 6000 = milliseconds so a 1 second delay before the first execution and will check every 6 seconds
 
+    }
+
+    @Override
+    public void contextInitialized(ServletContextEvent sce) {
+        // might as well initialize manager
+        ExecuteRequestManager.getInstance();
+    }
+
+    @Override
+    public void contextDestroyed(ServletContextEvent sce) {
+        timer.cancel();
     }
 }
