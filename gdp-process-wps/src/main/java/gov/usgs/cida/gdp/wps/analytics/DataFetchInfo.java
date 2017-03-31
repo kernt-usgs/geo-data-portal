@@ -61,7 +61,7 @@ public class DataFetchInfo implements IMetadataLogger {
 			
 			prepared.execute();
 		} catch (SQLException ex) {
-			log.debug("Problem logging user agent", ex);
+			log.debug("Problem logging fetch info", ex);
 		}
 	}
 	
