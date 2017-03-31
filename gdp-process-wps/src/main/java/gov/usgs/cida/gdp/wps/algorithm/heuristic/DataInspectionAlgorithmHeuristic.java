@@ -33,11 +33,9 @@ import ucar.nc2.dt.GridDatatype;
  * @author jiwalker
  *
  */
-public class FetchSizeAlgorithmHeuristic extends AlgorithmHeuristic {
+public class DataInspectionAlgorithmHeuristic extends AlgorithmHeuristic {
 
-	private static final Logger log = LoggerFactory.getLogger(FetchSizeAlgorithmHeuristic.class);
-
-	private static final DefaultMathTransformFactory transformFactory = new DefaultMathTransformFactory();
+	private static final Logger log = LoggerFactory.getLogger(DataInspectionAlgorithmHeuristic.class);
 	
 	private ISubject algorithm;
 	private FeatureCollection<?, ?> featureCollection;
@@ -50,7 +48,7 @@ public class FetchSizeAlgorithmHeuristic extends AlgorithmHeuristic {
 	private String footprint;
 	private DataFetchInfo info;
 	
-	public FetchSizeAlgorithmHeuristic(ISubject algorithm, FeatureCollection<?, ?> featureCollection,
+	public DataInspectionAlgorithmHeuristic(ISubject algorithm, FeatureCollection<?, ?> featureCollection,
 			Date dateTimeStart, Date dateTimeEnd, boolean requireFullCoverage) {
 		this.algorithm = algorithm;
 		this.featureCollection = featureCollection;
@@ -75,11 +73,10 @@ public class FetchSizeAlgorithmHeuristic extends AlgorithmHeuristic {
 		variableCount++;
 		int gridCells = dataCube.xLength * dataCube.xLength;
 		
-		if (footprint == null) {
+		if (footprint == null) { // somewhat expensive, only do once
 			footprint = calculateLatLonFootprint(gridDatatype);
 		}
-		// stubbing in bouning rect for now
-		// TODO get real bounding rect
+		
 		info = new DataFetchInfo(totalDataPulled, gridCells, dataCube.tLength, dataCube.dataTypeSize, variableCount, footprint);
 	}
 	
