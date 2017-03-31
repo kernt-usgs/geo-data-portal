@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author smlarson
  */
-public class ExecuteRequestManager implements ServletContextListener {
+public class ExecuteRequestManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExecuteRequestManager.class);
     private static final String TIMER_NAME = "RequestManagerPoll";
     private final ThrottleQueue queue;
@@ -69,14 +69,8 @@ public class ExecuteRequestManager implements ServletContextListener {
 
     }
 
-    @Override
-    public void contextInitialized(ServletContextEvent sce) {
-        // might as well initialize manager
-        ExecuteRequestManager.getInstance();
-    }
-
-    @Override
-    public void contextDestroyed(ServletContextEvent sce) {
+    public void shutdown() {
         timer.cancel();
     }
+
 }

@@ -35,7 +35,7 @@
     </listener>
     <listener>
         <description>Start up or tear down the queue manager</description>
-        <listener-class>gov.usgs.cida.gdp.wps.queue.ExecuteRequestManager</listener-class>
+        <listener-class>gov.usgs.cida.gdp.wps.queue.QueueServletListener</listener-class>
     </listener>
     <servlet>
         <servlet-name>wpsServlet</servlet-name>
