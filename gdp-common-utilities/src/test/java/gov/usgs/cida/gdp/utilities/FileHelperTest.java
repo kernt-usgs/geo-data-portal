@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import org.apache.commons.codec.binary.Base64;
 import org.slf4j.LoggerFactory;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -101,9 +102,11 @@ public class FileHelperTest {
     @Test
     public void base64EncodeWithByteArray() throws IOException {
 		System.out.println("Test: " + "base64EncodeWithByteArray");
-        byte[] result = FileHelper.base64Encode(new byte[]{'a', 'b', 'c', 'd', 'e', 'f', 'g'});
+        byte[] orig = new byte[]{'a', 'b', 'c', 'd', 'e', 'f', 'g'};
+        byte[] result = FileHelper.base64Encode(orig);
+        byte[] roundTrip = Base64.decodeBase64(result);
         assertThat(result, is(not(nullValue())));
-        assertThat(result.length, is(equalTo(14)));
+        assertThat(roundTrip, is(equalTo(orig)));
     }
 
     @Test
