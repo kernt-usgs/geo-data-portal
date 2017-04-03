@@ -10,6 +10,7 @@ import gov.usgs.cida.gdp.coreprocessing.Delimiter;
 import gov.usgs.cida.gdp.coreprocessing.analysis.grid.GridUtility.IndexToCoordinateBuilder;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -52,7 +53,7 @@ public class FeatureCategoricalGridCoverage {
             String attributeName,
             GridDataset gridDataset,
             String variableName,
-            BufferedWriter writer,
+            Writer writer,
             Delimiter delimiter)
             throws IOException, InvalidRangeException, FactoryException, TransformException, SchemaException {
         GridDatatype gridDatatype
@@ -67,7 +68,7 @@ public class FeatureCategoricalGridCoverage {
             FeatureCollection<SimpleFeatureType, SimpleFeature> featureCollection,
             String attributeName,
             GridDatatype gridDataType,
-            BufferedWriter writer,
+            Writer writer,
             Delimiter delimiter,
             boolean requireFullCoverage)
             throws IOException, InvalidRangeException, FactoryException, TransformException, SchemaException {
@@ -239,13 +240,13 @@ public class FeatureCategoricalGridCoverage {
     protected static class SimpleDelimitedWriter {
 
         private String delimiter;
-        private BufferedWriter writer;
+        private Writer writer;
 
         private StringBuilder lineSB = new StringBuilder();
 
         public SimpleDelimitedWriter(
                 Delimiter delimiter,
-                BufferedWriter writer) {
+                Writer writer) {
 
             this.delimiter = delimiter.delimiter;
             this.writer = writer;
@@ -266,7 +267,7 @@ public class FeatureCategoricalGridCoverage {
                 lineSB.append(delimiter).append(rowValue);
             }
             writer.write(lineSB.toString());
-            writer.newLine();
+            writer.write("\n");
         }
     }
 

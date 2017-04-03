@@ -61,8 +61,8 @@ public class SummaryOutputSizeAlgorithmHeuristic extends AlgorithmHeuristic {
 	@Override
 	public boolean traverseContinue() {
 		return (stepsCounted < evalSteps);
-	}
-	
+	}	
+
 	@Override
 	public void traverseEnd() {
 		OutputInfo outputInfo = new OutputInfo(cos.getByteCount());

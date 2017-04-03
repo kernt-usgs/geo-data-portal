@@ -15,6 +15,7 @@ import gov.usgs.cida.gdp.wps.algorithm.heuristic.TotalTimeAlgorithmHeuristic;
 import gov.usgs.cida.gdp.wps.algorithm.heuristic.UpdatePercentHeuristic;
 import gov.usgs.cida.gdp.wps.binding.CSVFileBinding;
 import gov.usgs.cida.gdp.wps.binding.GMLStreamingFeatureCollectionBinding;
+import java.io.BufferedOutputStream;
 
 import static org.n52.wps.algorithm.annotation.LiteralDataInput.ENUM_COUNT;
 
@@ -23,6 +24,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.Writer;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Date;
@@ -187,7 +190,7 @@ public class FeatureGridStatisticsAlgorithm extends AbstractAnnotatedAlgorithm {
 
 	@Execute
 	public void process() {
-		BufferedWriter writer = null;
+		Writer writer = null;
 		try {
 			if (featureCollection.getSchema().getDescriptor(featureAttributeName) == null) {
 				addError("Attribute " + featureAttributeName + " not found in feature collection");
@@ -195,8 +198,8 @@ public class FeatureGridStatisticsAlgorithm extends AbstractAnnotatedAlgorithm {
 			}
 
 			output = File.createTempFile(getClass().getSimpleName(), delimiter.extension, new File(AppConstant.WORK_LOCATION.getValue()));
-			CountingOutputStream cos = new CountingOutputStream(new FileOutputStream(output));
-			writer = new BufferedWriter(new OutputStreamWriter(cos));
+			CountingOutputStream cos = new CountingOutputStream(new BufferedOutputStream(new FileOutputStream(output)));
+			writer = new PrintWriter(new OutputStreamWriter(cos), true);
 
 			List<GridCellVisitor> heuristics = setupHeuristics(cos);
 			
@@ -213,7 +216,7 @@ public class FeatureGridStatisticsAlgorithm extends AbstractAnnotatedAlgorithm {
 						timeEnd);
 
 				writer.write("# " + currentDatasetId);
-				writer.newLine();
+				writer.write("\n");
 				FeatureCoverageGridStatistics.execute(
 						featureCollection,
 						featureAttributeName,

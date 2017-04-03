@@ -6,8 +6,8 @@ import org.junit.Test;
 import ucar.nc2.Dimension;
 import ucar.nc2.dt.GridDatatype;
 
-import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.closeTo;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -51,7 +51,7 @@ public class TimingHeuristicGridCellVisitorTest {
 		Thread.sleep(500);
 		instance.tEnd(1);
 		long result = instance.estimateTotalTime();
-		assertThat(result, is(equalTo(5000l)));
+		assertThat((double)result, is(closeTo(5000d, 50d)));
 	}
 	
 	@Test

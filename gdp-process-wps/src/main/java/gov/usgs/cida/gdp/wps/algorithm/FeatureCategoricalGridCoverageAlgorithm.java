@@ -26,6 +26,7 @@ import gov.usgs.cida.gdp.coreprocessing.Delimiter;
 import gov.usgs.cida.gdp.coreprocessing.analysis.grid.FeatureCategoricalGridCoverage;
 import gov.usgs.cida.gdp.wps.binding.CSVFileBinding;
 import gov.usgs.cida.gdp.wps.binding.GMLStreamingFeatureCollectionBinding;
+import java.io.Writer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ucar.ma2.InvalidRangeException;
@@ -121,7 +122,7 @@ public class FeatureCategoricalGridCoverageAlgorithm extends AbstractAnnotatedAl
     @Execute
     public void process() {
 //        FeatureDataset featureDataset = null;
-        BufferedWriter writer = null;
+        Writer writer = null;
 
         try {
             String extension = (delimiter == null) ? Delimiter.getDefault().extension : delimiter.extension;
@@ -135,7 +136,7 @@ public class FeatureCategoricalGridCoverageAlgorithm extends AbstractAnnotatedAl
                         featureCollection.getBounds(), requireFullCoverage);
                 
                 writer.write("# " + currentDatasetId);
-                writer.newLine();
+                writer.write("\n");
                 FeatureCategoricalGridCoverage.execute(
                         featureCollection,
                         featureAttributeName,
