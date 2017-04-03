@@ -1,5 +1,6 @@
 package org.n52.wps.server.request;
 
+import gov.usgs.cida.gdp.wps.analytics.MetadataObserver;
 import gov.usgs.cida.gdp.wps.queue.ExecuteRequestManager;
 import gov.usgs.cida.gdp.wps.queue.ThrottleStatus;
 import java.util.Arrays;
@@ -51,6 +52,7 @@ public class ExecuteRequestWrapper extends ExecuteRequest {
     public Response call() throws ExceptionReport {
         IAlgorithm algorithm = null;
         Map<String, List<IData>> inputMap = null;
+        MetadataObserver metaObs = new MetadataObserver(this.getUniqueId());
 
         LOGGER_WRAPPER.info("PROCESSING in call of ExecuteRequestWrapper. reqId: " + this.getUniqueId());
         try {
@@ -92,7 +94,7 @@ public class ExecuteRequestWrapper extends ExecuteRequest {
             if (algorithm instanceof ISubject) {
                 ISubject subject = (ISubject) algorithm;
                 subject.addObserver(this);
-
+                subject.addObserver(metaObs);
             }
 
             if (algorithm instanceof AbstractTransactionalAlgorithm) {
@@ -142,7 +144,9 @@ public class ExecuteRequestWrapper extends ExecuteRequest {
             //  you ***MUST*** call this or else you will have a PermGen ClassLoader memory leak due to ThreadLocal use
             ExecutionContextFactory.unregisterContext();
             if (algorithm instanceof ISubject) {
-                ((ISubject) algorithm).removeObserver(this);
+                ISubject subject = (ISubject) algorithm;
+                subject.removeObserver(this);
+                subject.removeObserver(metaObs);
             }
             if (inputMap != null) {
                 for (List<IData> l : inputMap.values()) {
@@ -171,4 +175,16 @@ public class ExecuteRequestWrapper extends ExecuteRequest {
     public void setId(UUID id) {
         this.id = id;
     }
+
+    @Override
+    public void update(ISubject subject) {
+        /* We will handle percent complete updates via MetadataObserver
+         * This needs to cancel out the super class which fails if subject is
+         * not Integer or String.
+         *
+         * In regular use, the super class should ignore subjects it can't handle
+         * rather than perform a botched update (currently ProcessFailed)
+         */
+    }
+
 }

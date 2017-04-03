@@ -2,7 +2,6 @@ package gov.usgs.cida.gdp.wps.algorithm;
 
 import static org.n52.wps.algorithm.annotation.LiteralDataInput.*;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -36,11 +35,16 @@ import gov.usgs.cida.gdp.coreprocessing.analysis.grid.FeatureCoverageWeightedGri
 import gov.usgs.cida.gdp.coreprocessing.analysis.grid.GridCellVisitor;
 import gov.usgs.cida.gdp.coreprocessing.analysis.grid.Statistics1DWriter.GroupBy;
 import gov.usgs.cida.gdp.coreprocessing.analysis.grid.WeightedStatistic;
+import gov.usgs.cida.gdp.wps.algorithm.heuristic.DataInspectionAlgorithmHeuristic;
 import gov.usgs.cida.gdp.wps.algorithm.heuristic.GeometrySizeAlgorithmHeuristic;
 import gov.usgs.cida.gdp.wps.algorithm.heuristic.SummaryOutputSizeAlgorithmHeuristic;
 import gov.usgs.cida.gdp.wps.algorithm.heuristic.TotalTimeAlgorithmHeuristic;
+import gov.usgs.cida.gdp.wps.algorithm.heuristic.UpdatePercentHeuristic;
 import gov.usgs.cida.gdp.wps.binding.CSVFileBinding;
 import gov.usgs.cida.gdp.wps.binding.GMLStreamingFeatureCollectionBinding;
+import java.io.BufferedOutputStream;
+import java.io.PrintWriter;
+import java.io.Writer;
 import ucar.ma2.InvalidRangeException;
 import ucar.ma2.Range;
 import ucar.nc2.dt.GridDatatype;
@@ -207,7 +211,7 @@ public class FeatureWeightedGridStatisticsAlgorithm extends AbstractAnnotatedAlg
 			return;
 		}
 
-		BufferedWriter writer = null;
+		Writer writer = null;
 
 		try {
 			if (featureCollection.getSchema().getDescriptor(featureAttributeName) == null) {
@@ -215,8 +219,8 @@ public class FeatureWeightedGridStatisticsAlgorithm extends AbstractAnnotatedAlg
 				return;
 			}
 			output = File.createTempFile(getClass().getSimpleName(), delimiter.extension, new File(AppConstant.WORK_LOCATION.getValue()));
-			CountingOutputStream cos = new CountingOutputStream(new FileOutputStream(output));
-			writer = new BufferedWriter(new OutputStreamWriter(cos));
+			CountingOutputStream cos = new CountingOutputStream(new BufferedOutputStream(new FileOutputStream(output)));
+			writer = new PrintWriter(new OutputStreamWriter(cos), true);
 
 			List<GridCellVisitor> heuristics = setupHeuristics(cos);
 			
@@ -233,7 +237,7 @@ public class FeatureWeightedGridStatisticsAlgorithm extends AbstractAnnotatedAlg
 						timeEnd);
 
 				writer.write("# " + currentDatasetId);
-				writer.newLine();
+				writer.write("\n");
 				FeatureCoverageWeightedGridStatistics.execute(
 						featureCollection,
 						featureAttributeName,
@@ -267,8 +271,10 @@ public class FeatureWeightedGridStatisticsAlgorithm extends AbstractAnnotatedAlg
 	private List<GridCellVisitor> setupHeuristics(CountingOutputStream cos) {
 		List<GridCellVisitor> heuristics = new LinkedList<>();
 		heuristics.add(new GeometrySizeAlgorithmHeuristic(featureCollection, requireFullCoverage));
-		heuristics.add(new SummaryOutputSizeAlgorithmHeuristic(cos, datasetId.size()));
+		heuristics.add(new SummaryOutputSizeAlgorithmHeuristic(this, cos, datasetId.size()));
 		heuristics.add(new TotalTimeAlgorithmHeuristic(datasetId.size()));
+		heuristics.add(new UpdatePercentHeuristic(this, datasetId.size()));
+		heuristics.add(new DataInspectionAlgorithmHeuristic(this, featureCollection, timeStart, timeEnd, requireFullCoverage));
 		return heuristics;
 	}
 }

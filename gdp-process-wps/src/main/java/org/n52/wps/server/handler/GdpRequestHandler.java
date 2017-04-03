@@ -1,15 +1,12 @@
 package org.n52.wps.server.handler;
 
+import gov.usgs.cida.gdp.wps.analytics.ClientInfo;
+import gov.usgs.cida.gdp.wps.analytics.MetadataLoggingWorker;
 import gov.usgs.cida.gdp.wps.queue.ExecuteRequestManager;
-import gov.usgs.cida.gdp.wps.util.DatabaseUtil;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.RejectedExecutionException;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -17,7 +14,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.n52.wps.server.ExceptionReport;
 import org.n52.wps.server.WebProcessingService;
-import org.n52.wps.server.database.connection.ConnectionHandler;
 import org.n52.wps.server.request.CapabilitiesRequest;
 import org.n52.wps.server.request.DescribeProcessRequest;
 import org.n52.wps.server.request.ExecuteRequest;
@@ -38,8 +34,8 @@ import org.xml.sax.SAXException;
 public class GdpRequestHandler extends RequestHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GdpRequestHandler.class);
-    private static ConnectionHandler connectionHandler = DatabaseUtil.getJNDIConnectionHandler();
     private String userAgent;
+    private String ipAddr;
 
     /**
      * Handles requests of type HTTP_POST (currently executeProcess). A Document
@@ -160,6 +156,19 @@ public class GdpRequestHandler extends RequestHandler {
         this.userAgent = userAgent;
     }
 
+    public String getIpAddr() {
+        return ipAddr;
+    }
+
+    public void setIpAddr(String ... ipAddr) {
+        for (String addr : ipAddr) {
+            if (StringUtils.isNotBlank(addr)) {
+                this.ipAddr = addr;
+                return;  // only set the first viable ip
+            }
+        }
+    }
+
     /**
      * Handle a request after its type is determined. The request is scheduled
      * for execution. If the server has enough free resources, the client will
@@ -179,7 +188,6 @@ public class GdpRequestHandler extends RequestHandler {
         if (req == null) {
             throw new ExceptionReport("Internal Error", "");
         }
-        handleAgentLogging();  //USGS override logic: inserts the user_agent into the meta-data table. Required the requestId for the insert.
 
         if (req instanceof ExecuteRequestWrapper) {
             ExecuteRequestWrapper execReq = (ExecuteRequestWrapper) req; //#USGS override code
@@ -187,6 +195,10 @@ public class GdpRequestHandler extends RequestHandler {
             LOGGER.debug("RequestId before updating to Accepted:" + execReq.getUniqueId());
             execReq.updateStatusAccepted();
             ExecuteRequestManager.getInstance().getThrottleQueue().putRequest(execReq); //inserts with ACCEPTED into the Throttle_Queue table. Does not actually add the request to the RequestQueue.
+
+            ClientInfo uaInfo = new ClientInfo(userAgent, ipAddr);
+            MetadataLoggingWorker worker = new MetadataLoggingWorker(execReq.getUniqueId(), uaInfo);
+            worker.poolJob();
 
             if (execReq.isStoreResponse()) {
                 addToQueue(execReq, resp);
@@ -258,27 +270,6 @@ public class GdpRequestHandler extends RequestHandler {
                 }
 
                 LOGGER.info("Served ExecuteRequest.");
-            }
-        }
-    }
-
-    // below is all the USGS additional functionality that is sliced into the original RequestHandler
-    //this was originally done first and then it was tossed back to the parent.handle(). Had to add another intercept at a different point so now override the entire handle method
-    public void handleAgentLogging() throws ExceptionReport {
-        if (StringUtils.isNotBlank(userAgent)) {
-            UUID uniqueId = super.req.getUniqueId();
-            LOGGER.debug("Inserting Agent Logging with ID:" + uniqueId);
-            //UUID uniqueId = parent.req.getUniqueId();
-            try (Connection connection = connectionHandler.getConnection()) {
-                UUID pkey = UUID.randomUUID();
-                PreparedStatement prepared = connection.prepareStatement("INSERT INTO request_metadata (ID, REQUEST_ID, USER_AGENT) VALUES (?, ?, ?)");
-                prepared.setString(1, pkey.toString());
-                prepared.setString(2, uniqueId.toString());
-                prepared.setString(3,userAgent);
-                prepared.execute();
-            } catch (SQLException ex) {
-                LOGGER.debug("Problem logging user agent", ex);
-                // don't rethrow, just keep going
             }
         }
     }

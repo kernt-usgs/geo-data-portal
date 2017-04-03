@@ -1,6 +1,7 @@
 package gov.usgs.cida.gdp.wps.queue;
 
 import gov.usgs.cida.gdp.wps.util.DatabaseUtil;
+import gov.usgs.cida.gdp.wps.util.DocumentUtil;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -457,7 +458,7 @@ public class ThrottleQueueImpl implements ThrottleQueue {
             // getRemainingWork and add it to the queue
             List<String> requestIds = getRemainingWork();
 
-            if (null != requestIds) {
+            if (null != requestIds && requestIds.size() > 0) {
                 LOGGER.debug("Quantity of work to be addeded to queue:" + requestIds.size());
                 addWorkToQueue(requestIds);
             } else {
@@ -474,7 +475,6 @@ public class ThrottleQueueImpl implements ThrottleQueue {
     }
 
     private void addWorkToQueue(List<String> requestIds) throws ExceptionReport {
-        System.setProperty("javax.xml.parsers.DocumentBuilderFactory", "org.apache.xerces.jaxp.DocumentBuilderFactoryImpl");
 
         for (String id : requestIds) {
 
@@ -482,12 +482,7 @@ public class ThrottleQueueImpl implements ThrottleQueue {
                 //need to get the ExecuteRequest from the db and re-create the wrapped request
                 LOGGER.debug("Creating doc and request so that work can be added to throttle queue: " + id);
                 String xml = getDoc(id);  //SELECT_REQUEST_XML
-                Document doc = null;
-                DocumentBuilderFactory fac = DocumentBuilderFactory.newInstance();
-                fac.setNamespaceAware(true);
-
-                // parse the InputStream to create a Document
-                doc = fac.newDocumentBuilder().parse(new ByteArrayInputStream(xml.getBytes("UTF-8")));
+                Document doc = DocumentUtil.createDocument(new ByteArrayInputStream(xml.getBytes("UTF-8")));
                 // add to the pool ie RequestHandler
                 ExecuteRequestWrapper req = new ExecuteRequestWrapper(doc);
                 //must reset the id to the previously stored id that occurred when the request was 'ACCEPTED'
@@ -496,7 +491,7 @@ public class ThrottleQueueImpl implements ThrottleQueue {
 
                 ExecuteRequestManager.getInstance().getExecuteRequestQueue().put(req); //adds the request to the queue
 
-            } catch (ParserConfigurationException | SAXException | IOException ex) {
+            } catch (SAXException | IOException ex) {
                 String msg = "Error in parsing doc for setting up remaining work on queue.";
                 LOGGER.debug(msg);
                 throw new ExceptionReport(msg, ExceptionReport.NO_APPLICABLE_CODE);
