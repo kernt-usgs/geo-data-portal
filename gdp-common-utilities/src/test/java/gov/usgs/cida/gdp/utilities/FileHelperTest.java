@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import org.geotools.data.Base64;
+import org.apache.commons.codec.binary.Base64;
 import org.slf4j.LoggerFactory;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -104,11 +104,9 @@ public class FileHelperTest {
 		System.out.println("Test: " + "base64EncodeWithByteArray");
         byte[] orig = new byte[]{'a', 'b', 'c', 'd', 'e', 'f', 'g'};
         byte[] result = FileHelper.base64Encode(orig);
-        byte[] roundTrip = Base64.decode(result);
+        byte[] roundTrip = Base64.decodeBase64(result);
         assertThat(result, is(not(nullValue())));
-        for (int i=0; i < orig.length; i++) {
-            assertThat(roundTrip[i], is(equalTo(orig[i])));
-        }
+        assertThat(roundTrip, is(equalTo(orig)));
     }
 
     @Test
