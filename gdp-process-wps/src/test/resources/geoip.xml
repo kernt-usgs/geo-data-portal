@@ -1,0 +1,13 @@
+<Response>
+	<IP>130.11.177.171</IP>
+	<CountryCode>US</CountryCode>
+	<CountryName>United States</CountryName>
+	<RegionCode>OH</RegionCode>
+	<RegionName>Ohio</RegionName>
+	<City>Columbus</City>
+	<ZipCode>43229</ZipCode>
+	<TimeZone>America/New_York</TimeZone>
+	<Latitude>40.0853</Latitude>
+	<Longitude>-82.9752</Longitude>
+	<MetroCode>535</MetroCode>
+</Response>

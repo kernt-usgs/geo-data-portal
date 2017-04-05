@@ -44,7 +44,9 @@ public enum AppConstant {
     HEURISTIC_GEOMETRY_MEMORY_MAX("gdp.heuristic.geometry.memory.max"), // Max bytes for process at single timestep
     HEURISTIC_GEOMETRY_FEATURE_EDGES("gdp.heuristic.geometry.feature.edges"), // Heuristic value for edges per feature
     HEURISTIC_SUMMARY_OUTPUT_MAX("gdp.heuristic.summary.output.max"), // Max size for csv/tsv file
-    HEURISTIC_TIME_TOTAL_MAX("gdp.heuristic.time.max"); // Total job time to allow before failing (actual processing)
+    HEURISTIC_TIME_TOTAL_MAX("gdp.heuristic.time.max"), // Total job time to allow before failing (actual processing)
+
+    ANALYTICS_GEOIP_ENDPOINT("gdp.analytics.geoip.endpoint"); // Where to get IP to location info
 
     private String input;
     private String value;
@@ -200,6 +202,12 @@ public enum AppConstant {
             if (input.equals("gdp.heuristic.time.max")) {
                 result = String.valueOf(24l * 60l * 60l * 1000l); // 24 hours
             }
+
+            // ANALYTICS_GEOIP_ENDPOINT
+            if (input.equals("gdp.analytics.geoip.endpoint")) {
+                result = "https://freegeoip.net/xml/";
+            }
+
             System.setProperty(input, result);
         }
 
