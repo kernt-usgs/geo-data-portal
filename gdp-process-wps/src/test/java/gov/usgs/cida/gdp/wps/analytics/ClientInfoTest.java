@@ -30,7 +30,7 @@ public class ClientInfoTest {
 	}
 
 	@Test
-	public void testSomeMethod() throws SAXException, IOException {
+	public void testGeoIPParse() throws SAXException, IOException {
 		String location = ClientInfo.GeoIP.parse(is);
 		assertThat(location, is(equalTo("POINT(-82.9752 40.0853)")));
 	}
