@@ -20,13 +20,13 @@ public class DataFetchInfo implements IMetadataLogger {
 	private static final ConnectionHandler connectionHandler = DatabaseUtil.getJNDIConnectionHandler();
 	
 	private long fetchSize;
-	private int gridCells;
+	private long gridCells;
 	private int timesteps;
 	private int cellSize;
 	private int numVars;
 	private String boundingRect;
 	
-	public DataFetchInfo(long fetchSize, int gridCells, int timesteps, int cellSize, int numVars, String boundingRect) {
+	public DataFetchInfo(long fetchSize, long gridCells, int timesteps, int cellSize, int numVars, String boundingRect) {
 		this.fetchSize = fetchSize;
 		this.gridCells = gridCells;
 		this.timesteps = timesteps;

@@ -1,5 +1,8 @@
 package gov.usgs.cida.gdp.wps.service;
 
+import gov.usgs.cida.gdp.wps.analytics.ClientInfo;
+import gov.usgs.cida.gdp.wps.analytics.DataFetchInfo;
+import gov.usgs.cida.gdp.wps.analytics.OutputInfo;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
@@ -21,6 +24,9 @@ public class DashboardData {
     private String elapsedTime = null;
     private String output = null;
     private String errorMessage = null;
+    private ClientInfo clientInfo = null;
+    private DataFetchInfo dataFetchInfo = null;
+    private OutputInfo outputInfo = null;
 
     public String getIdentifier() {
         return identifier;
@@ -99,6 +105,30 @@ public class DashboardData {
 	 */
 	public void setRequestLink(String requestLink) {
 		this.requestLink = requestLink;
+	}
+
+	public ClientInfo getClientInfo() {
+		return clientInfo;
+	}
+
+	public void setClientInfo(ClientInfo clientInfo) {
+		this.clientInfo = clientInfo;
+	}
+
+	public DataFetchInfo getDataFetchInfo() {
+		return dataFetchInfo;
+	}
+
+	public void setDataFetchInfo(DataFetchInfo dataFetchInfo) {
+		this.dataFetchInfo = dataFetchInfo;
+	}
+
+	public OutputInfo getOutputInfo() {
+		return outputInfo;
+	}
+
+	public void setOutputInfo(OutputInfo outputInfo) {
+		this.outputInfo = outputInfo;
 	}
 	
     /**

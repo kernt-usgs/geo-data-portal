@@ -42,17 +42,25 @@ public class ClientInfo implements IMetadataLogger {
 	
 	private final String userAgent;
 	private final String userIp;
+	private String userHash;
+	private String userGeo;
 	
 	public ClientInfo(String userAgent, String ip) {
+		this(userAgent, ip, null, null);
+	}
+	
+	public ClientInfo(String userAgent, String ip, String userHash, String userGeo) {
 		this.userAgent = userAgent;
 		this.userIp = ip;
+		this.userHash = userHash;
+		this.userGeo = userGeo;
 	}
 	
 	@Override
 	public void log(String requestId) {
 		
-		String userHash = calculateHash();
-		String userGeo = lookupLocation();
+		userHash = calculateHash();
+		userGeo = lookupLocation();
 		if (StringUtils.isNotBlank(userAgent)) {
 			log.debug("Inserting Agent Logging with ID:" + requestId);
 			try (Connection connection = connectionHandler.getConnection()) {
