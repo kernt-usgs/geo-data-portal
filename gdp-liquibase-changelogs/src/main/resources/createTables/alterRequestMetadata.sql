@@ -14,4 +14,7 @@ ALTER TABLE request_metadata ADD COLUMN user_hash TEXT,
 	ADD COLUMN data_returned BIGINT;
 
 -- changeset jiwalker:9addIdConstraint
-ALTER TABLE request_metadata ADD CONSTRAINT unique_request_constraint UNIQUE (request_id); 
+ALTER TABLE request_metadata ADD CONSTRAINT unique_request_constraint UNIQUE (request_id);
+
+-- changeset jiwalker:10addGeoInformation
+ALTER TABLE request_metadata ADD COLUMN user_geo TEXT;
