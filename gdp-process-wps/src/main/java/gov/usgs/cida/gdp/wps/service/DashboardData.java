@@ -20,6 +20,7 @@ public class DashboardData {
 	private String requestLink = null;
     private String identifier = null;
     private String status = null;
+    private Integer percentComplete = null;
     private String creationTime = null;
     private String elapsedTime = null;
     private String output = null;
@@ -42,6 +43,14 @@ public class DashboardData {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public Integer getPercentComplete() {
+        return percentComplete;
+    }
+
+    public void setPercentComplete(Integer percentComplete) {
+        this.percentComplete = percentComplete;
     }
 
     public String getCreationTime() {

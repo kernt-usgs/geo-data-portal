@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
 public class ProcessListService extends BaseProcessServlet {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ProcessListService.class);
-	private static final String DATA_QUERY = "select r.request_id, r.wps_algorithm_identifier, r.status, "
+	private static final String DATA_QUERY = "select r.request_id, r.wps_algorithm_identifier, r.status, r.percent_complete, "
 			+ "r.creation_time, r.start_time, r.end_time, r.exception_text, m.user_agent, m.user_hash, m.user_geo, "
 			+ "m.timesteps, m.gridcells, m.varcount, m.cellsize_bytes, m.bounding_rect, m.data_retrieved, m.data_returned "
 			+ "from response r, request_metadata m where m.request_id = r.request_id and r.request_id like ?;";
@@ -116,6 +116,7 @@ public class ProcessListService extends BaseProcessServlet {
 					Timestamp creationDate = rs.getTimestamp("creation_time");
 					String wpsAlgorithmIdentifier = rs.getString("wps_algorithm_identifier");
 					String status = rs.getString("status");
+					int percentComplete = rs.getInt("percent_complete");
 					Timestamp startDate = rs.getTimestamp("start_time");
 					Timestamp endDate = rs.getTimestamp("end_time");
 					String exceptionText = rs.getString("exception_text");
@@ -143,6 +144,7 @@ public class ProcessListService extends BaseProcessServlet {
 					data.setIdentifier(ClassUtils.getShortClassName(wpsAlgorithmIdentifier));
 					data.setErrorMessage(exceptionText);
 					data.setStatus(status);
+					data.setPercentComplete(percentComplete);
 					data.setCreationTime(creationDate.getTime());
 					data.setClientInfo(new ClientInfo(userAgent, null, userHash, userGeo));
 					data.setDataFetchInfo(new DataFetchInfo(dataRetrieved, gridcells, timesteps, cellsizeBytes, varcount, boundingRect));
