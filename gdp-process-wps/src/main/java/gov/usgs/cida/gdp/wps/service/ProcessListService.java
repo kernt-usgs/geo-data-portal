@@ -16,6 +16,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.GZIPInputStream;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -70,6 +71,8 @@ public class ProcessListService extends BaseProcessServlet {
 			int offset = NO_OFFSET;
 			String reqPage = req.getParameter("page");
 			
+			Map<String, String[]> params = req.getParameterMap();
+			
 			if (StringUtils.isNotBlank(reqPage)) {
 				try {
 					offset = (Integer.parseInt(reqPage, 10) - 1) * DEFAULT_LIMIT;
@@ -78,7 +81,7 @@ public class ProcessListService extends BaseProcessServlet {
 				}
 			}
 			
-			String json = new GsonBuilder().disableHtmlEscaping().create().toJson(getDashboardData(offset, req));
+			String json = new GsonBuilder().disableHtmlEscaping().create().toJson(getDashboardData(offset, params));
 			resp.setContentType("application/json");
 			resp.getWriter().write(json);
 			resp.flushBuffer();
@@ -93,9 +96,9 @@ public class ProcessListService extends BaseProcessServlet {
 		resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "This servlet is read only. Try using Get.");
 	}
 
-	private List<DashboardData> getDashboardData(int offset, HttpServletRequest req) throws SQLException {
+	private List<DashboardData> getDashboardData(int offset, Map<String, String[]> params) throws SQLException {
 		List<DashboardData> dataset = new ArrayList<>();
-		for (String request : getRequestIds(DEFAULT_LIMIT, offset)) {
+		for (String request : getRequestIds(DEFAULT_LIMIT, offset, params)) {
 			DashboardData dashboardData = buildDashboardData(request);
 			dashboardData.setRequestId(request);
 			dashboardData.setRequestLink(BASE_URL + "/request?id=" + request);

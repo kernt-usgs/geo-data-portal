@@ -7,7 +7,7 @@ $(document).ready(function () {
 	
 	var reload = function () {
 		$('#lastProcessLoad').text(new Date().timeNow());
-		$.get('list?page=' + page)
+		$.get(listUrl(page, status, hash))
 			.done(function (processJSON) {
 				$('#processData').empty();
 				if (processJSON.length) {
@@ -99,4 +99,15 @@ Date.prototype.timeNow = function () {
 
 function zeroPadSingleDigit (value) {
 	return value < 10 ? "0" + value : value;
+}
+
+function listUrl(page, status, hash) {
+	var url = 'list?page=' + page;
+	if (status !== '') {
+		url += '&status=' + status;
+	}
+	if (hash !== '') {
+		url += '&hash=' + hash;
+	}
+	return url;
 }
