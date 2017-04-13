@@ -1,6 +1,9 @@
 package gov.usgs.cida.gdp.wps.service;
 
 import com.google.gson.GsonBuilder;
+import gov.usgs.cida.gdp.wps.analytics.ClientInfo;
+import gov.usgs.cida.gdp.wps.analytics.DataFetchInfo;
+import gov.usgs.cida.gdp.wps.analytics.OutputInfo;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -36,7 +39,10 @@ import org.slf4j.LoggerFactory;
 public class ProcessListService extends BaseProcessServlet {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ProcessListService.class);
-	private static final String DATA_QUERY = "select request_id, wps_algorithm_identifier, status, creation_time, start_time, end_time, exception_text from response where request_id like ?;";
+	private static final String DATA_QUERY = "select r.request_id, r.wps_algorithm_identifier, r.status, r.percent_complete, "
+			+ "r.creation_time, r.start_time, r.end_time, r.exception_text, m.user_agent, m.user_hash, m.user_geo, "
+			+ "m.timesteps, m.gridcells, m.varcount, m.cellsize_bytes, m.bounding_rect, m.data_retrieved, m.data_returned "
+			+ "from response r, request_metadata m where m.request_id = r.request_id and r.request_id like ?;";
 	private static final int DATA_QUERY_REQUEST_ID_PARAM_INDEX = 1;
 	private static final long serialVersionUID = 1L;
 	private static final int NO_OFFSET = 0;
@@ -110,9 +116,24 @@ public class ProcessListService extends BaseProcessServlet {
 					Timestamp creationDate = rs.getTimestamp("creation_time");
 					String wpsAlgorithmIdentifier = rs.getString("wps_algorithm_identifier");
 					String status = rs.getString("status");
+					int percentComplete = rs.getInt("percent_complete");
 					Timestamp startDate = rs.getTimestamp("start_time");
 					Timestamp endDate = rs.getTimestamp("end_time");
 					String exceptionText = rs.getString("exception_text");
+					
+					String userAgent = rs.getString("user_agent");
+					String userHash = rs.getString("user_hash");
+					String userGeo = rs.getString("user_geo");
+					
+					int timesteps = rs.getInt("timesteps");
+					long gridcells = rs.getLong("gridcells");
+					int varcount = rs.getInt("varcount");
+					int cellsizeBytes = rs.getInt("cellsize_bytes");
+					String boundingRect = rs.getString("bounding_rect");
+					long dataRetrieved = rs.getLong("data_retrieved");
+					
+					long dataReturned = rs.getLong("data_returned");
+					
 					if (endDate != null) {
 						endTime = endDate.getTime();
 					}
@@ -123,7 +144,11 @@ public class ProcessListService extends BaseProcessServlet {
 					data.setIdentifier(ClassUtils.getShortClassName(wpsAlgorithmIdentifier));
 					data.setErrorMessage(exceptionText);
 					data.setStatus(status);
+					data.setPercentComplete(percentComplete);
 					data.setCreationTime(creationDate.getTime());
+					data.setClientInfo(new ClientInfo(userAgent, null, userHash, userGeo));
+					data.setDataFetchInfo(new DataFetchInfo(dataRetrieved, gridcells, timesteps, cellsizeBytes, varcount, boundingRect));
+					data.setOutputInfo(new OutputInfo(dataReturned));
 				}
 				if (startTime != -1) {
 					data.setElapsedTime(endTime - startTime);

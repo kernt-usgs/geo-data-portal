@@ -17,6 +17,7 @@ $(document).ready(function () {
 						$(thString).text('Request'),
 						$(thString).text('Identifier'),
 						$(thString).text('Status'),
+						$(thString).text('%'),
 						$(thString).text('Created'),
 						$(thString).text('Runtime'),
 						$(thString).text('Error'));
@@ -26,6 +27,7 @@ $(document).ready(function () {
 							$(tdString).append($('<a/>').attr('href', data.requestLink).attr('target', '_blank').html('->')),
 							$(tdString).text(data.identifier),
 							$(tdString).text(data.status),
+							$(tdString).text(data.percentComplete),
 							$(tdString).text(data.creationTime),
 							$(tdString).text(data.elapsedTime),
 							$(tdString).text(data.errorMessage));
