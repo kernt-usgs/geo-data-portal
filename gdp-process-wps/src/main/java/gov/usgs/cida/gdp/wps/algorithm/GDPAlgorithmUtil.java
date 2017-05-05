@@ -195,7 +195,7 @@ public abstract class GDPAlgorithmUtil {
             this.yLength = yLength;
             this.tLength = tLength;
             this.dataTypeSize = dataTypeSize;
-            this.totalSize = xLength * yLength * tLength * dataTypeSize;
+            this.totalSize = (long)xLength * (long)yLength * (long)tLength * (long)dataTypeSize;
 
             // just need these to pass through
             this.xRange = xRange;
