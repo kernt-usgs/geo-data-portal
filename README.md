@@ -45,7 +45,7 @@ A context.xml line:
 <Environment name="gdp.path.wps_config"	type="java.lang.String" value="{{ gdp_path_wps_config }}" override="false" />
 ```  
    needs to point the wps\_config.xml file. This file deploys in webapps/gdp-process-wps/conf/wps\_config.xml. This file can be used to configure the web processing service to use a postgres database rather than flat file database.
-If a postgres database is available it can be used for process status and other framework functions instead of the file system. The database snipit for the wps\_congig.xml looks like:
+If a postgres database is available it can be used for process status and other framework functions instead of the file system. The database snippet for the wps\_config.xml looks like:
 ```xml
 <Database>
 	<Property active="true" name="databaseClass">org.n52.wps.server.database.PostgresDatabase</Property>

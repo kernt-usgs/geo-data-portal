@@ -69,15 +69,15 @@ public class DataInspectionAlgorithmHeuristic extends AlgorithmHeuristic {
 	public void traverseStart(GridDatatype gridDatatype) {
 		GDPAlgorithmUtil.DataCube dataCube = GDPAlgorithmUtil.calculateDataCube(
 				gridDatatype, featureCollection, dateTimeStart, dateTimeEnd, requireFullCoverage);
-		totalDataPulled += dataCube.totalSize;
+		totalDataPulled += dataCube.getTotalSize();
 		variableCount++;
-		int gridCells = dataCube.xLength * dataCube.xLength;
+		int gridCells = dataCube.getxLength() * dataCube.getyLength();
 		
 		if (footprint == null) { // somewhat expensive, only do once
 			footprint = calculateLatLonFootprint(gridDatatype);
 		}
 		
-		info = new DataFetchInfo(totalDataPulled, gridCells, dataCube.tLength, dataCube.dataTypeSize, variableCount, footprint);
+		info = new DataFetchInfo(totalDataPulled, gridCells, dataCube.gettLength(), dataCube.getDataTypeSize(), variableCount, footprint);
 	}
 	
 	@Override

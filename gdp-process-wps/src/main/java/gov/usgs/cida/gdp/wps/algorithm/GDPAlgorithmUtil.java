@@ -180,14 +180,14 @@ public abstract class GDPAlgorithmUtil {
     }
 
     public static class DataCube {
-        public final int xLength;
-        public final int yLength;
-        public final int tLength;
-        public final int dataTypeSize;
-        public final long totalSize;
-        public final Range xRange;
-        public final Range yRange;
-        public final Range timeRange;
+        private final int xLength;
+        private final int yLength;
+        private final int tLength;
+        private final int dataTypeSize;
+        private final long totalSize;
+        private final Range xRange;
+        private final Range yRange;
+        private final Range timeRange;
 
         public DataCube(int xLength, int yLength, int tLength, int dataTypeSize,
                 Range xRange, Range yRange, Range timeRange) {
@@ -195,12 +195,46 @@ public abstract class GDPAlgorithmUtil {
             this.yLength = yLength;
             this.tLength = tLength;
             this.dataTypeSize = dataTypeSize;
-            this.totalSize = xLength * yLength * tLength * dataTypeSize;
+            this.totalSize = (long)xLength * (long)yLength * (long)tLength * (long)dataTypeSize;
 
             // just need these to pass through
             this.xRange = xRange;
             this.yRange = yRange;
             this.timeRange = timeRange;
         }
+
+        public int getxLength() {
+            return xLength;
+        }
+
+        public int getyLength() {
+            return yLength;
+        }
+
+        public int gettLength() {
+            return tLength;
+        }
+
+        public int getDataTypeSize() {
+            return dataTypeSize;
+        }
+
+        public long getTotalSize() {
+            return totalSize;
+        }
+
+        public Range getxRange() {
+            return xRange;
+        }
+
+        public Range getyRange() {
+            return yRange;
+        }
+
+        public Range getTimeRange() {
+            return timeRange;
+        }
+
+        
     }
 }

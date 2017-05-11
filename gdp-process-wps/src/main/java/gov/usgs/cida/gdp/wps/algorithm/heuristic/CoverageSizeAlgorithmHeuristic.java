@@ -80,10 +80,10 @@ public class CoverageSizeAlgorithmHeuristic extends AlgorithmHeuristic {
 		
 		GDPAlgorithmUtil.DataCube cubeSize = GDPAlgorithmUtil.calculateDataCube(gridDatatype, featureCollection, dateTimeStart, dateTimeEnd, requireFullCoverage);
 		
-		long allVariableSize = cubeSize.totalSize * numVariables;
+		long allVariableSize = cubeSize.getTotalSize() * numVariables;
 		
 		log.debug("ResultSizeHeuristic on {}x{}x{} with {} variables of type {} has an estimated size of {} bytes",
-				cubeSize.xLength, cubeSize.yLength, cubeSize.tLength, numVariables, dataTypeName, allVariableSize);
+				cubeSize.getxLength(), cubeSize.getyLength(), cubeSize.gettLength(), numVariables, dataTypeName, allVariableSize);
 
 		if (allVariableSize >= maximumSizeConfigured) {
 			StringBuilder message = new StringBuilder();
@@ -96,7 +96,7 @@ public class CoverageSizeAlgorithmHeuristic extends AlgorithmHeuristic {
 			 */
 			try {
 				String OPeNDAPurl = OPeNDAPUtils.generateOpenDapURL(gridDataset.getLocationURI(), 
-						gridVariableList, gridDataset.getNetcdfFile().getVariables(), cubeSize.timeRange, cubeSize.yRange, cubeSize.xRange);
+						gridVariableList, gridDataset.getNetcdfFile().getVariables(), cubeSize.getTimeRange(), cubeSize.getyRange(), cubeSize.getxRange());
 				message.append("  The following URI can be used with the nccopy tool")
 					.append("to create a local copy of the data in the NetCDF4 format. See the Geo Data Portal")
 					.append("documentation for more information: ")
