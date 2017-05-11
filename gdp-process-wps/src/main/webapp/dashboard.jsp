@@ -9,6 +9,10 @@
         <link rel="stylesheet" type="text/css" href="css/dashboard.css" />
         <jsp:include page="scripts.jsp" />
         <script src="js/dashboard.js"></script>
+        <script>
+            var status = '<%= (request.getParameter("status")==null) ? "" : request.getParameter("status")%>';
+            var hash = '<%= (request.getParameter("hash")==null) ? "" : request.getParameter("hash")%>';
+        </script>
         <title>GDP Web Processing Service Dashboard</title>
     </head>
     <body>

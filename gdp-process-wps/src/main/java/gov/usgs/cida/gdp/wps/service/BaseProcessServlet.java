@@ -1,5 +1,6 @@
 package gov.usgs.cida.gdp.wps.service;
 
+import com.google.common.collect.Maps;
 import gov.usgs.cida.gdp.wps.util.DatabaseUtil;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -28,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static gov.usgs.cida.gdp.wps.util.DatabaseUtil.getDatabaseProperty;
+import java.util.Map;
 
 /**
  * @author abramhall (Arthur Bramhall), isuftin@usgs.gov (Ivan Suftin)
@@ -39,9 +41,6 @@ public abstract class BaseProcessServlet extends HttpServlet {
 	// FEFF because this is the Unicode char represented by the UTF-8 byte order mark (EF BB BF).
 	protected static final int DEFAULT_OFFSET = 0;
 	protected static final int DEFAULT_LIMIT = 50;
-	private static final int LIMIT_PARAM_INDEX = 1;
-	private static final int OFFSET_PARAM_INDEX = 2;
-	private static final String REQUESTS_QUERY = "select request_id, wps_algorithm_identifier, status, creation_time, start_time, end_time from response order by creation_time desc limit ? offset ?;";
 	private static final String REQUEST_ENTITY_QUERY = "SELECT request_xml FROM request WHERE REQUEST_ID = ?";
 	private static final long serialVersionUID = -149568144765889031L;
 	protected Unmarshaller wpsUnmarshaller;
@@ -83,21 +82,29 @@ public abstract class BaseProcessServlet extends HttpServlet {
 	 * @throws SQLException
 	 */
 	protected final List<String> getRequestIds() throws SQLException {
-		return getRequestIds(DEFAULT_LIMIT, DEFAULT_OFFSET);
+		return getRequestIds(DEFAULT_LIMIT, DEFAULT_OFFSET, Maps.newTreeMap());
 	}
 
 	/**
 	 *
 	 * @param limit the max number of results to return
 	 * @param offset which row of the query results to start returning at
+	 * @param params parameter map for querying data
 	 * @return a list of ExecuteRequest request ids
 	 * @throws SQLException
 	 */
-	protected final List<String> getRequestIds(int limit, int offset) throws SQLException {
+	protected final List<String> getRequestIds(int limit, int offset, Map<String, String[]> params) throws SQLException {
 		List<String> request_ids = new ArrayList<>();
-		try (Connection conn = getConnection(); PreparedStatement pst = conn.prepareStatement(REQUESTS_QUERY)) {
-			pst.setInt(LIMIT_PARAM_INDEX, limit);
-			pst.setInt(OFFSET_PARAM_INDEX, offset);
+		try (Connection conn = getConnection(); PreparedStatement pst = conn.prepareStatement(requestQueryBuilder(params))) {
+			int paramPos = 1;
+			if (params.containsKey("hash")) {
+				pst.setString(paramPos++, params.get("hash")[0]);
+			}
+			if (params.containsKey("status")) {
+				pst.setString(paramPos++, params.get("status")[0]);
+			}
+			pst.setInt(paramPos++, limit);
+			pst.setInt(paramPos++, offset);
 			try (ResultSet rs = pst.executeQuery()) {
 				while (rs.next()) {
 					String id = rs.getString(1);
@@ -120,5 +127,26 @@ public abstract class BaseProcessServlet extends HttpServlet {
 		Execute execute = wpsExecuteElement.getValue();
 		String identifier = execute.getIdentifier().getValue();
 		return identifier.substring(identifier.lastIndexOf(".") + 1);
+	}
+	
+	private String requestQueryBuilder(Map<String, String[]> params) {
+		StringBuilder builder = new StringBuilder();
+		builder.append("SELECT")
+				.append(" r.request_id, r.wps_algorithm_identifier, r.status, r.creation_time, r.start_time, r.end_time")
+				.append(" FROM response r, request_metadata m");
+		if (params.containsKey("hash") || params.containsKey("status")) {
+			builder.append(" WHERE");
+			if (params.containsKey("hash")) {
+				builder.append(" m.user_hash = ?");
+			}
+			if (params.containsKey("hash") && params.containsKey("status")) {
+				builder.append(" AND");
+			}
+			if (params.containsKey("status")) {
+				builder.append(" r.status = ?");
+			}
+		}
+		builder.append(" ORDER BY creation_time DESC LIMIT ? offset ?;");
+		return builder.toString();
 	}
 }
