@@ -133,17 +133,13 @@ public abstract class BaseProcessServlet extends HttpServlet {
 		StringBuilder builder = new StringBuilder();
 		builder.append("SELECT")
 				.append(" r.request_id, r.wps_algorithm_identifier, r.status, r.creation_time, r.start_time, r.end_time")
-				.append(" FROM response r, request_metadata m");
+				.append(" FROM response r, request_metadata m WHERE m.request_id = r.request_id");
 		if (params.containsKey("hash") || params.containsKey("status")) {
-			builder.append(" WHERE");
 			if (params.containsKey("hash")) {
-				builder.append(" m.user_hash = ?");
-			}
-			if (params.containsKey("hash") && params.containsKey("status")) {
-				builder.append(" AND");
+				builder.append(" AND m.user_hash = ?");
 			}
 			if (params.containsKey("status")) {
-				builder.append(" r.status = ?");
+				builder.append(" AND r.status = ?");
 			}
 		}
 		builder.append(" ORDER BY creation_time DESC LIMIT ? offset ?;");
