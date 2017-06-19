@@ -197,6 +197,15 @@ public class FeatureGridStatisticsAlgorithm extends AbstractAnnotatedAlgorithm {
 				return;
 			}
 
+			if (datasetId.isEmpty()) {
+				addError("Error subsetting gridded data.  Grid variable list is empty! ");
+				return;
+			}
+			if (datasetURI == null || datasetURI.isAbsolute()) {
+				addError("Error accessing gridded data.  Dataset URI is invalid.");
+				return;
+			}
+			
 			output = File.createTempFile(getClass().getSimpleName(), delimiter.extension, new File(AppConstant.WORK_LOCATION.getValue()));
 			CountingOutputStream cos = new CountingOutputStream(new BufferedOutputStream(new FileOutputStream(output)));
 			writer = new PrintWriter(new OutputStreamWriter(cos), true);

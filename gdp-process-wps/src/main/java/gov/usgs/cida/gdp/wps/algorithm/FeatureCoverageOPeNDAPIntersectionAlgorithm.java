@@ -145,6 +145,16 @@ public class FeatureCoverageOPeNDAPIntersectionAlgorithm extends AbstractAnnotat
 	public void process() {
 		GridDataset gridDataSet = null;
 		try {
+			
+			if (datasetId.isEmpty()) {
+				addError("Error subsetting gridded data.  Grid variable list is empty! ");
+				return;
+			}
+			if (datasetURI == null || datasetURI.isAbsolute()) {
+				addError("Error accessing gridded data.  Dataset URI is invalid.");
+				return;
+			}
+			
 			gridDataSet = GDPAlgorithmUtil.generateGridDataSet(datasetURI);
 			List<GridCellVisitor> heuristics = setupHeuristics(gridDataSet);
 			// Pretend that we are starting traversal using visitor

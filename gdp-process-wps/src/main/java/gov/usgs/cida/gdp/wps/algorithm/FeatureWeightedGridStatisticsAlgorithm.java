@@ -210,6 +210,10 @@ public class FeatureWeightedGridStatisticsAlgorithm extends AbstractAnnotatedAlg
 			addError("Error subsetting gridded data.  Grid variable list is empty! ");
 			return;
 		}
+		if (datasetURI == null || datasetURI.isAbsolute()) {
+			addError("Error accessing gridded data.  Dataset URI is invalid.");
+			return;
+		}
 
 		Writer writer = null;
 

@@ -124,6 +124,15 @@ public class FeatureCategoricalGridCoverageAlgorithm extends AbstractAnnotatedAl
 //        FeatureDataset featureDataset = null;
         Writer writer = null;
 
+        if (datasetId.isEmpty()) {
+            addError("Error subsetting gridded data.  Grid variable list is empty! ");
+            return;
+        }
+        if (datasetURI == null || datasetURI.isAbsolute()) {
+            addError("Error accessing gridded data.  Dataset URI is invalid.");
+            return;
+        }
+
         try {
             String extension = (delimiter == null) ? Delimiter.getDefault().extension : delimiter.extension;
             output = File.createTempFile(getClass().getSimpleName(), extension, new File(AppConstant.WORK_LOCATION.getValue()));
