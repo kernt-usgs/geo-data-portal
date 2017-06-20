@@ -29,6 +29,7 @@ import gov.usgs.cida.gdp.wps.algorithm.heuristic.CoverageSizeAlgorithmHeuristic;
 import gov.usgs.cida.gdp.wps.algorithm.heuristic.exception.AlgorithmHeuristicException;
 import gov.usgs.cida.gdp.wps.binding.CoverageFileBinding;
 import gov.usgs.cida.gdp.wps.binding.GMLStreamingFeatureCollectionBinding;
+import org.apache.commons.lang.StringUtils;
 import ucar.ma2.InvalidRangeException;
 import ucar.nc2.dt.GridDataset;
 
@@ -150,7 +151,7 @@ public class FeatureCoverageOPeNDAPIntersectionAlgorithm extends AbstractAnnotat
 				addError("Error subsetting gridded data.  Grid variable list is empty! ");
 				return;
 			}
-			if (datasetURI == null || datasetURI.isAbsolute()) {
+			if (datasetURI == null || StringUtils.isBlank(datasetURI.toString())) {
 				addError("Error accessing gridded data.  Dataset URI is invalid.");
 				return;
 			}
