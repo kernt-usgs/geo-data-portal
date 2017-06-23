@@ -21,8 +21,6 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import org.n52.wps.server.ExceptionReport;
 import org.n52.wps.server.request.ExecuteRequest;
 import org.slf4j.Logger;
@@ -68,6 +66,9 @@ public class ThrottleQueueImpl implements ThrottleQueue {
             + "ORDER BY enqueued ASC LIMIT 1) sub WHERE q.request_id = sub.request_id RETURNING q.request_id";
 
     private static final String SELECT_REQUEST_XML = "SELECT request_xml FROM request WHERE request_id = ?";
+	
+    private static final String SELECT_ZOMBIE_PROCESSES = "SELECT r.request_id FROM response r, throttle_queue t WHERE r.request_id=t.request_id AND "
+            + "heartbeat > (SELECT NOW() - INTERVAL ?)";
 
     /**
      * Ensures the same request is not processed again (either finished or
@@ -474,6 +475,7 @@ public class ThrottleQueueImpl implements ThrottleQueue {
 
     }
 
+	/* this can be used to restart work, might need minor tweaks */
     private void addWorkToQueue(List<String> requestIds) throws ExceptionReport {
 
         for (String id : requestIds) {
@@ -547,4 +549,5 @@ public class ThrottleQueueImpl implements ThrottleQueue {
 
         return result;
     }
+
 }
