@@ -67,8 +67,6 @@ public class ThrottleQueueImpl implements ThrottleQueue {
 
 	private static final String SELECT_REQUEST_XML = "SELECT request_xml FROM request WHERE request_id = ?";
 
-	private static final String SELECT_ZOMBIE_PROCESSES = "SELECT r.request_id FROM response r, throttle_queue t WHERE r.request_id=t.request_id AND "
-			+ "heartbeat > (SELECT NOW() - INTERVAL ?)";
 
 	/**
 	 * Ensures the same request is not processed again (either finished or
@@ -549,5 +547,4 @@ public class ThrottleQueueImpl implements ThrottleQueue {
 
 		return result;
 	}
-
 }
