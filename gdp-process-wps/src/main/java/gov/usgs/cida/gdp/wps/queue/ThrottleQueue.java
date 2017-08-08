@@ -12,7 +12,7 @@ import org.n52.wps.server.request.ExecuteRequest;
  * 
  * @author smlarson
  */
-public interface ThrottleQueue  {
+public interface ThrottleQueue {
  
     public void putRequest(ExecuteRequest req) throws ExceptionReport;
     
