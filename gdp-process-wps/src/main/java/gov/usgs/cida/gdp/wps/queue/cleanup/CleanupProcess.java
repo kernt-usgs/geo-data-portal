@@ -23,7 +23,7 @@ public class CleanupProcess {
 	
 	private static final String REASON = "Server restart";
 	
-	private static final String REMOVE_ZOMBIE_QUEUE = "DELETE throttle_queue WHERE status = 'STARTED' OR status = 'PROCESSED'";
+	private static final String REMOVE_ZOMBIE_QUEUE = "DELETE FROM throttle_queue WHERE status = 'STARTED' OR status = 'PROCESSED'";
 	private static final String UPDATE_ZOMBIE_RESPONSE = "UPDATE response SET status = 'FAILED', exception_text = ? WHERE status = 'STARTED'";
 	
 	public CleanupProcess() {
