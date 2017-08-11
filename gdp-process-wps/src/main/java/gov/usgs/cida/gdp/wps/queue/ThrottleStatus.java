@@ -7,10 +7,10 @@ package gov.usgs.cida.gdp.wps.queue;
 
 public enum ThrottleStatus {
 	ACCEPTED,
-        PREENQUEUE,
-        ENQUEUE,
-        WAITING,
-        STARTED,
+	PREENQUEUE,
+	ENQUEUE,
+	WAITING,
+	STARTED,
 	PROCESSED,
-        UNKNOWN
+	UNKNOWN
 }

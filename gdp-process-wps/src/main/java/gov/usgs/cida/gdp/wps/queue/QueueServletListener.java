@@ -1,5 +1,6 @@
 package gov.usgs.cida.gdp.wps.queue;
 
+import gov.usgs.cida.gdp.wps.queue.cleanup.CleanupProcess;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import org.slf4j.Logger;
@@ -17,6 +18,10 @@ public class QueueServletListener implements ServletContextListener {
     public void contextInitialized(ServletContextEvent sce) {
         // might as well initialize manager
         ExecuteRequestManager.getInstance();
+
+        // Cleanup queue before we start
+        CleanupProcess cleanerUpper = new CleanupProcess();
+        cleanerUpper.cleanup();
     }
 
     @Override

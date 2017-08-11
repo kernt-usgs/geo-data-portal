@@ -33,6 +33,7 @@ import java.util.LinkedList;
 import java.util.List;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.CountingOutputStream;
+import org.apache.commons.lang.StringUtils;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.SchemaException;
 import org.n52.wps.algorithm.annotation.Algorithm;
@@ -197,6 +198,15 @@ public class FeatureGridStatisticsAlgorithm extends AbstractAnnotatedAlgorithm {
 				return;
 			}
 
+			if (datasetId.isEmpty()) {
+				addError("Error subsetting gridded data.  Grid variable list is empty! ");
+				return;
+			}
+			if (datasetURI == null || StringUtils.isBlank(datasetURI.toString())) {
+				addError("Error accessing gridded data.  Dataset URI is invalid.");
+				return;
+			}
+			
 			output = File.createTempFile(getClass().getSimpleName(), delimiter.extension, new File(AppConstant.WORK_LOCATION.getValue()));
 			CountingOutputStream cos = new CountingOutputStream(new BufferedOutputStream(new FileOutputStream(output)));
 			writer = new PrintWriter(new OutputStreamWriter(cos), true);

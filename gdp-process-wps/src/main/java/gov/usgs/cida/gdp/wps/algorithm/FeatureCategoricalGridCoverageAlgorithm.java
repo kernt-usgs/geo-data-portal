@@ -27,6 +27,7 @@ import gov.usgs.cida.gdp.coreprocessing.analysis.grid.FeatureCategoricalGridCove
 import gov.usgs.cida.gdp.wps.binding.CSVFileBinding;
 import gov.usgs.cida.gdp.wps.binding.GMLStreamingFeatureCollectionBinding;
 import java.io.Writer;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ucar.ma2.InvalidRangeException;
@@ -123,6 +124,15 @@ public class FeatureCategoricalGridCoverageAlgorithm extends AbstractAnnotatedAl
     public void process() {
 //        FeatureDataset featureDataset = null;
         Writer writer = null;
+
+        if (datasetId.isEmpty()) {
+            addError("Error subsetting gridded data.  Grid variable list is empty! ");
+            return;
+        }
+        if (datasetURI == null || StringUtils.isBlank(datasetURI.toString())) {
+            addError("Error accessing gridded data.  Dataset URI is invalid.");
+            return;
+        }
 
         try {
             String extension = (delimiter == null) ? Delimiter.getDefault().extension : delimiter.extension;
