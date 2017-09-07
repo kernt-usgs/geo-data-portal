@@ -222,10 +222,9 @@ class EmailCheckTask extends TimerTask {
             
             String from = AppConstant.FROM_EMAIL.getValue();
             String subject = "Processing Complete";
-            String content = "The processing has completed on your request."
-                            + " You can retrieve your file at " + fileLocation
-                            + "\n\n\nProcess Information Follows:\n"
-                            + processInfo;
+            String content = String.format("The processing has completed for your request (%s)."
+                            + " You can retrieve your file at %s"
+                            + "\n\n\nProcess Information Follows:\n%s", wpsCheckPoint, fileLocation, processInfo);
             if (callbackBaseURL != null) {
                 try {
                     content = content.concat("\n\nAdd result to ScienceBase: " + callbackBaseURL + URLEncoder.encode(wpsCheckPoint, CheckProcessCompletion.URLENCODE_CHARSET));
@@ -246,8 +245,8 @@ class EmailCheckTask extends TimerTask {
 	private void sendFailedEmail(String errorMsg) throws AddressException, MessagingException {
 		String from = AppConstant.FROM_EMAIL.getValue();
 		String subject = "Processing Failed";
-		String content = "The processing has failed on your request."
-				+ " The following errors occured: " + errorMsg;
+		String content = String.format("The processing has failed on your request (%s)."
+				+ " The following errors occured: %s", wpsCheckPoint, errorMsg);
 
 		List<String> bcc = new ArrayList<String>();
 		String bccAddr = AppConstant.TRACK_EMAIL.getValue();
