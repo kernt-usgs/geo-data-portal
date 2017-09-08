@@ -7,9 +7,7 @@ package gov.usgs.cida.gdp.coreprocessing.analysis.grid;
 
 import gov.usgs.cida.gdp.constants.AppConstant;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,18 +27,20 @@ public class MultiTimestepReader {
 		
 	private static final Logger LOGGER = LoggerFactory.getLogger(MultiTimestepReader.class);
 	
-	private final Map<Long, GridDatatype> splitGridDataType;
+	private final static int INVALID_INDEX = Integer.MAX_VALUE;
+	
+	private final Map<Integer, GridDatatype> splitGridDataType;
 	private final GridType gridType;
 	private final int splitSize;
 	
-	private Long currentArrayPosition;
+	private int currentArrayPosition;
 	private Array currentRequestData;
 	
 	public MultiTimestepReader(GridDatatype gridDataType) {
 		this.gridType = GridType.findGridType(gridDataType);
 		this.splitSize = calculateSplitSize(gridDataType);
 		this.splitGridDataType = splitGridDatatype(gridDataType, splitSize);
-		this.currentArrayPosition = -1l;
+		this.currentArrayPosition = -1;
 		this.currentRequestData = null;
 	}
 
@@ -48,12 +48,15 @@ public class MultiTimestepReader {
 		int failures = 0;
 		
 		Array slice = null;
+		
+		int tPassthru = (t_index == INVALID_INDEX) ? t_index : -1;
+		int zPassthru = (z_index == INVALID_INDEX) ? z_index : -1;
 		while (slice == null) {
-			GridDatatype gridDataType = splitGridDataType.get((long)t_index);
+			GridDatatype gridDataType = splitGridDataType.get(t_index);
 			try {
-				if (currentArrayPosition == -1 || splitGridDataType.get((long)t_index) != splitGridDataType.get(currentArrayPosition)) {
-					currentArrayPosition = (long)t_index;
-					currentRequestData = gridDataType.readDataSlice(-1, -1, -1, -1);
+				if (currentArrayPosition == -1 || splitGridDataType.get(t_index) != splitGridDataType.get(currentArrayPosition)) {
+					currentArrayPosition = t_index;
+					currentRequestData = gridDataType.readDataSlice(tPassthru, zPassthru, -1, -1);
 				}
 				switch(gridType) {
 					case TYX:
@@ -87,11 +90,10 @@ public class MultiTimestepReader {
 		GridCoordSystem gridCoordSystem = gridDataType.getCoordinateSystem();
 		CoordinateAxis zAxis = gridCoordSystem.getVerticalAxis();
 
-		
+		// storing as long to avoid overflow of int in calculation
 		long xCellCount = GridUtility.getXAxisLength(gridCoordSystem);
 		long yCellCount = GridUtility.getYAxisLength(gridCoordSystem);
 		long zCellCount = (zAxis == null) ? 1l : zAxis.getShape(0);
-		
 		
 		long maxSplit = Long.valueOf(AppConstant.MAX_DATA_CHUCK_REQUEST_SIZE.getValue());
 		long singleTimestep = (long)gridDataType.getDataType().getSize() * xCellCount * yCellCount * zCellCount;
@@ -99,8 +101,10 @@ public class MultiTimestepReader {
 		return numTimesteps;
 	}
 
-	private static Map<Long, GridDatatype> splitGridDatatype(GridDatatype gridDataType, int splitSize) {
-		Map<Long, GridDatatype> splits = new HashMap<>();
+	private static Map<Integer, GridDatatype> splitGridDatatype(GridDatatype gridDataType, int splitSize) {
+		Map<Integer, GridDatatype> splits = new HashMap<>();
+		
+		splits.put(INVALID_INDEX, gridDataType);
 		
 		GridCoordSystem gridCoordSystem = gridDataType.getCoordinateSystem();
 		CoordinateAxis1DTime tAxis = gridCoordSystem.getTimeAxis1D();
@@ -110,12 +114,13 @@ public class MultiTimestepReader {
 		for (int i = 0; i < tCellCount; i += splitSize) {
 			GridDatatype split;
 			try {
-				Range timeRange = new Range(i, i + splitSize);
+				int maxRange = (i + splitSize < tCellCount) ? i + splitSize : (int)tCellCount - 1;
+				Range timeRange = new Range(i, maxRange);
 				split = gridDataType.makeSubset(null, null, timeRange, null, null, null);
 			} catch (InvalidRangeException ex) {
 				throw new RuntimeException("this shouldn't happen");
 			}
-			for (long j = i; j < i + splitSize; j++) {
+			for (int j = i; j < i + splitSize && j < tCellCount; j++) {
 				splits.put(j, split);
 			}
 		}
