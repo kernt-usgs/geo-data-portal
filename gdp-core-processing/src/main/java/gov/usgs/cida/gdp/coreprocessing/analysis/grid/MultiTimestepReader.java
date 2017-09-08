@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package gov.usgs.cida.gdp.coreprocessing.analysis.grid;
 
 import gov.usgs.cida.gdp.constants.AppConstant;
@@ -55,6 +50,7 @@ public class MultiTimestepReader {
 			GridDatatype gridDataType = splitGridDataType.get(t_index);
 			try {
 				if (currentArrayPosition == -1 || splitGridDataType.get(t_index) != splitGridDataType.get(currentArrayPosition)) {
+					LOGGER.debug("Requesting next chunk of data from server");
 					currentArrayPosition = t_index;
 					currentRequestData = gridDataType.readDataSlice(tPassthru, zPassthru, -1, -1);
 				}
@@ -118,7 +114,7 @@ public class MultiTimestepReader {
 				Range timeRange = new Range(i, maxRange);
 				split = gridDataType.makeSubset(null, null, timeRange, null, null, null);
 			} catch (InvalidRangeException ex) {
-				throw new RuntimeException("this shouldn't happen");
+				throw new RuntimeException("Data range is invalid", ex);
 			}
 			for (int j = i; j < i + splitSize && j < tCellCount; j++) {
 				splits.put(j, split);
