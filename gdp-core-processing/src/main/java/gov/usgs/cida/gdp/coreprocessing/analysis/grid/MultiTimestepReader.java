@@ -15,7 +15,11 @@ import ucar.nc2.dt.GridCoordSystem;
 import ucar.nc2.dt.GridDatatype;
 
 /**
- *
+ * Request more than one timestep (and all z data) at a time to improve
+ * the efficiency of high latency connections.  This improvement is important
+ * for both speed of processing as well as being a good client to servers that
+ * aren't expecting to be pummeled with requests.
+ * 
  * @author jiwalker
  */
 public class MultiTimestepReader {
@@ -39,11 +43,26 @@ public class MultiTimestepReader {
 		this.currentRequestData = null;
 	}
 
+	/**
+	 * Read a single slice of x-y data at a given t, z index.
+	 * 
+	 * To be more efficient about requests it will use a cached version if it is
+	 * available locally.  The access pattern to be used in order to be
+	 * efficient should be to work through time sequentially and fully read all
+	 * z-indices before moving along.  Coming back to a timestep after it has
+	 * been processed will result in another server read which is expensive.
+	 * 
+	 * @param t_index time index to read x-y slice for
+	 * @param z_index z index to read x-y slice for
+	 * @return Array containing data for 2d slice
+	 * @throws java.io.IOException 
+	 */
 	public Array readDataSlice(int t_index, int z_index) throws java.io.IOException {
 		int failures = 0;
 		
 		Array slice = null;
 		
+		// INVALID_INDEX used when dimension shouldn't exist
 		int tPassthru = (t_index == INVALID_INDEX) ? t_index : -1;
 		int zPassthru = (z_index == INVALID_INDEX) ? z_index : -1;
 		while (slice == null) {
@@ -106,7 +125,6 @@ public class MultiTimestepReader {
 		CoordinateAxis1DTime tAxis = gridCoordSystem.getTimeAxis1D();
 		long tCellCount = (tAxis == null) ? 0 : tAxis.getShape(0);
 		
-
 		for (int i = 0; i < tCellCount; i += splitSize) {
 			GridDatatype split;
 			try {
