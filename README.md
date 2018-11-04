@@ -45,6 +45,8 @@ A context.xml line:
 <Environment name="gdp.path.wps_config"	type="java.lang.String" value="{{ gdp_path_wps_config }}" override="false" />
 ```  
    needs to point the wps\_config.xml file. This file deploys in webapps/gdp-process-wps/conf/wps\_config.xml. This file can be used to configure the web processing service to use a postgres database rather than flat file database.
+
+###### PostgreSQL Database
 If a postgres database is available it can be used for process status and other framework functions instead of the file system. The database snippet for the wps\_config.xml looks like:
 ```xml
 <Database>
@@ -67,12 +69,15 @@ If a postgres database is available it can be used for process status and other 
 	logAbandoned="true"
 	maxActive="20" maxIdle="10" maxWait="-1" />
 ```
-In order to utilize a PostgreSQL database, the target PostgreSQL database either must be set up correctly with the correct schema. One way to set up the database correctly is to utilize Liquibase with the included changelogs. After user credentials are specified within the included pom.xml running
+
+###### Database Setup 
+In order to utilize a PostgreSQL database, the target PostgreSQL database either must be set up correctly with the correct schema. One way to set up the database correctly is to utilize Liquibase with the included changelogs. After user credentials are specified (within the included pom.xml or through other means), then running
 ```
 mvn liquibase:update
 ```
 will set up the target database with the required schema.
 
+###### Process Results
 The default location for process results to be stored is in the Tomcat/temp/GDP folder. This can be changed with a context.xml element like:
 ```xml
 <Environment name="gdp.path.workspace"			type="java.lang.String" value="{{ gdp_path_workspace }}"		override="false" />
