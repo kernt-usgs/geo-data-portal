@@ -176,7 +176,12 @@ This request can be posted to the deployed war at a url like: http://localhost:8
 	</wps:ResponseForm>
 </wps:Execute>
 ```
-  
+This request can be easily sent utilizing curl:
+```
+curl -d @example_req.xml http://localhost:8080/gdp-process-wps/WebProcessingService
+```
+Assuming that the above sample request specified was saved in a file called *example_req.xml*.
+
 
   [
     ![CC0](http://i.creativecommons.org/p/zero/1.0/88x31.png)
