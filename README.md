@@ -71,7 +71,7 @@ The database snippet for the wps\_config.xml looks like:
 ```
 
 ##### Database Setup 
-In order to utilize a PostgreSQL database, the target PostgreSQL database must be set up correctly with the correct schema. One way to set up the database correctly is to utilize Liquibase with the included changelogs. After user credentials are specified (such as within the pom.xml of *gdp-liquibase-changelogs*), then running
+In order to utilize a PostgreSQL database, the target PostgreSQL database must be set up with the correct schema. One way to set up the database correctly is to utilize Liquibase with the included changelogs. After user credentials are specified (such as within the pom.xml of *gdp-liquibase-changelogs*), then running
 ```
 mvn liquibase:update
 ```
