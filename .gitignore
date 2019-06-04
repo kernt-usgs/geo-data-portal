@@ -15,3 +15,4 @@ gdp-utility-wps/src/main/webapp/WEB-INF/server-config.wsdd
 .project
 .settings
 nbactions.xml
+.DS_Store
