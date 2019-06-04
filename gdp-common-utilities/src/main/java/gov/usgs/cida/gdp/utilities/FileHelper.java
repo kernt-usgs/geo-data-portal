@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -466,6 +468,52 @@ public class FileHelper {
         result = System.getProperty("java.io.tmpdir");
 
         return result;
+    }
+    
+    /**
+     * This method zips the contents of a given directory.  It currently only works on files so
+     * nested directories (and their contents) are ignored.
+     * @param inputDirectory - the directory to be zipped
+     * @param absoluteFileName - the absolute file name of the destination zip file
+     * @return true if successful
+     * @throws FileNotFoundException
+     * @throws IOException
+     */
+    public static boolean zipDirectory(String inputDirectory, String absoluteFileName) throws FileNotFoundException, IOException {
+        try(FileOutputStream outputStream = new FileOutputStream(absoluteFileName);
+            ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream)) {
+            Iterator<File> directoryContentsItr = FileUtils.iterateFiles(new File(inputDirectory), null, false);
+            
+            while(directoryContentsItr.hasNext()) {
+                File file = directoryContentsItr.next();
+                
+                if (!file.isDirectory()) {
+                    FileInputStream inputStream = null;
+                    boolean written = false;
+                    
+                    try {
+                        inputStream = new FileInputStream(file);
+                        
+                        ZipEntry zipEntry = new ZipEntry(file.getName());
+                        zipOutputStream.putNextEntry(zipEntry);
+        
+                        IOUtils.copy(inputStream, zipOutputStream);
+                        
+                        written = true;
+                    } finally {
+                        if(written) {
+                            zipOutputStream.closeEntry();
+                        }
+                        
+                        if(inputStream != null) {
+                            inputStream.close();
+                        }
+                    }
+                }
+            }        
+        }
+        
+        return true;
     }
 
     /**

@@ -1,15 +1,14 @@
 package gov.usgs.cida.gdp.coreprocessing.analysis.grid;
 
+import gov.usgs.cida.gdp.coreprocessing.analysis.Statistic;
 import gov.usgs.cida.gdp.coreprocessing.analysis.statistics.IStatistics1D;
 import java.io.IOException;
 import java.io.Writer;
-import java.security.AccessController;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import sun.security.action.GetPropertyAction;
 
 public class Statistics1DWriter {
     
@@ -23,7 +22,7 @@ public class Statistics1DWriter {
     static {
         String blockSeparator;
         try {
-            blockSeparator = AccessController.doPrivileged(new GetPropertyAction("line.separator"));
+            blockSeparator = System.lineSeparator();
         } catch (Exception e) {
             blockSeparator = "\n";
         }
@@ -33,37 +32,6 @@ public class Statistics1DWriter {
     public enum GroupBy {
         STATISTIC,
         FEATURE_ATTRIBUTE;
-    }
-
-    public enum Statistic {
-
-        MEAN("%f", "%s")
-        { @Override public Number getValue(IStatistics1D wsa) { return (float)wsa.getMean(); } },
-        MINIMUM("%f", "%s")
-        { @Override public Number getValue(IStatistics1D wsa) { return (float)wsa.getMinimum(); } },
-        MAXIMUM("%f", "%s")
-        { @Override public Number getValue(IStatistics1D wsa) { return (float)wsa.getMaximum(); } },
-        VARIANCE("%f", "%s^2")
-        { @Override public Number getValue(IStatistics1D wsa) { return (float)wsa.getSampleVariance(); } },
-        STD_DEV("%f", "%s")
-        { @Override public Number getValue(IStatistics1D wsa) { return (float)wsa.getSampleStandardDeviation(); } },
-        SUM("%f")
-        { @Override public Number getValue(IStatistics1D wsa) { return (float)wsa.getSum(); } },
-        COUNT("%d")
-        { @Override public Number getValue(IStatistics1D wsa) { return wsa.getCount(); } };
-
-        private final String valueFormat;
-        private final String unitFormat;
-
-        Statistic(String format) { this(format, null); }
-        Statistic(String format, String unitFormat) {
-            this.valueFormat = format;
-            this.unitFormat = unitFormat;
-        }
-        public String getValueFormat() { return valueFormat; }
-        public String getUnitFormat() {  return unitFormat; }
-        public boolean getNeedsUnits() { return unitFormat != null && unitFormat.length() > 0; }
-        public abstract Number getValue(IStatistics1D wsa);
     }
 
     private final List<Object> attributeList;
@@ -83,7 +51,7 @@ public class Statistics1DWriter {
             List<Object> attributeList,
             String variableName,
             String variableUnits,
-            List<Statistic> statisticList,
+            List<? extends Statistic> statisticList,
             boolean groupByStatistic,
             String tokenSeparator,
             String blockSeparator,
@@ -95,7 +63,7 @@ public class Statistics1DWriter {
             List<Object> attributeList,
             String variableName,
             String variableUnits,
-            List<Statistic> statisticList,
+            List<? extends Statistic> statisticList,
             boolean groupByStatistic,
             String tokenSeparator,
             String blockSeparator,

@@ -1,15 +1,18 @@
 package gov.usgs.cida.gdp.wps.algorithm;
 
 import gov.usgs.cida.gdp.coreprocessing.analysis.grid.GridUtility;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
 import org.geotools.feature.FeatureCollection;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
+
 import ucar.ma2.InvalidRangeException;
 import ucar.ma2.Range;
 import ucar.nc2.Attribute;
@@ -26,11 +29,12 @@ public class NetCDFGridWriter {
 
     static private org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(NetCDFGridWriter.class);
 
-    public static void makeFile(
+    @SuppressWarnings("deprecation")
+	public static void makeFile(
             String location,
             GridDataset gridDataset,
             List<String> gridVariableList,
-            FeatureCollection featureCollection,
+            FeatureCollection<?, ?> featureCollection,
             Date dateTimeStart,
             Date dateTimeEnd,
             boolean requireFullCoverage,

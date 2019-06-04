@@ -3,33 +3,34 @@ $(document).ready(function () {
 	var trString = "<tr />";
 	var thString = "<th />";
 	var tdString = "<td />";
+	var page = 1;
 	
-	$('#loadProcessesButton').click(function () {
+	var reload = function () {
 		$('#lastProcessLoad').text(new Date().timeNow());
-		$.get('list')
+		$.get(listUrl(page, status, hash))
 			.done(function (processJSON) {
 				$('#processData').empty();
 				if (processJSON.length) {
 					var $table = $(tableString).appendTo($('#processData'));
 					var $headerRow = $(trString).appendTo($table);
 					$headerRow.append(
+						$(thString).text('Request'),
 						$(thString).text('Identifier'),
 						$(thString).text('Status'),
+						$(thString).text('%'),
 						$(thString).text('Created'),
 						$(thString).text('Runtime'),
-						$(thString).text('Output'));
+						$(thString).text('Error'));
 					$.each(processJSON, function (idx, data) {
 						var $dataRow = $(trString).appendTo($table);
-						if (data.errorMessage) {
-							$dataRow.append($(tdString).attr('colspan', 5).text(data.errorMessage));
-						} else {
-							$dataRow.append(
-								$(tdString).text(data.identifier),
-								$(tdString).text(data.status),
-								$(tdString).text(data.creationTime),
-								$(tdString).text(data.elapsedTime),
-								$(tdString).text(data.output));
-						}
+						$dataRow.append(
+							$(tdString).append($('<a/>').attr('href', data.requestLink).attr('target', '_blank').html('->')),
+							$(tdString).text(data.identifier),
+							$(tdString).text(data.status),
+							$(tdString).text(data.percentComplete),
+							$(tdString).text(data.creationTime),
+							$(tdString).text(data.elapsedTime),
+							$(tdString).text(data.errorMessage));
 					});
 				} else {
 					$('#processData').text("No processes found");
@@ -38,6 +39,19 @@ $(document).ready(function () {
 			.fail(function (jqXHR) {
 				$('#processData').html(jqXHR.responseText);
 			});
+	};
+	
+	$('#loadProcessesButton').click(reload);
+	
+	$('#previousPageButton').click(function() {
+		if (page > 1) {
+			page--;
+		}
+		reload();
+	});
+	$('#nextPageButton').click(function() {
+		page++;
+		reload();
 	});
 
 	$('#reportButton').click(function () {
@@ -85,4 +99,15 @@ Date.prototype.timeNow = function () {
 
 function zeroPadSingleDigit (value) {
 	return value < 10 ? "0" + value : value;
+}
+
+function listUrl(page, status, hash) {
+	var url = 'list?page=' + page;
+	if (status !== '') {
+		url += '&status=' + status;
+	}
+	if (hash !== '') {
+		url += '&hash=' + hash;
+	}
+	return url;
 }

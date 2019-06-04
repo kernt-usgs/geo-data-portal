@@ -1,6 +1,9 @@
 package gov.usgs.cida.gdp.wps.service;
 
 import com.google.gson.GsonBuilder;
+import gov.usgs.cida.gdp.wps.analytics.ClientInfo;
+import gov.usgs.cida.gdp.wps.analytics.DataFetchInfo;
+import gov.usgs.cida.gdp.wps.analytics.OutputInfo;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -13,6 +16,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.GZIPInputStream;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -23,7 +27,10 @@ import javax.xml.bind.JAXBException;
 import javax.xml.transform.stream.StreamSource;
 import net.opengis.wps.v_1_0_0.ExecuteResponse;
 import net.opengis.wps.v_1_0_0.StatusType;
+import org.apache.commons.lang.ClassUtils;
 import org.apache.commons.lang.StringUtils;
+import org.n52.wps.ServerDocument;
+import org.n52.wps.commons.WPSConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,20 +40,38 @@ import org.slf4j.LoggerFactory;
 public class ProcessListService extends BaseProcessServlet {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ProcessListService.class);
-	private static final String DATA_QUERY = "select request_id, request_date, response from results where request_id like ?;";
+	private static final String DATA_QUERY = "select r.request_id, r.wps_algorithm_identifier, r.status, r.percent_complete, "
+			+ "r.creation_time, r.start_time, r.end_time, r.exception_text, m.user_agent, m.user_hash, m.user_geo, "
+			+ "m.timesteps, m.gridcells, m.varcount, m.cellsize_bytes, m.bounding_rect, m.data_retrieved, m.data_returned "
+			+ "from response r, request_metadata m where m.request_id = r.request_id and r.request_id like ?;";
 	private static final int DATA_QUERY_REQUEST_ID_PARAM_INDEX = 1;
-	private static final int DATA_QUERY_REQUEST_ID_COLUMN_INDEX = 1;
-	private static final int DATA_QUERY_REQUEST_DATE_COLUMN_INDEX = 2;
-	private static final int DATA_QUERY_RESPONSE_COLUMN_INDEX = 3;
-	private static final String REQUEST_PREFIX = "REQ_";
 	private static final long serialVersionUID = 1L;
 	private static final int NO_OFFSET = 0;
+	
+	private static String BASE_URL;
+
+	@Override
+	public void init() throws ServletException {
+		super.init();
+		ServerDocument.Server server = WPSConfig.getInstance().getWPSConfig().getServer();
+		StringBuilder url = new StringBuilder();
+		url.append(server.getProtocol())
+				.append("://")
+				.append(server.getHostname())
+				.append(":")
+				.append(server.getHostport())
+				.append("/")
+				.append(server.getWebappPath());
+		BASE_URL = url.toString();
+	}
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		try {
 			int offset = NO_OFFSET;
 			String reqPage = req.getParameter("page");
+			
+			Map<String, String[]> params = req.getParameterMap();
 			
 			if (StringUtils.isNotBlank(reqPage)) {
 				try {
@@ -56,7 +81,7 @@ public class ProcessListService extends BaseProcessServlet {
 				}
 			}
 			
-			String json = new GsonBuilder().disableHtmlEscaping().create().toJson(getDashboardData(offset, req));
+			String json = new GsonBuilder().disableHtmlEscaping().create().toJson(getDashboardData(offset, params));
 			resp.setContentType("application/json");
 			resp.getWriter().write(json);
 			resp.flushBuffer();
@@ -71,15 +96,12 @@ public class ProcessListService extends BaseProcessServlet {
 		resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "This servlet is read only. Try using Get.");
 	}
 
-	private List<DashboardData> getDashboardData(int offset, HttpServletRequest req) throws SQLException {
+	private List<DashboardData> getDashboardData(int offset, Map<String, String[]> params) throws SQLException {
 		List<DashboardData> dataset = new ArrayList<>();
-		String requestUrl = req.getRequestURL().toString();
-		String cleanedUrl = requestUrl.substring(0, requestUrl.indexOf("/list"));
-		for (String request : getRequestIds(DEFAULT_LIMIT, offset)) {
-			String baseRequestId = request.substring(REQUEST_PREFIX.length());
-			DashboardData dashboardData = buildDashboardData(baseRequestId);
-			dashboardData.setRequestId(baseRequestId);
-			dashboardData.setRequestLink(cleanedUrl + "/request?id=" + baseRequestId);
+		for (String request : getRequestIds(DEFAULT_LIMIT, offset, params)) {
+			DashboardData dashboardData = buildDashboardData(request);
+			dashboardData.setRequestId(request);
+			dashboardData.setRequestLink(BASE_URL + "/request?id=" + request);
 			dataset.add(dashboardData);
 		}
 		return dataset;
@@ -90,31 +112,50 @@ public class ProcessListService extends BaseProcessServlet {
 		long startTime = -1;
 		long endTime = System.currentTimeMillis();
 		try (Connection conn = getConnection(); PreparedStatement pst = conn.prepareStatement(DATA_QUERY)) {
-			pst.setString(DATA_QUERY_REQUEST_ID_PARAM_INDEX, "%" + baseRequestId + "%");
+			pst.setString(DATA_QUERY_REQUEST_ID_PARAM_INDEX, baseRequestId);
 			try (ResultSet rs = pst.executeQuery()) {
 				while (rs.next()) {
-					String requestId = rs.getString(DATA_QUERY_REQUEST_ID_COLUMN_INDEX);
-					String requestDate = rs.getString(DATA_QUERY_REQUEST_DATE_COLUMN_INDEX);
-					String xml = rs.getString(DATA_QUERY_RESPONSE_COLUMN_INDEX);
-					if (requestId.toUpperCase().endsWith("OUTPUT")) {
-						endTime = Timestamp.valueOf(requestDate).getTime();
-						data.setOutput(xml);
-					} else if (requestId.startsWith(REQUEST_PREFIX)) {
-						String identifier;
-						identifier = getIdentifier(xml);
-						data.setIdentifier(identifier);
-					} else {
-						String status = getStatus(xml);
-						startTime = getStartTime(xml);
-						data.setStatus(status);
-						data.setCreationTime(startTime);
+					String requestId = rs.getString("request_id");
+					Timestamp creationDate = rs.getTimestamp("creation_time");
+					String wpsAlgorithmIdentifier = rs.getString("wps_algorithm_identifier");
+					String status = rs.getString("status");
+					int percentComplete = rs.getInt("percent_complete");
+					Timestamp startDate = rs.getTimestamp("start_time");
+					Timestamp endDate = rs.getTimestamp("end_time");
+					String exceptionText = rs.getString("exception_text");
+					
+					String userAgent = rs.getString("user_agent");
+					String userHash = rs.getString("user_hash");
+					String userGeo = rs.getString("user_geo");
+					
+					int timesteps = rs.getInt("timesteps");
+					long gridcells = rs.getLong("gridcells");
+					int varcount = rs.getInt("varcount");
+					int cellsizeBytes = rs.getInt("cellsize_bytes");
+					String boundingRect = rs.getString("bounding_rect");
+					long dataRetrieved = rs.getLong("data_retrieved");
+					
+					long dataReturned = rs.getLong("data_returned");
+					
+					if (endDate != null) {
+						endTime = endDate.getTime();
 					}
+					if (startDate != null) {
+						startTime = startDate.getTime();
+					}
+					data.setRequestId(requestId);
+					data.setIdentifier(ClassUtils.getShortClassName(wpsAlgorithmIdentifier));
+					data.setErrorMessage(exceptionText);
+					data.setStatus(status);
+					data.setPercentComplete(percentComplete);
+					data.setCreationTime(creationDate.getTime());
+					data.setClientInfo(new ClientInfo(userAgent, null, userHash, userGeo));
+					data.setDataFetchInfo(new DataFetchInfo(dataRetrieved, gridcells, timesteps, cellsizeBytes, varcount, boundingRect));
+					data.setOutputInfo(new OutputInfo(dataReturned));
 				}
 				if (startTime != -1) {
 					data.setElapsedTime(endTime - startTime);
 				}
-			} catch (JAXBException | IOException ex) {
-				data.setErrorMessage("Unmarshalling error for request [" + baseRequestId + "] " + ex.toString());
 			}
 		}
 		return data;

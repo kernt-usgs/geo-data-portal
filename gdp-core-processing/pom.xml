@@ -4,14 +4,14 @@
 	<parent>
 		<groupId>gov.usgs.cida.gdp</groupId>
 		<artifactId>gdp</artifactId>
-		<version>39-SNAPSHOT</version>
+		<version>58-SNAPSHOT</version>
 	</parent>
 	<artifactId>gdp-core-processing</artifactId>
 	<name>GDP Core Processing</name>
 	<licenses>
 		<license>
 			<name>Public Domain</name>
-			<url>http://en.wikipedia.org/wiki/Public_domain_software</url>
+			<url>https://en.wikipedia.org/wiki/Public_domain_software</url>
 			<comments>
 				All work of the US Government enter into the Public Domain within
 				the United States.  Whether that work is public domain outside of
@@ -39,6 +39,10 @@
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.thoughtworks.xstream</groupId>

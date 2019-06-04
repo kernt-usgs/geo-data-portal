@@ -9,12 +9,19 @@
         <link rel="stylesheet" type="text/css" href="css/dashboard.css" />
         <jsp:include page="scripts.jsp" />
         <script src="js/dashboard.js"></script>
+        <script>
+            var status = '<%= (request.getParameter("status")==null) ? "" : request.getParameter("status")%>';
+            var hash = '<%= (request.getParameter("hash")==null) ? "" : request.getParameter("hash")%>';
+        </script>
         <title>GDP Web Processing Service Dashboard</title>
     </head>
     <body>
         <p>Geo Data Portal Web Processing Service Dashboard</p>
         <input id="loadProcessesButton" type="button" value="Load Processes" />Last loaded: <span id="lastProcessLoad">never</span>
         <br />
+        <input id="previousPageButton" type="button" value="&lt; Previous Page"/>
+        <input id="nextPageButton" type="button" value="Next Page &gt;"/>
+
         <div id="processData">Load processes...</div>
     </body>
 </html>

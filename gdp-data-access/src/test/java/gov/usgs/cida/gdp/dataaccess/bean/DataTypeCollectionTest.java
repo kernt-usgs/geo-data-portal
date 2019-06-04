@@ -67,7 +67,7 @@ public class DataTypeCollectionTest {
 
 		ResponseCache.CacheIdentifier cacheId = null;
 		try {
-			cacheId = new ResponseCache.CacheIdentifier("http://not-a-r-eal-url.gov", ResponseCache.CacheIdentifier.CacheType.DATA_TYPE, "Dummy cache data");
+			cacheId = new ResponseCache.CacheIdentifier("https://not-a-r-eal-url.gov", ResponseCache.CacheIdentifier.CacheType.DATA_TYPE, "Dummy cache data");
 			boolean didWrite = inputBean.writeToCache(cacheId);
 			assertTrue(didWrite);
 		} finally {
@@ -94,7 +94,7 @@ public class DataTypeCollectionTest {
 		inputBean.getDataTypeCollection().get(0).setUnitsstring("UNITS STRING");
 		ResponseCache.CacheIdentifier cacheId = null;
 		try {
-			cacheId = new ResponseCache.CacheIdentifier("http://not-a-r-eal-url.gov", ResponseCache.CacheIdentifier.CacheType.DATA_TYPE, "Dummy cache data");
+			cacheId = new ResponseCache.CacheIdentifier("https://not-a-r-eal-url.gov", ResponseCache.CacheIdentifier.CacheType.DATA_TYPE, "Dummy cache data");
 			boolean didWrite = inputBean.writeToCache(cacheId);
 			assertTrue(didWrite);
 			DataTypeCollection resultBean = DataTypeCollection.buildFromCache(cacheId);

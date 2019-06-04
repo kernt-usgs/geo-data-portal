@@ -35,7 +35,6 @@ public class AlgorithmTest {
         validateAlgorithmDescription(new FeatureCoverageOPeNDAPIntersectionAlgorithm());
         validateAlgorithmDescription(new FeatureGridStatisticsAlgorithm());
         validateAlgorithmDescription(new FeatureWeightedGridStatisticsAlgorithm());
-        validateAlgorithmDescription(new PRMSParameterGeneratorAlgorithm());
     }
     
     private void validateAlgorithmDescription(IAlgorithm algorithm) {

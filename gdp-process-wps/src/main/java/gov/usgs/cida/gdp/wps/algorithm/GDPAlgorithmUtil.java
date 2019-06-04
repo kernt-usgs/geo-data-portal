@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Date;
 import java.util.Formatter;
+import java.util.List;
+import org.geotools.feature.FeatureCollection;
 
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.opengis.referencing.FactoryException;
@@ -20,6 +22,7 @@ import ucar.ma2.InvalidRangeException;
 import ucar.ma2.Range;
 import ucar.nc2.constants.FeatureType;
 import ucar.nc2.dataset.CoordinateAxis1DTime;
+import ucar.nc2.dt.GridCoordSystem;
 import ucar.nc2.dt.GridDataset;
 import ucar.nc2.dt.GridDatatype;
 import ucar.nc2.ft.FeatureDataset;
@@ -142,4 +145,96 @@ public abstract class GDPAlgorithmUtil {
         return timeRange;
     }
 
+    public static DataCube calculateDataCube(GridDatatype gridDatatype,
+            FeatureCollection featureCollection,
+            Date dateTimeStart, Date dateTimeEnd,
+            boolean requireFullCoverage) {
+
+        GridDatatype subset = null;
+        Range timeRange = null;
+        Range yRange = null;
+        Range xRange = null;
+
+        try {
+            timeRange = GDPAlgorithmUtil.generateTimeRange(gridDatatype, dateTimeStart, dateTimeEnd);
+            GridCoordSystem gridCoordSystem = gridDatatype.getCoordinateSystem();
+            Range[] xyRanges = GridUtility.getXYRangesFromBoundingBox(featureCollection.getBounds(), gridCoordSystem, requireFullCoverage);
+            yRange = new Range(xyRanges[1].first(), xyRanges[1].last());
+            xRange = new Range(xyRanges[0].first(), xyRanges[0].last());
+            subset = gridDatatype.makeSubset(null, null, timeRange, null, yRange, xRange);
+        } catch (TransformException | FactoryException | InvalidRangeException e) {
+            log.debug("User specified invalid request", e);
+            // wrapping in Runtime to propogate to error handler, nothin we can do to recover
+            throw new RuntimeException(e);
+        }
+
+        int xLength = subset.getXDimension().getLength();
+        int yLength = subset.getYDimension().getLength();
+        int tLength = subset.getTimeDimension().getLength();
+        int dataTypeSize = gridDatatype.getDataType().getSize();
+
+        DataCube info = new DataCube(xLength, yLength, tLength, dataTypeSize,
+                xRange, yRange, timeRange);
+
+        return info;
+    }
+
+    public static class DataCube {
+        private final int xLength;
+        private final int yLength;
+        private final int tLength;
+        private final int dataTypeSize;
+        private final long totalSize;
+        private final Range xRange;
+        private final Range yRange;
+        private final Range timeRange;
+
+        public DataCube(int xLength, int yLength, int tLength, int dataTypeSize,
+                Range xRange, Range yRange, Range timeRange) {
+            this.xLength = xLength;
+            this.yLength = yLength;
+            this.tLength = tLength;
+            this.dataTypeSize = dataTypeSize;
+            this.totalSize = (long)xLength * (long)yLength * (long)tLength * (long)dataTypeSize;
+
+            // just need these to pass through
+            this.xRange = xRange;
+            this.yRange = yRange;
+            this.timeRange = timeRange;
+        }
+
+        public int getxLength() {
+            return xLength;
+        }
+
+        public int getyLength() {
+            return yLength;
+        }
+
+        public int gettLength() {
+            return tLength;
+        }
+
+        public int getDataTypeSize() {
+            return dataTypeSize;
+        }
+
+        public long getTotalSize() {
+            return totalSize;
+        }
+
+        public Range getxRange() {
+            return xRange;
+        }
+
+        public Range getyRange() {
+            return yRange;
+        }
+
+        public Range getTimeRange() {
+            return timeRange;
+        }
+
+        
+    }
 }

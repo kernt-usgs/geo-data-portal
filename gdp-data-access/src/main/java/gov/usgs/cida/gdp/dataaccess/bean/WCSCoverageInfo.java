@@ -10,30 +10,16 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @XStreamAlias("WCSCoverageInfo")
 public class WCSCoverageInfo extends Response {
 
-	private static transient final org.slf4j.Logger log = LoggerFactory.getLogger(WCSCoverageInfo.class);
-	private static long serialVersionUID = 234234L;
+	private static transient final Logger log = LoggerFactory.getLogger(WCSCoverageInfo.class);
+	private static final long serialVersionUID = 7913244968738305557L;
 
-	/**
-	 * @return the serialVersionUID
-	 */
-	public static long getSerialVersionUID() {
-		return serialVersionUID;
-	}
-
-	/**
-	 * @param aSerialVersionUID the serialVersionUID to set
-	 */
-	public static void setSerialVersionUID(long aSerialVersionUID) {
-		serialVersionUID = aSerialVersionUID;
-	}
 	private String minResamplingFactor;
 	private String fullyCovers;
 	private String units;

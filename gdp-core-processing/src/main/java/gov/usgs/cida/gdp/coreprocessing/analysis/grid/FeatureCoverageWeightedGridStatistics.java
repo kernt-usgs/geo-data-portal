@@ -4,7 +4,6 @@ import ucar.nc2.dataset.CoordinateAxis1D;
 import org.slf4j.Logger;
 import gov.usgs.cida.gdp.coreprocessing.Delimiter;
 import gov.usgs.cida.gdp.coreprocessing.analysis.grid.Statistics1DWriter.GroupBy;
-import gov.usgs.cida.gdp.coreprocessing.analysis.grid.Statistics1DWriter.Statistic;
 import gov.usgs.cida.gdp.coreprocessing.analysis.statistics.WeightedStatistics1D;
 import gov.usgs.cida.gdp.coreprocessing.analysis.grid.GridCellCoverageFactory.GridCellCoverageByIndex;
 import gov.usgs.cida.gdp.coreprocessing.analysis.grid.GridCellCoverageFactory.GridCellIndexCoverage;
@@ -31,7 +30,9 @@ import ucar.nc2.dt.GridDataset;
 import ucar.nc2.dt.GridDatatype;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.io.Writer;
+import java.util.LinkedList;
 
 public class FeatureCoverageWeightedGridStatistics {
     
@@ -43,7 +44,8 @@ public class FeatureCoverageWeightedGridStatistics {
             GridDataset gridDataset,
             String variableName,
             Range timeRange,
-            List<Statistic> statisticList,
+            List<GridCellVisitor> additionalVisitors,
+            List<WeightedStatistic> statisticList,
             Writer writer,
             GroupBy groupBy,
             Delimiter delimiter)
@@ -57,6 +59,7 @@ public class FeatureCoverageWeightedGridStatistics {
         execute(featureCollection,
                 attributeName,
                 gridDatatype.makeSubset(null, null, timeRange, null, null, null),
+                additionalVisitors,
                 statisticList,
                 writer,
                 groupBy,
@@ -70,7 +73,8 @@ public class FeatureCoverageWeightedGridStatistics {
             FeatureCollection<SimpleFeatureType, SimpleFeature> featureCollection,
             String attributeName,
             GridDatatype gridDatatype,
-            List<Statistic> statisticList,
+            List<GridCellVisitor> additionalVisitors,
+            List<WeightedStatistic> statisticList,
             Writer writer,
             GroupBy groupBy,
             Delimiter delimiter,
@@ -93,7 +97,7 @@ public class FeatureCoverageWeightedGridStatistics {
         gridDatatype = gridDatatype.makeSubset(null, null, null, null, ranges[1], ranges[0]);
 
         GridCellCoverageByIndex coverageByIndex =
-				GridCellCoverageFactory.generateFeatureAttributeCoverageByIndex(
+                GridCellCoverageFactory.generateFeatureAttributeCoverageByIndex(
                     featureCollection,
                     attributeName,
                     gridDatatype.getCoordinateSystem());
@@ -115,10 +119,13 @@ public class FeatureCoverageWeightedGridStatistics {
                     summarizeFeatures,
                     writer);
 
+        List<GridCellVisitor> visitorList = new LinkedList<>();
         WeightedGridStatisticsVisitor v = new WeightedGridStatisticsVisitor(coverageByIndex, writerX);
+        visitorList.add(v);
+        visitorList.addAll(additionalVisitors);
         GridCellTraverser gct = new GridCellTraverser(gridDatatype);
 
-        gct.traverse(v);
+        gct.traverse(visitorList);
     }
 
     public static abstract class FeatureCoverageGridCellVisitor extends GridCellVisitor {
@@ -132,15 +139,15 @@ public class FeatureCoverageWeightedGridStatistics {
         @Override
         public void processGridCell(int xCellIndex, int yCellIndex, double value) {
             double coverageTotal = 0;
-			List<GridCellIndexCoverage> list = coverageByIndex.getCoverageList(xCellIndex, yCellIndex);
-			if (list != null) {
-				for (GridCellIndexCoverage c : list) {
-					if (c.coverage > 0.0) {
-						processPerAttributeGridCellCoverage(value, c.coverage, c.attribute);
-					}
-					coverageTotal += c.coverage;
-				}
-			}
+            List<GridCellIndexCoverage> list = coverageByIndex.getCoverageList(xCellIndex, yCellIndex);
+            if (list != null) {
+                for (GridCellIndexCoverage c : list) {
+                    if (c.coverage > 0.0) {
+                        processPerAttributeGridCellCoverage(value, c.coverage, c.attribute);
+                    }
+                    coverageTotal += c.coverage;
+                }
+            }
             if (coverageTotal > 0.0) {
                 processAllAttributeGridCellCoverage(value, coverageTotal);
             }

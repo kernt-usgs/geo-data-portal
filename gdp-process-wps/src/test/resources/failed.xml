@@ -1,0 +1,15 @@
+<ns:ExecuteResponse xmlns:ns="http://www.opengis.net/wps/1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengis.net/wps/1.0.0 http://schemas.opengis.net/wps/1.0.0/wpsExecute_response.xsd" serviceInstance="http://cida-eros-gdpdev:8080/gdp-process-wps/WebProcessingService?REQUEST=GetCapabilities&amp;SERVICE=WPS" xml:lang="en-US" service="WPS" version="1.0.0" statusLocation="http://cida-eros-gdpdev:8080/gdp-process-wps/RetrieveResultServlet?id=13407966-71a0-4150-8e93-a60d3cdf9a24">
+	<ns:Process ns:processVersion="1.0.0">
+		<ns1:Identifier xmlns:ns1="http://www.opengis.net/ows/1.1">gov.usgs.cida.gdp.wps.algorithm.FeatureGridStatisticsAlgorithm</ns1:Identifier>
+		<ns1:Title xmlns:ns1="http://www.opengis.net/ows/1.1">Area Grid Statistics (unweighted)</ns1:Title>
+	</ns:Process>
+	<ns:Status creationTime="2014-08-05T10:08:43.746-05:00">
+		<ns:ProcessFailed>
+			<ns1:ExceptionReport xmlns:ns1="http://www.opengis.net/ows/1.1">
+				<ns1:Exception>
+					<ns1:ExceptionText>IO Error :opendap.dap.DAP2Exception: Method failed:HTTP/1.1 403 Forbidden on URL= http://cida-eros-mows1.er.usgs.gov:8080/thredds/dodsC/data/ssurgo/awc/ssurgo_available_water_capacity.nc.dods?AWC[63157:1:76906][56620:1:77408]</ns1:ExceptionText>
+				</ns1:Exception>
+			</ns1:ExceptionReport>
+		</ns:ProcessFailed>
+	</ns:Status>
+</ns:ExecuteResponse>

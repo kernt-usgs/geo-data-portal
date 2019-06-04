@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wps:ExecuteResponse xmlns:wps="http://www.opengis.net/wps/1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ows="http://www.opengis.net/ows/1.1" xsi:schemaLocation="http://www.opengis.net/wps/1.0.0 http://schemas.opengis.net/wps/1.0.0/wpsExecute_response.xsd" serviceInstance="http://localhost:9080/gdp-process-wps/WebProcessingService?REQUEST=GetCapabilities&amp;SERVICE=WPS" xml:lang="en-US" service="WPS" version="1.0.0" statusLocation="http://localhost:9080/gdp-process-wps/RetrieveResultServlet?id=67ced899-e5ce-4fe3-b89b-ebec5dffbbc1">
+	<wps:Process wps:processVersion="1.0.0">
+		<ows:Identifier>gov.usgs.cida.gdp.wps.algorithm.FeatureGridStatisticsAlgorithm</ows:Identifier>
+		<ows:Title>Area Grid Statistics (unweighted)</ows:Title>
+	</wps:Process>
+	<wps:Status creationTime="2015-04-08T16:16:34.177-05:00">
+		<wps:ProcessAccepted>Process Accepted</wps:ProcessAccepted>
+	</wps:Status>
+</wps:ExecuteResponse>

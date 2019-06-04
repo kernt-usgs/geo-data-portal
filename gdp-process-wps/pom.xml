@@ -4,16 +4,16 @@
 	<parent>
 		<artifactId>gdp</artifactId>
 		<groupId>gov.usgs.cida.gdp</groupId>
-		<version>39-SNAPSHOT</version>
+		<version>58-SNAPSHOT</version>
 	</parent>
 	<artifactId>gdp-process-wps</artifactId>
 	<packaging>war</packaging>
 	<name>GDP Process WPS</name>
-        
+
 	<licenses>
 		<license>
 			<name>Public Domain</name>
-			<url>http://en.wikipedia.org/wiki/Public_domain_software</url>
+			<url>https://en.wikipedia.org/wiki/Public_domain_software</url>
 			<comments>
 				All work of the US Government enter into the Public Domain within
 				the United States.  Whether that work is public domain outside of
@@ -27,7 +27,7 @@
 		<version.maven.jetty.plugin>6.1.26</version.maven.jetty.plugin>
 		<version.jquery>2.1.0</version.jquery>
 	</properties>
-    
+
 	<build>
 		<finalName>gdp-process-wps</finalName>
 		<resources>
@@ -163,9 +163,28 @@
 					</dependency>
 				</dependencies>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<executions>
+					<execution>
+					<id>unpack-shared-resources</id>
+					<goals>
+						<goal>unpack-dependencies</goal>
+					</goals>
+					<phase>generate-test-resources</phase>
+					<configuration>
+						<outputDirectory>${project.build.directory}/test-classes</outputDirectory>
+						<includeGroupIds>${project.groupId}</includeGroupIds>
+						<includeArtifactIds>gdp-liquibase-changelogs</includeArtifactIds>
+						<excludeTransitive>true</excludeTransitive>
+					</configuration>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
-    
+
 	<dependencies>
 		<!-- sibling module dependencies -->
 		<dependency>
@@ -192,6 +211,10 @@
 		<dependency>
 			<groupId>commons-lang</groupId>
 			<artifactId>commons-lang</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.sun.xml.fastinfoset</groupId>
@@ -278,6 +301,7 @@
 			<artifactId>jquery</artifactId>
 			<version>${version.jquery}-2</version>
 		</dependency>
+		
 		<dependency>
 			<groupId>org.jvnet.ogc</groupId>
 			<artifactId>wps-v_1_0_0-schema</artifactId>
@@ -296,5 +320,30 @@
 			<type>pom</type>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>ru.yandex.qatools.embed</groupId>
+			<artifactId>postgresql-embedded</artifactId>
+			<version>1.3</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.tomcat</groupId>
+			<artifactId>tomcat-catalina</artifactId>
+			<version>8.0.23</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.liquibase</groupId>
+			<artifactId>liquibase-core</artifactId>
+			<version>3.4.0</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>gdp-liquibase-changelogs</artifactId>
+			<version>${project.version}</version>
+			<scope>test</scope>
+		</dependency>
+		
 	</dependencies>
 </project>

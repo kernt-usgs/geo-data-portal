@@ -88,9 +88,10 @@ public class GridCellCoverageTest {
                 (GridDataset) dataset,
                 variableName,
                 timeRange,
-                Arrays.asList(new Statistics1DWriter.Statistic[]{
-                    Statistics1DWriter.Statistic.MEAN,
-                    Statistics1DWriter.Statistic.MAXIMUM,}),
+                Arrays.asList(),
+                Arrays.asList(new WeightedStatistic[]{
+                    WeightedStatistic.MEAN,
+                    WeightedStatistic.MAXIMUM,}),
                 writer,
                 Statistics1DWriter.GroupBy.FEATURE_ATTRIBUTE,
                 Delimiter.COMMA);
@@ -107,9 +108,10 @@ public class GridCellCoverageTest {
                 (GridDataset) dataset,
                 variableName,
                 timeRange,
-                Arrays.asList(new Statistics1DWriter.Statistic[]{
-                    Statistics1DWriter.Statistic.MEAN,
-                    Statistics1DWriter.Statistic.MAXIMUM,}),
+                Arrays.asList(),
+                Arrays.asList(new WeightedStatistic[]{
+                    WeightedStatistic.MEAN,
+                    WeightedStatistic.MAXIMUM,}),
                 writer,
                 Statistics1DWriter.GroupBy.FEATURE_ATTRIBUTE,
                 Delimiter.COMMA);
@@ -125,9 +127,10 @@ public class GridCellCoverageTest {
                 (GridDataset) dataset,
                 variableName,
                 timeRange,
-                Arrays.asList(new Statistics1DWriter.Statistic[]{
-                    Statistics1DWriter.Statistic.MEAN,
-                    Statistics1DWriter.Statistic.MAXIMUM,}),
+                null,
+                Arrays.asList(new WeightedStatistic[]{
+                    WeightedStatistic.MEAN,
+                    WeightedStatistic.MAXIMUM,}),
                 writer,
                 Statistics1DWriter.GroupBy.FEATURE_ATTRIBUTE,
                 Delimiter.COMMA);
@@ -143,9 +146,10 @@ public class GridCellCoverageTest {
                 (GridDataset) dataset,
                 variableName,
                 timeRange,
-                Arrays.asList(new Statistics1DWriter.Statistic[]{
-                    Statistics1DWriter.Statistic.MEAN,
-                    Statistics1DWriter.Statistic.MAXIMUM,}),
+                null,
+                Arrays.asList(new WeightedStatistic[]{
+                    WeightedStatistic.MEAN,
+                    WeightedStatistic.MAXIMUM,}),
                 writer,
                 Statistics1DWriter.GroupBy.FEATURE_ATTRIBUTE,
                 Delimiter.COMMA);
@@ -162,9 +166,10 @@ public class GridCellCoverageTest {
                 (GridDataset) dataset,
                 variableName,
                 timeRange,
-                Arrays.asList(new Statistics1DWriter.Statistic[]{
-                    Statistics1DWriter.Statistic.MEAN,
-                    Statistics1DWriter.Statistic.MAXIMUM,}),
+                Arrays.asList(),
+                Arrays.asList(new WeightedStatistic[]{
+                    WeightedStatistic.MEAN,
+                    WeightedStatistic.MAXIMUM,}),
                 writer,
                 Statistics1DWriter.GroupBy.FEATURE_ATTRIBUTE,
                 Delimiter.COMMA);
@@ -178,14 +183,15 @@ public class GridCellCoverageTest {
                 (GridDataset) dataset,
                 variableName,
                 timeRange,
-                Arrays.asList(new Statistics1DWriter.Statistic[]{
-                    Statistics1DWriter.Statistic.MEAN,
-                    Statistics1DWriter.Statistic.MAXIMUM,
-                    Statistics1DWriter.Statistic.MINIMUM,
-                    Statistics1DWriter.Statistic.VARIANCE,
-                    Statistics1DWriter.Statistic.STD_DEV,
-                    Statistics1DWriter.Statistic.SUM,
-                    Statistics1DWriter.Statistic.COUNT,}),
+                Arrays.asList(),
+                Arrays.asList(new WeightedStatistic[]{
+                    WeightedStatistic.MEAN,
+                    WeightedStatistic.MAXIMUM,
+                    WeightedStatistic.MINIMUM,
+                    WeightedStatistic.VARIANCE,
+                    WeightedStatistic.STD_DEV,
+                    WeightedStatistic.SUM,
+                    WeightedStatistic.COUNT,}),
                 writer,
                 Statistics1DWriter.GroupBy.FEATURE_ATTRIBUTE,
                 Delimiter.COMMA);

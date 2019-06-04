@@ -1,13 +1,11 @@
 package gov.usgs.cida.gdp.wps.service;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.sql.SQLException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 
@@ -33,16 +31,12 @@ public class RequestRetrieveService extends BaseProcessServlet {
 		if (StringUtils.isBlank(id)) {
 			response.sendError(HttpServletResponse.SC_NOT_FOUND);
 		} else {
-			try {
-				File requestEntity = getRequestEntityAsFile(id);
+			try (InputStream requestEntity = getRequestEntityAsStream(id)){
+				response.setContentType("text/xml");
+				response.setContentLength(-1);
 
-				response.setContentType("application/octet-stream");
-				response.setHeader("Content-Disposition", "attachment; filename=\"" + id + "\".gz");
-				response.setContentLength((int) requestEntity.length());
-
-				IOUtils.copy(new FileInputStream(requestEntity), response.getOutputStream());
+				IOUtils.copy(requestEntity, response.getOutputStream());
 				response.flushBuffer();
-				FileUtils.deleteQuietly(requestEntity);
 			} catch (SQLException ex) {
 				response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
 			}

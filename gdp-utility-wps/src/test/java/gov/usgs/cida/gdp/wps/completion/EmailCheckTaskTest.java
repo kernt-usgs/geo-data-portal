@@ -46,7 +46,7 @@ public class EmailCheckTaskTest {
 	@Test
 	public void errorOutCheckTask() throws Exception {
 		int port = server.getConnectors()[0].getLocalPort();
-		EmailCheckTask task = new EmailCheckTask("http://localhost:" + port + "/", "test@test.test.com", "", null, true, false, 5);
+		EmailCheckTask task = new EmailCheckTask("https://localhost:" + port + "/", "test@test.test.com", "", null, true, false, 5);
 		task.run();
 		assertFalse(task.isCancelled());
 		assertEquals(task.getErrorCount(), Integer.valueOf(1));
@@ -67,7 +67,7 @@ public class EmailCheckTaskTest {
 	@Test
 	public void neverErrorOutCheckTask() throws Exception {
 		int port = server.getConnectors()[0].getLocalPort();
-		EmailCheckTask task = new EmailCheckTask("http://localhost:" + port + "/", "test@test.test.com", "", null, true, false, -1);
+		EmailCheckTask task = new EmailCheckTask("https://localhost:" + port + "/", "test@test.test.com", "", null, true, false, -1);
 		task.run();
 		assertFalse(task.isCancelled());
 		assertEquals(task.getErrorCount(), Integer.valueOf(0));

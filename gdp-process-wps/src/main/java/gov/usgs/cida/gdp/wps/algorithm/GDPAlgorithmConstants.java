@@ -16,6 +16,18 @@ public class GDPAlgorithmConstants {
     public final static String FEATURE_ATTRIBUTE_NAME_TITLE = "Feature Attribute Name";
     public final static String FEATURE_ATTRIBUTE_NAME_ABSTRACT = "The attribute that will be used to label column headers in processing output.";
     
+    public final static String OBSERVED_PROPERTY_IDENTIFIER = "OBSERVED_PROPERTY";
+    public final static String OBSERVED_PROPERTY_TITLE = "Time Series Observed Property";
+    public final static String OBSERVED_PROPERTY_ABSTRACT = "The attribute use to determine the data set.";
+    
+    public final static String ADDITIONAL_VISITORS_IDENTIFIER = "ADDITIONAL_VISITORS";
+    public final static String ADDITIONAL_VISITORS_TITLE = "Additional Visitors";
+    public final static String ADDITIONAL_VISITORS_ABSTRACT = "The list of additional action to take for each time series entry.";
+    
+    public final static String INCLUDE_SHAPEFILE_IDENTIFIER = "INCLUDE_SHAPEFILE";
+    public final static String INCLUDE_SHAPEFILE_TITLE = "Include ShapeFile";
+    public final static String INCLUDE_SHAPEFILE_ABSTRACT = "Indicates to include the feature collection shapefile or not.";
+    
     public final static String DATASET_URI_IDENTIFIER = "DATASET_URI";
     public final static String DATASET_URI_TITLE = "Dataset URI";
     public final static String DATASET_URI_ABSTRACT = "The base data web service URI for the dataset of interest.";
@@ -37,6 +49,10 @@ public class GDPAlgorithmConstants {
     public final static String TIME_END_IDENTIFIER = "TIME_END";
     public final static String TIME_END_TITLE = "Time End";
     public final static String TIME_END_ABSTRACT = "The date to end analysis.";
+    
+    public final static String OUTPUT_TYPE_IDENTIFIER = "OUTPUT_TYPE";
+    public final static String OUTPUT_TYPE_TITLE = "Output Format Type";
+    public final static String OUTPUT_TYPE_ABSTRACT = "The output type format for this request.  Current implementations: \"netcdf\" and \"geotiff\".";
     
     
     public final static String DELIMITER_IDENTIFIER = "DELIMITER";

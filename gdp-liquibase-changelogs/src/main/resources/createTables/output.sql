@@ -1,0 +1,13 @@
+--liquibase formatted sql
+
+--changeset jiwalker:5createTableOutput
+CREATE TABLE output (
+	ID VARCHAR(100) NOT NULL PRIMARY KEY,
+	OUTPUT_ID VARCHAR(100),
+	RESPONSE_ID VARCHAR(100),
+	INLINE_RESPONSE TEXT,
+	MIME_TYPE VARCHAR(100),
+	RESPONSE_LENGTH BIGINT,
+	LOCATION VARCHAR(200),
+	INSERTED TIMESTAMP)
+--rollback drop table output;

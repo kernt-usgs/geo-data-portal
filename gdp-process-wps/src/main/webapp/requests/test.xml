@@ -1,53 +1,760 @@
 
-<wps:Execute service="WPS" version="1.0.0" xmlns:wps="http://www.opengis.net/wps/1.0.0" xmlns:ows="http://www.opengis.net/ows/1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengis.net/wps/1.0.0
-	http://schemas.opengis.net/wps/1.0.0/wpsExecute_request.xsd">
-    <ows:Identifier>gov.usgs.cida.gdp.wps.algorithm.TestProcess</ows:Identifier>
-    <wps:DataInputs>
-        <wps:Input>
-            <ows:Identifier>LITERAL_LIST_FIELD</ows:Identifier>
-            <wps:Data>
-                <wps:LiteralData>123</wps:LiteralData>
-            </wps:Data>
-        </wps:Input>
-        <wps:Input>
-            <ows:Identifier>LITERAL_LIST_FIELD</ows:Identifier>
-            <wps:Data>
-                <wps:LiteralData>456</wps:LiteralData>
-            </wps:Data>
-        </wps:Input>
-        <wps:Input>
-            <ows:Identifier>LITERAL_LIST_METHOD</ows:Identifier>
-            <wps:Data>
-                <wps:LiteralData>789</wps:LiteralData>
-            </wps:Data>
-        </wps:Input>
-        <wps:Input>
-            <ows:Identifier>LITERAL_LIST_METHOD</ows:Identifier>
-            <wps:Data>
-                <wps:LiteralData>ABC</wps:LiteralData>
-            </wps:Data>
-        </wps:Input>
-        <wps:Input>
-            <ows:Identifier>LITERAL_FIELD</ows:Identifier>
-            <wps:Data>
-                <wps:LiteralData>abc</wps:LiteralData>
-            </wps:Data>
-        </wps:Input>
-        <wps:Input>
-            <ows:Identifier>LITERAL_METHOD</ows:Identifier>
-            <wps:Data>
-                <wps:LiteralData>xyz</wps:LiteralData>
-            </wps:Data>
-        </wps:Input>
-    </wps:DataInputs>
-    <wps:ResponseForm>
-        <wps:ResponseDocument storeExecuteResponse="false" status="false">
-            <wps:Output asReference="true">
-                <ows:Identifier>CONCATENATION_FIELD</ows:Identifier>
-            </wps:Output>
-            <wps:Output asReference="true">
-                <ows:Identifier>CONCATENATION_METHOD</ows:Identifier>
-            </wps:Output>
-        </wps:ResponseDocument>
-    </wps:ResponseForm>
-</wps:Execute>
+<?xml version="1.0" encoding="UTF-8"?>
+<wfs:WFS_Capabilities version="1.1.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.opengis.net/wfs"
+	xmlns:wfs="http://www.opengis.net/wfs" xmlns:ows="http://www.opengis.net/ows"
+	xmlns:gml="http://www.opengis.net/gml" xmlns:ogc="http://www.opengis.net/ogc"
+	xmlns:xlink="http://www.w3.org/1999/xlink"
+	xsi:schemaLocation="http://www.opengis.net/wfs http://cida.usgs.gov/gdp/geoserver/schemas/wfs/1.1.0/wfs.xsd"
+	xmlns:xml="http://www.w3.org/XML/1998/namespace" xmlns:draw="gov.usgs.cida.gdp.draw"
+	xmlns:waters="gov.usgs.cida.gdp.waters" xmlns:derivative="gov.usgs.cida.gdp.derivative"
+	xmlns:upload="gov.usgs.cida.gdp.upload" xmlns:sample="gov.usgs.cida.gdp.sample"
+	updateSequence="20960">
+	<ows:ServiceIdentification>
+		<ows:Title>GeoServer Web Feature Service</ows:Title>
+		<ows:Abstract>This is the reference implementation of WFS 1.0.0 and WFS 1.1.0, supports all WFS operations including Transaction.</ows:Abstract>
+		<ows:ServiceType>WFS</ows:ServiceType>
+		<ows:ServiceTypeVersion>1.1.0</ows:ServiceTypeVersion>
+		<ows:Fees />
+		<ows:AccessConstraints />
+	</ows:ServiceIdentification>
+	<ows:ServiceProvider>
+		<ows:ProviderName />
+		<ows:ServiceContact>
+			<ows:IndividualName />
+			<ows:PositionName />
+			<ows:ContactInfo>
+				<ows:Phone>
+					<ows:Voice />
+					<ows:Facsimile />
+				</ows:Phone>
+				<ows:Address>
+					<ows:City />
+					<ows:AdministrativeArea />
+					<ows:PostalCode />
+					<ows:Country />
+				</ows:Address>
+			</ows:ContactInfo>
+		</ows:ServiceContact>
+	</ows:ServiceProvider>
+	<ows:OperationsMetadata>
+		<ows:Operation name="GetCapabilities">
+			<ows:DCP>
+				<ows:HTTP>
+					<ows:Get xlink:href="http://cida.usgs.gov/gdp/geoserver/wfs" />
+					<ows:Post xlink:href="http://cida.usgs.gov/gdp/geoserver/wfs" />
+				</ows:HTTP>
+			</ows:DCP>
+			<ows:Parameter name="AcceptVersions">
+				<ows:Value>1.0.0</ows:Value>
+				<ows:Value>1.1.0</ows:Value>
+			</ows:Parameter>
+			<ows:Parameter name="AcceptFormats">
+				<ows:Value>text/xml</ows:Value>
+			</ows:Parameter>
+		</ows:Operation>
+		<ows:Operation name="DescribeFeatureType">
+			<ows:DCP>
+				<ows:HTTP>
+					<ows:Get xlink:href="http://cida.usgs.gov/gdp/geoserver/wfs" />
+					<ows:Post xlink:href="http://cida.usgs.gov/gdp/geoserver/wfs" />
+				</ows:HTTP>
+			</ows:DCP>
+			<ows:Parameter name="outputFormat">
+				<ows:Value>text/xml; subtype=gml/3.1.1</ows:Value>
+			</ows:Parameter>
+		</ows:Operation>
+		<ows:Operation name="GetFeature">
+			<ows:DCP>
+				<ows:HTTP>
+					<ows:Get xlink:href="http://cida.usgs.gov/gdp/geoserver/wfs" />
+					<ows:Post xlink:href="http://cida.usgs.gov/gdp/geoserver/wfs" />
+				</ows:HTTP>
+			</ows:DCP>
+			<ows:Parameter name="resultType">
+				<ows:Value>results</ows:Value>
+				<ows:Value>hits</ows:Value>
+			</ows:Parameter>
+			<ows:Parameter name="outputFormat">
+				<ows:Value>text/xml; subtype=gml/3.1.1</ows:Value>
+				<ows:Value>GML2</ows:Value>
+				<ows:Value>SHAPE-ZIP</ows:Value>
+				<ows:Value>application/gml+xml; version=3.2</ows:Value>
+				<ows:Value>application/json</ows:Value>
+				<ows:Value>csv</ows:Value>
+				<ows:Value>gml3</ows:Value>
+				<ows:Value>gml32</ows:Value>
+				<ows:Value>json</ows:Value>
+				<ows:Value>text/xml; subtype=gml/2.1.2</ows:Value>
+				<ows:Value>text/xml; subtype=gml/3.2</ows:Value>
+			</ows:Parameter>
+			<ows:Constraint name="LocalTraverseXLinkScope">
+				<ows:Value>2</ows:Value>
+			</ows:Constraint>
+		</ows:Operation>
+		<ows:Operation name="GetGmlObject">
+			<ows:DCP>
+				<ows:HTTP>
+					<ows:Get xlink:href="http://cida.usgs.gov/gdp/geoserver/wfs" />
+					<ows:Post xlink:href="http://cida.usgs.gov/gdp/geoserver/wfs" />
+				</ows:HTTP>
+			</ows:DCP>
+		</ows:Operation>
+		<ows:Operation name="LockFeature">
+			<ows:DCP>
+				<ows:HTTP>
+					<ows:Get xlink:href="http://cida.usgs.gov/gdp/geoserver/wfs" />
+					<ows:Post xlink:href="http://cida.usgs.gov/gdp/geoserver/wfs" />
+				</ows:HTTP>
+			</ows:DCP>
+			<ows:Parameter name="releaseAction">
+				<ows:Value>ALL</ows:Value>
+				<ows:Value>SOME</ows:Value>
+			</ows:Parameter>
+		</ows:Operation>
+		<ows:Operation name="GetFeatureWithLock">
+			<ows:DCP>
+				<ows:HTTP>
+					<ows:Get xlink:href="http://cida.usgs.gov/gdp/geoserver/wfs" />
+					<ows:Post xlink:href="http://cida.usgs.gov/gdp/geoserver/wfs" />
+				</ows:HTTP>
+			</ows:DCP>
+			<ows:Parameter name="resultType">
+				<ows:Value>results</ows:Value>
+				<ows:Value>hits</ows:Value>
+			</ows:Parameter>
+			<ows:Parameter name="outputFormat">
+				<ows:Value>text/xml; subtype=gml/3.1.1</ows:Value>
+				<ows:Value>GML2</ows:Value>
+				<ows:Value>SHAPE-ZIP</ows:Value>
+				<ows:Value>application/gml+xml; version=3.2</ows:Value>
+				<ows:Value>application/json</ows:Value>
+				<ows:Value>csv</ows:Value>
+				<ows:Value>gml3</ows:Value>
+				<ows:Value>gml32</ows:Value>
+				<ows:Value>json</ows:Value>
+				<ows:Value>text/xml; subtype=gml/2.1.2</ows:Value>
+				<ows:Value>text/xml; subtype=gml/3.2</ows:Value>
+			</ows:Parameter>
+		</ows:Operation>
+		<ows:Operation name="Transaction">
+			<ows:DCP>
+				<ows:HTTP>
+					<ows:Get xlink:href="http://cida.usgs.gov/gdp/geoserver/wfs" />
+					<ows:Post xlink:href="http://cida.usgs.gov/gdp/geoserver/wfs" />
+				</ows:HTTP>
+			</ows:DCP>
+			<ows:Parameter name="inputFormat">
+				<ows:Value>text/xml; subtype=gml/3.1.1</ows:Value>
+			</ows:Parameter>
+			<ows:Parameter name="idgen">
+				<ows:Value>GenerateNew</ows:Value>
+				<ows:Value>UseExisting</ows:Value>
+				<ows:Value>ReplaceDuplicate</ows:Value>
+			</ows:Parameter>
+			<ows:Parameter name="releaseAction">
+				<ows:Value>ALL</ows:Value>
+				<ows:Value>SOME</ows:Value>
+			</ows:Parameter>
+		</ows:Operation>
+	</ows:OperationsMetadata>
+	<FeatureTypeList>
+		<Operations>
+			<Operation>Query</Operation>
+			<Operation>Insert</Operation>
+			<Operation>Update</Operation>
+			<Operation>Delete</Operation>
+			<Operation>Lock</Operation>
+		</Operations>
+		<FeatureType xmlns:sample="gov.usgs.cida.gdp.sample">
+			<Name>sample:Alaska</Name>
+			<Title>Alaska</Title>
+			<Abstract />
+			<ows:Keywords>
+				<ows:Keyword>features</ows:Keyword>
+				<ows:Keyword>Alaska</ows:Keyword>
+			</ows:Keywords>
+			<DefaultSRS>urn:x-ogc:def:crs:EPSG:4326</DefaultSRS>
+			<ows:WGS84BoundingBox>
+				<ows:LowerCorner>-179.13339233398438 51.21723937988281</ows:LowerCorner>
+				<ows:UpperCorner>-129.97463989257812 71.3980484008789</ows:UpperCorner>
+			</ows:WGS84BoundingBox>
+		</FeatureType>
+		<FeatureType xmlns:derivative="gov.usgs.cida.gdp.derivative">
+			<Name>derivative:CONUS_States</Name>
+			<Title>CONUS States</Title>
+			<Abstract />
+			<ows:Keywords>
+				<ows:Keyword>features</ows:Keyword>
+				<ows:Keyword>CONUS_States</ows:Keyword>
+			</ows:Keywords>
+			<DefaultSRS>urn:x-ogc:def:crs:EPSG:4326</DefaultSRS>
+			<ows:WGS84BoundingBox>
+				<ows:LowerCorner>-124.75579071044922 24.518321990966815</ows:LowerCorner>
+				<ows:UpperCorner>-66.95400238037112 49.38562011718747</ows:UpperCorner>
+			</ows:WGS84BoundingBox>
+		</FeatureType>
+		<FeatureType xmlns:sample="gov.usgs.cida.gdp.sample">
+			<Name>sample:CONUS_states</Name>
+			<Title>CONUS States</Title>
+			<Abstract />
+			<ows:Keywords>
+				<ows:Keyword>CONUS</ows:Keyword>
+				<ows:Keyword>features</ows:Keyword>
+			</ows:Keywords>
+			<DefaultSRS>urn:x-ogc:def:crs:EPSG:4326</DefaultSRS>
+			<ows:WGS84BoundingBox>
+				<ows:LowerCorner>-124.75579071044922 24.518321990966797</ows:LowerCorner>
+				<ows:UpperCorner>-66.9540023803711 49.3856201171875</ows:UpperCorner>
+			</ows:WGS84BoundingBox>
+		</FeatureType>
+		<FeatureType xmlns:sample="gov.usgs.cida.gdp.sample">
+			<Name>sample:CSC_Boundaries</Name>
+			<Title>CSC_Boundaries</Title>
+			<Abstract />
+			<ows:Keywords>
+				<ows:Keyword>CSC_Boundaries</ows:Keyword>
+				<ows:Keyword>features</ows:Keyword>
+			</ows:Keywords>
+			<DefaultSRS>urn:x-ogc:def:crs:EPSG:4326</DefaultSRS>
+			<ows:WGS84BoundingBox>
+				<ows:LowerCorner>-179.99999999999994 -15.422166639552529</ows:LowerCorner>
+				<ows:UpperCorner>180.0 71.40623535300016</ows:UpperCorner>
+			</ows:WGS84BoundingBox>
+		</FeatureType>
+		<FeatureType xmlns:derivative="gov.usgs.cida.gdp.derivative">
+			<Name>derivative:FWS_LCC</Name>
+			<Title>FWS LCCs</Title>
+			<Abstract />
+			<ows:Keywords>
+				<ows:Keyword>FWS_LCC</ows:Keyword>
+				<ows:Keyword>features</ows:Keyword>
+			</ows:Keywords>
+			<DefaultSRS>urn:x-ogc:def:crs:EPSG:4326</DefaultSRS>
+			<ows:WGS84BoundingBox>
+				<ows:LowerCorner>-179.99999999999994 -15.422166639552664</ows:LowerCorner>
+				<ows:UpperCorner>180.0 83.14808393711968</ows:UpperCorner>
+			</ows:WGS84BoundingBox>
+		</FeatureType>
+		<FeatureType xmlns:sample="gov.usgs.cida.gdp.sample">
+			<Name>sample:FWS_LCC</Name>
+			<Title>FWS_LCC</Title>
+			<Abstract />
+			<ows:Keywords>
+				<ows:Keyword>FWS_LCC</ows:Keyword>
+				<ows:Keyword>features</ows:Keyword>
+			</ows:Keywords>
+			<DefaultSRS>urn:x-ogc:def:crs:EPSG:4326</DefaultSRS>
+			<ows:WGS84BoundingBox>
+				<ows:LowerCorner>-179.99999999999994 -15.422166639552643</ows:LowerCorner>
+				<ows:UpperCorner>180.0 83.14808393711964</ows:UpperCorner>
+			</ows:WGS84BoundingBox>
+		</FeatureType>
+		<FeatureType xmlns:upload="gov.usgs.cida.gdp.upload">
+			<Name>upload:G07249413</Name>
+			<Title>G07249413</Title>
+			<Abstract />
+			<ows:Keywords>
+				<ows:Keyword>G07249413</ows:Keyword>
+				<ows:Keyword>features</ows:Keyword>
+			</ows:Keywords>
+			<DefaultSRS>urn:x-ogc:def:crs:EPSG:5070</DefaultSRS>
+			<ows:WGS84BoundingBox>
+				<ows:LowerCorner>-95.39875250489149 34.668730788953305</ows:LowerCorner>
+				<ows:UpperCorner>-93.87348710658215 35.23512639360214</ows:UpperCorner>
+			</ows:WGS84BoundingBox>
+		</FeatureType>
+		<FeatureType xmlns:upload="gov.usgs.cida.gdp.upload">
+			<Name>upload:G08218500</Name>
+			<Title>G08218500</Title>
+			<Abstract />
+			<ows:Keywords>
+				<ows:Keyword>G08218500</ows:Keyword>
+				<ows:Keyword>features</ows:Keyword>
+			</ows:Keywords>
+			<DefaultSRS>urn:x-ogc:def:crs:EPSG:5070</DefaultSRS>
+			<ows:WGS84BoundingBox>
+				<ows:LowerCorner>-107.0093091314777 37.552094658432246</ows:LowerCorner>
+				<ows:UpperCorner>-106.75049215232094 37.76659436020502</ows:UpperCorner>
+			</ows:WGS84BoundingBox>
+		</FeatureType>
+		<FeatureType xmlns:derivative="gov.usgs.cida.gdp.derivative">
+			<Name>derivative:wbdhu8_alb_simp</Name>
+			<Title>HUC8 Watersheds</Title>
+			<Abstract />
+			<ows:Keywords>
+				<ows:Keyword>features</ows:Keyword>
+				<ows:Keyword>wbdhu8_alb_simp</ows:Keyword>
+			</ows:Keywords>
+			<DefaultSRS>urn:x-ogc:def:crs:EPSG:4326</DefaultSRS>
+			<ows:WGS84BoundingBox>
+				<ows:LowerCorner>-124.77148019908924 24.512236010285942</ows:LowerCorner>
+				<ows:UpperCorner>-66.88543928165748 49.38447884756701</ows:UpperCorner>
+			</ows:WGS84BoundingBox>
+		</FeatureType>
+		<FeatureType xmlns:upload="gov.usgs.cida.gdp.upload">
+			<Name>upload:HUC8_RioHeadwaters</Name>
+			<Title>HUC8_RioHeadwaters</Title>
+			<Abstract />
+			<ows:Keywords>
+				<ows:Keyword>HUC8_RioHeadwaters</ows:Keyword>
+				<ows:Keyword>features</ows:Keyword>
+			</ows:Keywords>
+			<DefaultSRS>urn:x-ogc:def:crs:EPSG:4269</DefaultSRS>
+			<ows:WGS84BoundingBox>
+				<ows:LowerCorner>-107.55934652122471 37.40741348200518</ows:LowerCorner>
+				<ows:UpperCorner>-106.36521859131123 37.97484505901337</ows:UpperCorner>
+			</ows:WGS84BoundingBox>
+		</FeatureType>
+		<FeatureType xmlns:derivative="gov.usgs.cida.gdp.derivative">
+			<Name>derivative:Level_III_Ecoregions</Name>
+			<Title>Level III Ecoregions</Title>
+			<Abstract />
+			<ows:Keywords>
+				<ows:Keyword>features</ows:Keyword>
+				<ows:Keyword>Level_III_Ecoregions</ows:Keyword>
+			</ows:Keywords>
+			<DefaultSRS>urn:x-ogc:def:crs:EPSG:4269</DefaultSRS>
+			<ows:WGS84BoundingBox>
+				<ows:LowerCorner>-179.13339320062786 24.518322446144964</ows:LowerCorner>
+				<ows:UpperCorner>179.78820610148102 71.39804835669429</ows:UpperCorner>
+			</ows:WGS84BoundingBox>
+		</FeatureType>
+		<FeatureType xmlns:draw="gov.usgs.cida.gdp.draw">
+			<Name>draw:MCBCL</Name>
+			<Title>MCBCL</Title>
+			<Abstract />
+			<ows:Keywords>
+				<ows:Keyword>features</ows:Keyword>
+				<ows:Keyword>MCBCL</ows:Keyword>
+			</ows:Keywords>
+			<DefaultSRS>urn:x-ogc:def:crs:EPSG:4326</DefaultSRS>
+			<ows:WGS84BoundingBox>
+				<ows:LowerCorner>-78.071685791011 34.448669433594</ows:LowerCorner>
+				<ows:UpperCorner>-77.082916259761 35.124328613282</ows:UpperCorner>
+			</ows:WGS84BoundingBox>
+		</FeatureType>
+		<FeatureType xmlns:derivative="gov.usgs.cida.gdp.derivative">
+			<Name>derivative:NCA_Regions</Name>
+			<Title>NCA Regions</Title>
+			<Abstract />
+			<ows:Keywords>
+				<ows:Keyword>NCA_Regions</ows:Keyword>
+				<ows:Keyword>features</ows:Keyword>
+			</ows:Keywords>
+			<DefaultSRS>urn:x-ogc:def:crs:EPSG:4326</DefaultSRS>
+			<ows:WGS84BoundingBox>
+				<ows:LowerCorner>-124.75579071044922 24.519685745239258</ows:LowerCorner>
+				<ows:UpperCorner>-66.9540023803711 49.38562011718743</ows:UpperCorner>
+			</ows:WGS84BoundingBox>
+		</FeatureType>
+		<FeatureType xmlns:draw="gov.usgs.cida.gdp.draw">
+			<Name>draw:SP</Name>
+			<Title>SP</Title>
+			<Abstract />
+			<ows:Keywords>
+				<ows:Keyword>features</ows:Keyword>
+				<ows:Keyword>SP</ows:Keyword>
+			</ows:Keywords>
+			<DefaultSRS>urn:x-ogc:def:crs:EPSG:4326</DefaultSRS>
+			<ows:WGS84BoundingBox>
+				<ows:LowerCorner>-105.99755859375 38.17578125</ows:LowerCorner>
+				<ows:UpperCorner>-101.03173828125 41.71337890625</ows:UpperCorner>
+			</ows:WGS84BoundingBox>
+		</FeatureType>
+		<FeatureType xmlns:derivative="gov.usgs.cida.gdp.derivative">
+			<Name>derivative:US_Counties</Name>
+			<Title>US Counties</Title>
+			<Abstract />
+			<ows:Keywords>
+				<ows:Keyword>US_Counties</ows:Keyword>
+				<ows:Keyword>features</ows:Keyword>
+			</ows:Keywords>
+			<DefaultSRS>urn:x-ogc:def:crs:EPSG:4269</DefaultSRS>
+			<ows:WGS84BoundingBox>
+				<ows:LowerCorner>-179.13339233398438 17.674692153384203</ows:LowerCorner>
+				<ows:UpperCorner>179.78820800781253 71.39804840030934</ows:UpperCorner>
+			</ows:WGS84BoundingBox>
+		</FeatureType>
+		<FeatureType xmlns:upload="gov.usgs.cida.gdp.upload">
+			<Name>upload:US_counties_LRRsubset</Name>
+			<Title>US_counties_LRRsubset</Title>
+			<Abstract />
+			<ows:Keywords>
+				<ows:Keyword>US_counties_LRRsubset</ows:Keyword>
+				<ows:Keyword>features</ows:Keyword>
+			</ows:Keywords>
+			<DefaultSRS>urn:x-ogc:def:crs:EPSG:102003</DefaultSRS>
+			<ows:WGS84BoundingBox>
+				<ows:LowerCorner>-113.5160726335662 27.51911175950218</ows:LowerCorner>
+				<ows:UpperCorner>-72.03416814293554 49.889447291128135</ows:UpperCorner>
+			</ows:WGS84BoundingBox>
+		</FeatureType>
+		<FeatureType xmlns:upload="gov.usgs.cida.gdp.upload">
+			<Name>upload:mke_cherry_lower</Name>
+			<Title>mke_cherry_lower</Title>
+			<Abstract />
+			<ows:Keywords>
+				<ows:Keyword>features</ows:Keyword>
+				<ows:Keyword>mke_cherry_lower</ows:Keyword>
+			</ows:Keywords>
+			<DefaultSRS>urn:x-ogc:def:crs:EPSG:4326</DefaultSRS>
+			<ows:WGS84BoundingBox>
+				<ows:LowerCorner>-88.19359104592884 43.045031822669024</ows:LowerCorner>
+				<ows:UpperCorner>-87.86385855061384 43.29984646398574</ows:UpperCorner>
+			</ows:WGS84BoundingBox>
+		</FeatureType>
+		<FeatureType xmlns:upload="gov.usgs.cida.gdp.upload">
+			<Name>upload:mke_cherry_lower2</Name>
+			<Title>mke_cherry_lower2</Title>
+			<Abstract />
+			<ows:Keywords>
+				<ows:Keyword>features</ows:Keyword>
+				<ows:Keyword>mke_cherry_lower2</ows:Keyword>
+			</ows:Keywords>
+			<DefaultSRS>urn:x-ogc:def:crs:EPSG:4326</DefaultSRS>
+			<ows:WGS84BoundingBox>
+				<ows:LowerCorner>-88.19359104592884 43.045031822669024</ows:LowerCorner>
+				<ows:UpperCorner>-87.86385855061384 43.29984646398574</ows:UpperCorner>
+			</ows:WGS84BoundingBox>
+		</FeatureType>
+		<FeatureType xmlns:upload="gov.usgs.cida.gdp.upload">
+			<Name>upload:mke_cherry_lower3</Name>
+			<Title>mke_cherry_lower3</Title>
+			<Abstract />
+			<ows:Keywords>
+				<ows:Keyword>features</ows:Keyword>
+				<ows:Keyword>mke_cherry_lower3</ows:Keyword>
+			</ows:Keywords>
+			<DefaultSRS>urn:x-ogc:def:crs:EPSG:4326</DefaultSRS>
+			<ows:WGS84BoundingBox>
+				<ows:LowerCorner>-88.06400688172388 43.04503182266902</ows:LowerCorner>
+				<ows:UpperCorner>-87.86385855061384 43.2977085532246</ows:UpperCorner>
+			</ows:WGS84BoundingBox>
+		</FeatureType>
+		<FeatureType xmlns:upload="gov.usgs.cida.gdp.upload">
+			<Name>upload:mke_mouth_lower</Name>
+			<Title>mke_mouth_lower</Title>
+			<Abstract />
+			<ows:Keywords>
+				<ows:Keyword>mke_mouth_lower</ows:Keyword>
+				<ows:Keyword>features</ows:Keyword>
+			</ows:Keywords>
+			<DefaultSRS>urn:x-ogc:def:crs:EPSG:4326</DefaultSRS>
+			<ows:WGS84BoundingBox>
+				<ows:LowerCorner>-88.21212914087417 42.93174945611367</ows:LowerCorner>
+				<ows:UpperCorner>-87.84929175216777 43.30008843505797</ows:UpperCorner>
+			</ows:WGS84BoundingBox>
+		</FeatureType>
+		<FeatureType xmlns:upload="gov.usgs.cida.gdp.upload">
+			<Name>upload:mke_mouth_lower2</Name>
+			<Title>mke_mouth_lower2</Title>
+			<Abstract />
+			<ows:Keywords>
+				<ows:Keyword>mke_mouth_lower2</ows:Keyword>
+				<ows:Keyword>features</ows:Keyword>
+			</ows:Keywords>
+			<DefaultSRS>urn:x-ogc:def:crs:EPSG:4326</DefaultSRS>
+			<ows:WGS84BoundingBox>
+				<ows:LowerCorner>-88.21212914087417 42.93174945611367</ows:LowerCorner>
+				<ows:UpperCorner>-87.84929175216777 43.30008843505797</ows:UpperCorner>
+			</ows:WGS84BoundingBox>
+		</FeatureType>
+		<FeatureType xmlns:sample="gov.usgs.cida.gdp.sample">
+			<Name>sample:nps_boundary_2013</Name>
+			<Title>nps_boundary_2013</Title>
+			<Abstract />
+			<ows:Keywords>
+				<ows:Keyword>nps_boundary</ows:Keyword>
+				<ows:Keyword>features</ows:Keyword>
+			</ows:Keywords>
+			<DefaultSRS>urn:x-ogc:def:crs:EPSG:4269</DefaultSRS>
+			<ows:WGS84BoundingBox>
+				<ows:LowerCorner>-170.72848129003984 -14.285582057432073</ows:LowerCorner>
+				<ows:UpperCorner>144.73418948348422 68.6553848577618</ows:UpperCorner>
+			</ows:WGS84BoundingBox>
+		</FeatureType>
+		<FeatureType xmlns:sample="gov.usgs.cida.gdp.sample">
+			<Name>sample:simplified_HUC8s</Name>
+			<Title>simplified_HUC8s</Title>
+			<Abstract />
+			<ows:Keywords>
+				<ows:Keyword>features</ows:Keyword>
+				<ows:Keyword>huc_8_multipart_wgs</ows:Keyword>
+			</ows:Keywords>
+			<DefaultSRS>urn:x-ogc:def:crs:EPSG:4326</DefaultSRS>
+			<ows:WGS84BoundingBox>
+				<ows:LowerCorner>-124.77148019908924 24.512236010285942</ows:LowerCorner>
+				<ows:UpperCorner>-66.88543928165748 49.38447884756701</ows:UpperCorner>
+			</ows:WGS84BoundingBox>
+		</FeatureType>
+	</FeatureTypeList>
+	<ogc:Filter_Capabilities>
+		<ogc:Spatial_Capabilities>
+			<ogc:GeometryOperands>
+				<ogc:GeometryOperand>gml:Envelope</ogc:GeometryOperand>
+				<ogc:GeometryOperand>gml:Point</ogc:GeometryOperand>
+				<ogc:GeometryOperand>gml:LineString</ogc:GeometryOperand>
+				<ogc:GeometryOperand>gml:Polygon</ogc:GeometryOperand>
+			</ogc:GeometryOperands>
+			<ogc:SpatialOperators>
+				<ogc:SpatialOperator name="Disjoint" />
+				<ogc:SpatialOperator name="Equals" />
+				<ogc:SpatialOperator name="DWithin" />
+				<ogc:SpatialOperator name="Beyond" />
+				<ogc:SpatialOperator name="Intersects" />
+				<ogc:SpatialOperator name="Touches" />
+				<ogc:SpatialOperator name="Crosses" />
+				<ogc:SpatialOperator name="Within" />
+				<ogc:SpatialOperator name="Contains" />
+				<ogc:SpatialOperator name="Overlaps" />
+				<ogc:SpatialOperator name="BBOX" />
+			</ogc:SpatialOperators>
+		</ogc:Spatial_Capabilities>
+		<ogc:Scalar_Capabilities>
+			<ogc:LogicalOperators />
+			<ogc:ComparisonOperators>
+				<ogc:ComparisonOperator>LessThan</ogc:ComparisonOperator>
+				<ogc:ComparisonOperator>GreaterThan</ogc:ComparisonOperator>
+				<ogc:ComparisonOperator>LessThanEqualTo</ogc:ComparisonOperator>
+				<ogc:ComparisonOperator>GreaterThanEqualTo</ogc:ComparisonOperator>
+				<ogc:ComparisonOperator>EqualTo</ogc:ComparisonOperator>
+				<ogc:ComparisonOperator>NotEqualTo</ogc:ComparisonOperator>
+				<ogc:ComparisonOperator>Like</ogc:ComparisonOperator>
+				<ogc:ComparisonOperator>Between</ogc:ComparisonOperator>
+				<ogc:ComparisonOperator>NullCheck</ogc:ComparisonOperator>
+			</ogc:ComparisonOperators>
+			<ogc:ArithmeticOperators>
+				<ogc:SimpleArithmetic />
+				<ogc:Functions>
+					<ogc:FunctionNames>
+						<ogc:FunctionName nArgs="1">abs</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">abs_2</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">abs_3</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">abs_4</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">acos</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">AddCoverages</ogc:FunctionName>
+						<ogc:FunctionName nArgs="4">Aggregate</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">Area</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">area2</ogc:FunctionName>
+						<ogc:FunctionName nArgs="3">AreaGrid</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">asin</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">atan</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">atan2</ogc:FunctionName>
+						<ogc:FunctionName nArgs="14">BarnesSurface</ogc:FunctionName>
+						<ogc:FunctionName nArgs="3">between</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">boundary</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">boundaryDimension</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">Bounds</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">buffer</ogc:FunctionName>
+						<ogc:FunctionName nArgs="3">BufferFeatureCollection</ogc:FunctionName>
+						<ogc:FunctionName nArgs="3">bufferWithSegments</ogc:FunctionName>
+						<ogc:FunctionName nArgs="7">Categorize</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">ceil</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">centroid</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">classify</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">Clip</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">CollectGeometries</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">Collection_Average</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">Collection_Bounds</ogc:FunctionName>
+						<ogc:FunctionName nArgs="0">Collection_Count</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">Collection_Max</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">Collection_Median</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">Collection_Min</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">Collection_Sum</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">Collection_Unique</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">Concatenate</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">contains</ogc:FunctionName>
+						<ogc:FunctionName nArgs="7">Contour</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">convert</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">convexHull</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">cos</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">Count</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">CropCoverage</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">crosses</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">dateFormat</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">dateParse</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">densify</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">difference</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">dimension</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">disjoint</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">disjoint3D</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">distance</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">distance3D</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">double2bool</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">endAngle</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">endPoint</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">env</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">envelope</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">EqualInterval</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">equalsExact</ogc:FunctionName>
+						<ogc:FunctionName nArgs="3">equalsExactTolerance</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">equalTo</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">exp</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">exteriorRing</ogc:FunctionName>
+						<ogc:FunctionName nArgs="3">Feature</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">floor</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">geometryType</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">geomFromWKT</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">geomLength</ogc:FunctionName>
+						<ogc:FunctionName nArgs="10">GeorectifyCoverage</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">GetFullCoverage</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">getGeometryN</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">getX</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">getY</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">getz</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">greaterEqualThan</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">greaterThan</ogc:FunctionName>
+						<ogc:FunctionName nArgs="5">Grid</ogc:FunctionName>
+						<ogc:FunctionName nArgs="7">Heatmap</ogc:FunctionName>
+						<ogc:FunctionName nArgs="0">id</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">IEEEremainder</ogc:FunctionName>
+						<ogc:FunctionName nArgs="3">if_then_else</ogc:FunctionName>
+						<ogc:FunctionName nArgs="8">Import</ogc:FunctionName>
+						<ogc:FunctionName nArgs="11">in10</ogc:FunctionName>
+						<ogc:FunctionName nArgs="3">in2</ogc:FunctionName>
+						<ogc:FunctionName nArgs="4">in3</ogc:FunctionName>
+						<ogc:FunctionName nArgs="5">in4</ogc:FunctionName>
+						<ogc:FunctionName nArgs="6">in5</ogc:FunctionName>
+						<ogc:FunctionName nArgs="7">in6</ogc:FunctionName>
+						<ogc:FunctionName nArgs="8">in7</ogc:FunctionName>
+						<ogc:FunctionName nArgs="9">in8</ogc:FunctionName>
+						<ogc:FunctionName nArgs="10">in9</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">InclusionFeatureCollection</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">int2bbool</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">int2ddouble</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">interiorPoint</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">interiorRingN</ogc:FunctionName>
+						<ogc:FunctionName nArgs="3">Interpolate</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">intersection</ogc:FunctionName>
+						<ogc:FunctionName nArgs="7">IntersectionFeatureCollection</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">intersects</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">intersects3D</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">isClosed</ogc:FunctionName>
+						<ogc:FunctionName nArgs="0">isCoverage</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">isEmpty</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">isLike</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">isNull</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">isometric</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">isRing</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">isSimple</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">isValid</ogc:FunctionName>
+						<ogc:FunctionName nArgs="3">isWithinDistance</ogc:FunctionName>
+						<ogc:FunctionName nArgs="3">isWithinDistance3D</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">Jenks</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">length</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">lessEqualThan</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">lessThan</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">log</ogc:FunctionName>
+						<ogc:FunctionName nArgs="4">LRSGeocode</ogc:FunctionName>
+						<ogc:FunctionName nArgs="5">LRSMeasure</ogc:FunctionName>
+						<ogc:FunctionName nArgs="5">LRSSegment</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">max</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">max_2</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">max_3</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">max_4</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">min</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">min_2</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">min_3</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">min_4</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">mincircle</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">minimumdiameter</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">minrectangle</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">modulo</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">MultiplyCoverages</ogc:FunctionName>
+						<ogc:FunctionName nArgs="3">Nearest</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">not</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">notEqualTo</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">numberFormat</ogc:FunctionName>
+						<ogc:FunctionName nArgs="5">numberFormat2</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">numGeometries</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">numInteriorRing</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">numPoints</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">octagonalenvelope</ogc:FunctionName>
+						<ogc:FunctionName nArgs="3">offset</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">overlaps</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">parameter</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">parseBoolean</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">parseDouble</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">parseInt</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">parseLong</ogc:FunctionName>
+						<ogc:FunctionName nArgs="0">pi</ogc:FunctionName>
+						<ogc:FunctionName nArgs="4">PointBuffers</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">pointN</ogc:FunctionName>
+						<ogc:FunctionName nArgs="6">PointStacker</ogc:FunctionName>
+						<ogc:FunctionName nArgs="6">PolygonExtraction</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">polygonize</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">pow</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">property</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">PropertyExists</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">Quantile</ogc:FunctionName>
+						<ogc:FunctionName nArgs="3">Query</ogc:FunctionName>
+						<ogc:FunctionName nArgs="0">random</ogc:FunctionName>
+						<ogc:FunctionName nArgs="5">RangeLookup</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">RasterAsPointCollection</ogc:FunctionName>
+						<ogc:FunctionName nArgs="4">RasterZonalStatistics</ogc:FunctionName>
+						<ogc:FunctionName nArgs="5">Recode</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">RectangularClip</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">relate</ogc:FunctionName>
+						<ogc:FunctionName nArgs="3">relatePattern</ogc:FunctionName>
+						<ogc:FunctionName nArgs="3">reproject</ogc:FunctionName>
+						<ogc:FunctionName nArgs="3">ReprojectGeometry</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">rint</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">round</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">round_2</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">roundDouble</ogc:FunctionName>
+						<ogc:FunctionName nArgs="6">ScaleCoverage</ogc:FunctionName>
+						<ogc:FunctionName nArgs="4">sdo_nn</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">setCRS</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">simplify</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">sin</ogc:FunctionName>
+						<ogc:FunctionName nArgs="3">Snap</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">splitPolygon</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">sqrt</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">StandardDeviation</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">startAngle</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">startPoint</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">StoreCoverage</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">strCapitalize</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">strConcat</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">strEndsWith</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">strEqualsIgnoreCase</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">strIndexOf</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">strLastIndexOf</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">strLength</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">strMatches</ogc:FunctionName>
+						<ogc:FunctionName nArgs="3">strPosition</ogc:FunctionName>
+						<ogc:FunctionName nArgs="4">strReplace</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">strStartsWith</ogc:FunctionName>
+						<ogc:FunctionName nArgs="3">strSubstring</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">strSubstringStart</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">strToLowerCase</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">strToUpperCase</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">strTrim</ogc:FunctionName>
+						<ogc:FunctionName nArgs="3">strTrim2</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">StyleCoverage</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">symDifference</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">tan</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">toDegrees</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">toRadians</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">touches</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">toWKT</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">Transform</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">union</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">UnionFeatureCollection</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">Unique</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">UniqueInterval</ogc:FunctionName>
+						<ogc:FunctionName nArgs="6">VectorToRaster</ogc:FunctionName>
+						<ogc:FunctionName nArgs="3">VectorZonalStatistics</ogc:FunctionName>
+						<ogc:FunctionName nArgs="1">vertices</ogc:FunctionName>
+						<ogc:FunctionName nArgs="2">within</ogc:FunctionName>
+					</ogc:FunctionNames>
+				</ogc:Functions>
+			</ogc:ArithmeticOperators>
+		</ogc:Scalar_Capabilities>
+		<ogc:Id_Capabilities>
+			<ogc:FID />
+			<ogc:EID />
+		</ogc:Id_Capabilities>
+	</ogc:Filter_Capabilities>
+</wfs:WFS_Capabilities>

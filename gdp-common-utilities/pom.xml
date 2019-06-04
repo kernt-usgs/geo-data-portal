@@ -4,14 +4,14 @@
 	<parent>
 		<groupId>gov.usgs.cida.gdp</groupId>
 		<artifactId>gdp</artifactId>
-		<version>39-SNAPSHOT</version>
+		<version>58-SNAPSHOT</version>
 	</parent>
 	<artifactId>gdp-common-utilities</artifactId>
 	<name>GDP Common Utilities</name>
 	<licenses>
 		<license>
 			<name>Public Domain</name>
-			<url>http://en.wikipedia.org/wiki/Public_domain_software</url>
+			<url>https://en.wikipedia.org/wiki/Public_domain_software</url>
 			<comments>
 				All work of the US Government enter into the Public Domain within
 				the United States.  Whether that work is public domain outside of
@@ -24,6 +24,10 @@
 		<dependency>
 			<groupId>gov.usgs.cida</groupId>
 			<artifactId>dynamicProperties</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>edu.ucar</groupId>
+			<artifactId>netcdf</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.codehaus.jettison</groupId>
@@ -76,9 +80,8 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.easymock</groupId>
-			<artifactId>easymock</artifactId>
-			<scope>test</scope>
+			<groupId>gov.usgs.cida</groupId>
+			<artifactId>proxy-utils</artifactId>
 		</dependency>
 	</dependencies>
 </project>

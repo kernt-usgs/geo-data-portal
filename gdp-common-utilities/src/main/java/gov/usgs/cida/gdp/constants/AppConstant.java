@@ -19,6 +19,7 @@ public enum AppConstant {
     FILE_WIPE_CHECK_WORKSPACES("gdp.file.wipe.workspace.check"), // Which workspaces do we check for file wiping
     FILE_WIPE_MILLIS("gdp.file.age.limit"), // Age, in milliseconds, that a file can be before it gets wiped (Default: 48 hours)
     FILE_WIPE_CHECK_RATE("gdp.file.wipe.check.rate"), // Rate, in milliseconds, at which to run the file wipe timer
+    MAX_DATA_CHUCK_REQUEST_SIZE("gdp.data.request.size.max.bytes"), // For multi-timestep access pattern, how big to make slices
 
     WFS_ENDPOINT("gdp.geoserver.url"), // Default location where Geoserver can be found
     WFS_USER("gdp.geoserver.username"), // Username for Geoserver endpoint if needed
@@ -33,7 +34,21 @@ public enum AppConstant {
     FROM_EMAIL("gdp.communication.from.addr"), // Email address from which to send messages
     TRACK_EMAIL("gdp.communication.bcc.addr"), // Email address to track requests on
     EMAIL_HOST("gdp.communication.smtp.host"), // Email smtp server address
-    EMAIL_PORT("gdp.communication.smtp.port"); // Email smtp port number
+    EMAIL_PORT("gdp.communication.smtp.port"), // Email smtp port number
+
+    URS_USERNAME("gdp.login.urs.username"), // Username to use when passing through to URS resources
+    URS_PASSWORD("gdp.login.urs.password"), // Password to use when passing through to URS resources
+    URS_HOST("gdp.login.urs.host"), // URS hostname that servers redirect to (may need to be list in future)
+
+    HEURISTIC_EVALUATION_STEPS("gdp.heuristic.evaluation.steps"), // Number of timesteps to use for heuristic estimate
+    HEURISTIC_COVERAGE_OUTPUT_MAX("gdp.heuristic.coverage.output.max"), // Max bytes for heuristic to fail on
+    HEURISTIC_GEOMETRY_MEMORY_MAX("gdp.heuristic.geometry.memory.max"), // Max bytes for process at single timestep
+    HEURISTIC_GEOMETRY_FEATURE_EDGES("gdp.heuristic.geometry.feature.edges"), // Heuristic value for edges per feature
+    HEURISTIC_SUMMARY_OUTPUT_MAX("gdp.heuristic.summary.output.max"), // Max size for csv/tsv file
+    HEURISTIC_TIME_TOTAL_MAX("gdp.heuristic.time.max"), // Total job time to allow before failing (actual processing)
+
+    ANALYTICS_GEOIP_ENDPOINT("gdp.analytics.geoip.endpoint"); // Where to get IP to location info
+
     private String input;
     private String value;
     private final String BASE_LOCATION = System.getProperty("java.io.tmpdir") + File.separator + "GDP";
@@ -95,10 +110,15 @@ public enum AppConstant {
             if (input.equals("gdp.file.wipe.check.rate")) {
                 result = "3600000";
             }
+            ///////////////////// Memory overhead constants
+            // MAX_DATA_CHUCK_REQUEST_SIZE
+            if (input.equals("gdp.data.request.size.max.bytes")) {
+                result = Long.toString(1024l * 1024l * 10l);
+            }
             ///////////////////// Endpoint constants
             // WFS_ENDPOINT
             if (input.equals("gdp.geoserver.url")) {
-                result = "http://localhost:8082/geoserver";
+                result = "https://localhost:8445/geoserver";
             }
             // WFS_USER
             if (input.equals("gdp.geoserver.username")) {
@@ -110,11 +130,11 @@ public enum AppConstant {
             }
             // WPS_ENDPOINT
             if (input.equals("gdp.endpoint.wps.url")) {
-                result = "http://localhost:8080/gdp-utility-wps/WebProcessingService";
+                result = "https://localhost:8443/gdp-utility-wps/WebProcessingService";
             }
-            // CSW_ENDPOINT
+            // CSW_ENDPOINT !CLEANUP!
             if (input.equals("gdp.endpoint.csw.url")) {
-                result = "http://localhost:8082/geonetwork/srv/en/csw";
+                result = "https://localhost:8445/geonetwork/srv/en/csw";
             }
 
             ///////////////////// Communication constants
@@ -149,6 +169,49 @@ public enum AppConstant {
             // TRACK_EMAIL
             if (input.equals("gdp.communication.bcc.addr")) {
                 result = "gdp_data@usgs.gov";
+            }
+
+            // URS_USERNAME
+            if (input.equals("gdp.login.urs.username")) {
+                result = "test";
+            }
+            // URS_PASSWORD
+            if (input.equals("gdp.login.urs.password")) {
+                result = "test";
+            }
+            // URS_ENDPOINT
+            if (input.equals("gdp.login.urs.host")) {
+                result = "uat.urs.earthdata.nasa.gov";
+            }
+
+            // HEURISTIC_EVALUATION_STEPS
+            if (input.equals("gdp.heuristic.evaluation.steps")) {
+                result = "7";
+            }
+            // HEURISTIC_COVERAGE_OUTPUT_MAX
+            if (input.equals("gdp.heuristic.coverage.output.max")) {
+                result = String.valueOf(1024l * 1024l * 500l); // 500 MB
+            }
+            // HEURISTIC_GEOMETRY_MEMORY_MAX
+            if (input.equals("gdp.heuristic.geometry.memory.max")) {
+                result = String.valueOf(1024l * 1024l * 1024l * 2l); // 2 GB
+            }
+            // HEURISTIC_GEOMETRY_FEATURE_EDGES
+            if (input.equals("gdp.heuristic.geometry.feature.edges")) {
+                result = "100";
+            }
+            // HEURISTIC_SUMMARY_OUTPUT_MAX
+            if (input.equals("gdp.heuristic.summary.output.max")) {
+                result = String.valueOf(1024l * 1024l * 1024l * 5l); // 5 GB
+            }
+            // HEURISTIC_TIME_TOTAL_MAX
+            if (input.equals("gdp.heuristic.time.max")) {
+                result = String.valueOf(24l * 60l * 60l * 1000l); // 24 hours
+            }
+
+            // ANALYTICS_GEOIP_ENDPOINT
+            if (input.equals("gdp.analytics.geoip.endpoint")) {
+                result = "https://freegeoip.net/xml/";
             }
 
             System.setProperty(input, result);
