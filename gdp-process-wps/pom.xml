@@ -208,6 +208,11 @@
 			<groupId>gov.usgs.cida.jmx</groupId>
 			<artifactId>jmx-log4j</artifactId>
 		</dependency>
+                <dependency>
+                        <groupId>org.apache.commons</groupId>
+                        <artifactId>commons-lang3</artifactId>
+                        <version>3.9</version>
+                </dependency>
 		<dependency>
 			<groupId>commons-lang</groupId>
 			<artifactId>commons-lang</artifactId>

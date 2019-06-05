@@ -817,4 +817,3 @@ public class PostgresDatabase extends AbstractDatabase {
 		}
 	}
 }
-

@@ -2,7 +2,7 @@ package gov.usgs.cida.gdp.wps.algorithm.heuristic;
 
 import gov.usgs.cida.gdp.constants.AppConstant;
 import gov.usgs.cida.gdp.wps.algorithm.heuristic.exception.AlgorithmHeuristicException;
-import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.lang3.time.StopWatch;
 import org.joda.time.MutablePeriod;
 import org.joda.time.ReadablePeriod;
 import org.slf4j.Logger;
@@ -61,8 +61,11 @@ public class TotalTimeAlgorithmHeuristic extends AlgorithmHeuristic {
 
 	@Override
 	public boolean tStart(int tIndex) {
-		if (stopwatch.getTime() == 0) {
-			stopwatch.start();
+		if (! stopwatch.isStarted()) {
+                    if (stopwatch.isStopped()) {
+                        stopwatch.reset();
+                    }
+                    stopwatch.start();
 		}
 		return traverseContinue();
 	}
