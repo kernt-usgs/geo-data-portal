@@ -6,6 +6,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.junit.After;
 import org.junit.Test;
@@ -45,7 +46,7 @@ public class EmailCheckTaskTest {
 
 	@Test
 	public void errorOutCheckTask() throws Exception {
-		int port = server.getConnectors()[0].getLocalPort();
+		int port = ((ServerConnector)server.getConnectors()[0]).getLocalPort();
 		EmailCheckTask task = new EmailCheckTask("https://localhost:" + port + "/", "test@test.test.com", "", null, true, false, 5);
 		task.run();
 		assertFalse(task.isCancelled());
@@ -66,7 +67,7 @@ public class EmailCheckTaskTest {
 
 	@Test
 	public void neverErrorOutCheckTask() throws Exception {
-		int port = server.getConnectors()[0].getLocalPort();
+		int port = ((ServerConnector)server.getConnectors()[0]).getLocalPort();
 		EmailCheckTask task = new EmailCheckTask("https://localhost:" + port + "/", "test@test.test.com", "", null, true, false, -1);
 		task.run();
 		assertFalse(task.isCancelled());
