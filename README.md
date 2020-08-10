@@ -30,7 +30,7 @@ The USGS Geo Data Portal (GDP) project provides scientists and environmental res
 
 ### Building
 ```bash
-git clone git@github.com:dblodgett-usgs/geo-data-portal.git
+git clone git@github.com:kernt-usgs/geo-data-portal.git
 cd geo-data-portal
 mvn install
 ```
